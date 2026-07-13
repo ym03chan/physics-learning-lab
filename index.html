@@ -508,6 +508,11 @@
       background: #fff3c7;
     }
 
+    .status-tag.available {
+      color: #0d6841;
+      background: #e4f7ed;
+    }
+
     .activity-card h3 {
       margin: 0;
       color: var(--navy);
@@ -533,6 +538,26 @@
       font: inherit;
       font-weight: 800;
       cursor: not-allowed;
+    }
+
+    .card-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-style: solid;
+      border-color: var(--blue);
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      text-decoration: none;
+      cursor: pointer;
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .card-link:hover,
+    .card-link:focus-visible {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 22px rgba(31, 103, 210, 0.22);
+      outline: none;
     }
 
     .principles {
@@ -942,9 +967,9 @@
                 <span data-lang="en">Measurement</span>
                 <span data-lang="zh">測量</span>
               </span>
-              <span class="status-tag">
-                <span data-lang="en">Coming soon</span>
-                <span data-lang="zh">即將推出</span>
+              <span class="status-tag available">
+                <span data-lang="en">Available</span>
+                <span data-lang="zh">可使用</span>
               </span>
             </div>
             <h3>
@@ -960,10 +985,10 @@
                 透過估算、計時、重複測量及證據分析進行的短時間二人探究活動。
               </span>
             </p>
-            <button class="card-action" type="button" disabled>
-              <span data-lang="en">Activity not uploaded yet</span>
-              <span data-lang="zh">活動尚未上載</span>
-            </button>
+            <a class="card-action card-link" href="time-lab.html">
+              <span data-lang="en">Launch Time Lab →</span>
+              <span data-lang="zh">開啟時間實驗室 →</span>
+            </a>
           </div>
         </article>
 
@@ -982,9 +1007,9 @@
                 <span data-lang="en">Electromagnetism</span>
                 <span data-lang="zh">電磁學</span>
               </span>
-              <span class="status-tag">
-                <span data-lang="en">Coming soon</span>
-                <span data-lang="zh">即將推出</span>
+              <span class="status-tag available">
+                <span data-lang="en">Available</span>
+                <span data-lang="zh">可使用</span>
               </span>
             </div>
             <h3>
@@ -1000,10 +1025,10 @@
                 探究磁通量、感應電流及導電環運動之間的關係。
               </span>
             </p>
-            <button class="card-action" type="button" disabled>
-              <span data-lang="en">Activity not uploaded yet</span>
-              <span data-lang="zh">活動尚未上載</span>
-            </button>
+            <a class="card-action card-link" href="eddy-current.html">
+              <span data-lang="en">Launch simulator →</span>
+              <span data-lang="zh">開啟模擬器 →</span>
+            </a>
           </div>
         </article>
       </div>
