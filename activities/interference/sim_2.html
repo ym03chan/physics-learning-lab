@@ -1,0 +1,931 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+  />
+  <title>Wave Interference Lab 3 — From Path Difference to Interference Patterns</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    canvas {
+      touch-action: none;
+    }
+
+    /* Better mobile range UI */
+    input[type="range"] {
+      touch-action: pan-y;
+    }
+
+    .slider-thumb::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 22px;
+      height: 22px;
+      background: #2563eb;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+    .slider-thumb::-moz-range-thumb {
+      width: 22px;
+      height: 22px;
+      background: #2563eb;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.35);
+    }
+
+    .readout {
+      font-family: "Courier New", Courier, monospace;
+      font-weight: bold;
+    }
+
+    .tab-active {
+      background-color: #2563eb;
+      color: white;
+      border-bottom: 4px solid #1e40af;
+    }
+    .tab-inactive {
+      background-color: #e5e7eb;
+      color: #4b5563;
+    }
+    .tab-inactive:hover {
+      background-color: #d1d5db;
+    }
+
+    /* Hide horizontal scrollbar on tab row (mobile) */
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    .simulation-panel {
+      min-height: 300px !important;
+    }
+
+    @media (min-width: 1024px) {
+      .simulation-panel {
+        min-height: 0 !important;
+      }
+    }
+
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(59, 130, 246, 0.65);
+      outline-offset: 3px;
+    }
+  </style>
+</head>
+
+<body class="bg-gray-100 min-h-[100dvh] lg:h-[100dvh] flex flex-col overflow-x-hidden overflow-y-auto lg:overflow-hidden">
+
+  <!-- Top Navigation -->
+  <nav class="bg-white shadow-md z-10 sticky top-0">
+    <div class="max-w-7xl mx-auto px-3 sm:px-4">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between py-2 sm:py-0 sm:h-16 gap-2 sm:gap-0">
+
+        <div class="flex items-center gap-3">
+          <span class="text-xl font-bold text-gray-800 hidden lg:block">Wave Interference Lab 3</span>
+
+          <!-- Tabs: horizontal scroll on small screens -->
+          <div class="flex gap-2 overflow-x-auto no-scrollbar whitespace-nowrap pb-1 sm:pb-0" role="tablist" aria-label="Interference pattern stages">
+            <button onclick="sim.setStage(1)" id="tab1"
+              role="tab" aria-selected="true" class="px-3 py-2 text-sm sm:text-base rounded-t-lg font-medium transition-colors tab-active">
+              1. 1D Path Diff
+            </button>
+            <button onclick="sim.setStage(2)" id="tab2"
+              role="tab" aria-selected="false" class="px-3 py-2 text-sm sm:text-base rounded-t-lg font-medium transition-colors tab-inactive">
+              2. 2D Geometry
+            </button>
+            <button onclick="sim.setStage(3)" id="tab3"
+              role="tab" aria-selected="false" class="px-3 py-2 text-sm sm:text-base rounded-t-lg font-medium transition-colors tab-inactive">
+              3. Full Waves
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between sm:justify-end gap-3">
+          <label class="flex items-center cursor-pointer" title="Slow down animation">
+            <input type="checkbox" id="slowMoCheck" onchange="sim.toggleSlowMo()" class="sr-only peer" />
+            <div
+              class="relative w-10 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer
+                     peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full
+                     peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px]
+                     after:start-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full
+                     after:h-[18px] after:w-[18px] after:transition-all peer-checked:bg-blue-600">
+            </div>
+            <span class="ms-2 text-xs font-bold text-gray-500">Slow</span>
+          </label>
+
+          <button onclick="sim.togglePause()" id="pauseButton" aria-pressed="false"
+            class="text-gray-600 hover:text-blue-600 font-bold px-3 py-1.5 border rounded text-sm">
+            Pause
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </nav>
+
+  <!-- Main Layout -->
+  <main class="flex-1 min-h-0 flex flex-col lg:flex-row max-w-7xl mx-auto w-full p-3 sm:p-4 gap-3 sm:gap-4 overflow-y-auto lg:overflow-hidden">
+
+    <!-- Left: Canvas -->
+    <div class="simulation-panel flex-1 relative bg-black rounded-xl shadow-lg overflow-hidden border-2 border-gray-700 min-h-[52vh] sm:min-h-[58vh] lg:min-h-0">
+      <canvas id="simCanvas" class="w-full h-full cursor-crosshair" aria-label="Interactive interference pattern showing two sources and a movable detector P"></canvas>
+
+      <!-- Detector Label (optional visual aid; shown in stage>=2) -->
+      <div id="detectorLabel"
+        class="absolute pointer-events-none text-white text-xs font-bold bg-green-600 px-2 py-1 rounded hidden">
+        P
+      </div>
+
+      <!-- 1D Strip Visual -->
+      <div id="stripVisual"
+        class="absolute bottom-0 left-0 w-full h-28 sm:h-32 bg-gray-900 border-t border-gray-600 flex flex-col p-2 hidden">
+        <div class="text-gray-400 text-xs mb-1 flex justify-between px-2">
+          <span>Phase Alignment at Detector P</span>
+          <span class="text-blue-300">Compare lengths r₁ vs r₂</span>
+        </div>
+        <canvas id="stripCanvas" class="w-full h-full"></canvas>
+      </div>
+    </div>
+
+    <!-- Right: Controls -->
+    <div class="w-full lg:w-80 flex-shrink-0 flex flex-col gap-3 lg:max-h-full lg:overflow-y-auto">
+
+      <!-- Live Data -->
+      <div class="bg-white p-4 rounded-xl shadow-lg border-l-4 border-blue-500">
+        <h2 class="text-gray-500 text-xs font-bold uppercase tracking-wide mb-2">Live Data</h2>
+        <div class="grid grid-cols-2 gap-y-1 text-sm">
+          <div class="text-gray-600">Source 1 (r₁):</div>
+          <div class="readout text-right" id="r1-val">--</div>
+
+          <div class="text-gray-600">Source 2 (r₂):</div>
+          <div class="readout text-right" id="r2-val">--</div>
+
+          <div class="text-gray-600 font-bold">Path Diff (Δx):</div>
+          <div class="readout text-right font-bold text-blue-600" id="dx-val">--</div>
+
+          <div class="col-span-2 border-t my-2"></div>
+
+          <div class="text-gray-800 font-bold text-lg">Δx / λ :</div>
+          <div class="readout text-right text-2xl font-bold text-purple-600" id="n-val">--</div>
+        </div>
+        <div id="interferenceStatus"
+          class="mt-2 text-center font-bold text-white py-1 px-3 rounded bg-gray-400 text-sm">
+          --
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="bg-white p-4 rounded-xl shadow-lg flex-grow flex flex-col">
+        <h2 class="text-gray-500 text-xs font-bold uppercase tracking-wide mb-3">Parameters</h2>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Frequency (sets wavelength)</label>
+          <input type="range" id="freqSlider" min="2" max="10" step="0.5" value="5"
+            class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb" />
+        </div>
+
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Separation (d)</label>
+          <input type="range" id="sepSlider" min="20" max="200" step="5" value="100"
+            class="w-full h-3 bg-gray-200 rounded-lg appearance-none cursor-pointer slider-thumb" />
+        </div>
+
+        <!-- Phase Toggle -->
+        <div class="mb-4 flex items-center justify-between border-t pt-2">
+          <span class="text-sm font-medium text-gray-700">Source Phase:</span>
+          <select id="phaseSelect"
+            class="text-sm border-gray-300 rounded-md shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+            <option value="0">In Phase</option>
+            <option value="1">Anti-Phase (180°)</option>
+          </select>
+        </div>
+
+        <div id="teacherPrompt"
+          class="mt-auto bg-yellow-50 border border-yellow-200 p-3 rounded text-sm text-yellow-800 italic">
+          Find the yellow constructive markers and gray destructive markers. How do their Δx/λ values change when the sources switch phase?
+        </div>
+      </div>
+
+      <div class="text-center text-xs text-gray-400">
+        Solid = Constructive | Dashed = Destructive
+      </div>
+    </div>
+
+  </main>
+
+  <script>
+    class Simulator {
+      constructor() {
+        this.canvas = document.getElementById("simCanvas");
+        this.ctx = this.canvas.getContext("2d");
+
+        this.stripCanvas = document.getElementById("stripCanvas");
+        this.stripCtx = this.stripCanvas.getContext("2d");
+
+        // Logical (CSS pixel) sizes
+        this.width = 0;
+        this.height = 0;
+        this.stripW = 0;
+        this.stripH = 0;
+
+        this.time = 0;
+        this.previousFrameTime = null;
+        this.running = true;
+        this.slowMotion = false;
+        this.stage = 1;
+        this.phaseOffset = 0; // 0 for in-phase, 0.5 for anti-phase
+
+        // Physics
+        this.frequency = 5;
+        this.wavelength = 40;
+        this.separation = 100;
+
+        this.sources = [
+          { x: 0, y: 0, color: "#F87171" },
+          { x: 0, y: 0, color: "#60A5FA" },
+        ];
+
+        this.detector = { x: 0, y: 0, dragging: false };
+
+        this.ui = {
+          r1: document.getElementById("r1-val"),
+          r2: document.getElementById("r2-val"),
+          dx: document.getElementById("dx-val"),
+          n: document.getElementById("n-val"),
+          status: document.getElementById("interferenceStatus"),
+          prompt: document.getElementById("teacherPrompt"),
+          strip: document.getElementById("stripVisual"),
+          detectorLabel: document.getElementById("detectorLabel"),
+          pauseButton: document.getElementById("pauseButton"),
+        };
+
+        this.initInteractions();
+        this.resize();
+        this.setStage(1);
+
+        window.addEventListener("resize", () => this.resize());
+        window.addEventListener("orientationchange", () => {
+          setTimeout(() => this.resize(), 80);
+        });
+
+        this.loop = this.loop.bind(this);
+        requestAnimationFrame(this.loop);
+      }
+
+      initInteractions() {
+        document.getElementById("freqSlider").addEventListener("input", (e) => {
+          this.frequency = parseFloat(e.target.value);
+          this.wavelength = 200 / this.frequency;
+        });
+
+        document.getElementById("sepSlider").addEventListener("input", (e) => {
+          this.separation = parseFloat(e.target.value);
+        });
+
+        document.getElementById("phaseSelect").addEventListener("change", (e) => {
+          this.phaseOffset = parseFloat(e.target.value) * 0.5; // 0 or 0.5
+        });
+
+        const startDrag = (e) => {
+          const pos = this.getPos(e);
+          const dx = pos.x - this.detector.x;
+          const dy = pos.y - this.detector.y;
+
+          // Larger grab radius for mobile usability
+          const grabR = 46;
+
+          if (Math.hypot(dx, dy) < grabR) {
+            this.detector.dragging = true;
+          } else if (this.stage >= 2) {
+            this.detector.dragging = true;
+            this.detector.x = Math.max(20, Math.min(this.width - 20, pos.x));
+            this.detector.y = Math.max(20, Math.min(this.height - 20, pos.y));
+          }
+        };
+
+        const moveDrag = (e) => {
+          if (!this.detector.dragging) return;
+          const pos = this.getPos(e);
+
+          if (this.stage === 1) {
+            const stripHeight = this.ui.strip.getBoundingClientRect().height || 128;
+            const maxVisibleY = Math.max(20, this.height - stripHeight - 20);
+            this.detector.x = this.width * 0.75;
+            this.detector.y = Math.max(20, Math.min(maxVisibleY, pos.y));
+          } else {
+            this.detector.x = Math.max(20, Math.min(this.width - 20, pos.x));
+            this.detector.y = Math.max(20, Math.min(this.height - 20, pos.y));
+          }
+        };
+
+        const endDrag = () => {
+          this.detector.dragging = false;
+        };
+
+        // Mouse
+        this.canvas.addEventListener("mousedown", startDrag);
+        this.canvas.addEventListener("mousemove", moveDrag);
+        window.addEventListener("mouseup", endDrag);
+
+        // Touch
+        this.canvas.addEventListener(
+          "touchstart",
+          (e) => {
+            e.preventDefault();
+            startDrag(e.touches[0]);
+          },
+          { passive: false }
+        );
+        this.canvas.addEventListener(
+          "touchmove",
+          (e) => {
+            e.preventDefault();
+            moveDrag(e.touches[0]);
+          },
+          { passive: false }
+        );
+        window.addEventListener("touchend", endDrag);
+      }
+
+      getPos(e) {
+        const rect = this.canvas.getBoundingClientRect();
+        return {
+          x: (e.clientX - rect.left) * (this.width / rect.width),
+          y: (e.clientY - rect.top) * (this.height / rect.height),
+        };
+      }
+
+      setStage(n) {
+        this.stage = n;
+
+        [1, 2, 3].forEach((i) => {
+          const tab = document.getElementById(`tab${i}`);
+          tab.setAttribute("aria-selected", String(i === n));
+          tab.className =
+            i === n
+              ? "px-3 py-2 text-sm sm:text-base rounded-t-lg font-bold transition-colors tab-active"
+              : "px-3 py-2 text-sm sm:text-base rounded-t-lg font-medium transition-colors tab-inactive";
+        });
+
+        if (n === 1) {
+          this.detector.x = this.width * 0.75;
+          this.detector.y = this.height / 2;
+          this.ui.strip.classList.remove("hidden");
+          this.ui.detectorLabel.classList.add("hidden");
+        } else {
+          this.ui.strip.classList.add("hidden");
+          this.detector.x = this.width / 2 + 50;
+          this.detector.y = this.height / 2;
+          this.ui.detectorLabel.classList.remove("hidden");
+        }
+
+        const prompts = [
+          "",
+          "Find the yellow constructive markers and gray destructive markers. How do their Δx/λ values change when the sources switch phase?",
+          "Drag P onto a solid or dashed line. Use the live Δx/λ value to explain why that line is constructive or destructive.",
+          "Connect the wavefront picture to the geometry: solid lines mark repeated reinforcement; dashed lines mark repeated cancellation.",
+        ];
+        this.ui.prompt.innerText = prompts[n];
+
+        // After changing stage, sizes may change (strip shown/hidden)
+        setTimeout(() => this.resize(), 0);
+      }
+
+      togglePause() {
+        this.running = !this.running;
+        this.ui.pauseButton.textContent = this.running ? "Pause" : "Play";
+        this.ui.pauseButton.setAttribute("aria-pressed", String(!this.running));
+      }
+      toggleSlowMo() {
+        this.slowMotion = !this.slowMotion;
+      }
+
+      resize() {
+        // HiDPI scaling for crisp rendering on phones/tablets
+        const dpr = window.devicePixelRatio || 1;
+
+        const parent = this.canvas.parentElement;
+        const cssW = parent.clientWidth;
+        const cssH = parent.clientHeight;
+
+        this.canvas.width = Math.max(1, Math.floor(cssW * dpr));
+        this.canvas.height = Math.max(1, Math.floor(cssH * dpr));
+        this.canvas.style.width = cssW + "px";
+        this.canvas.style.height = cssH + "px";
+        this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        this.width = cssW;
+        this.height = cssH;
+
+        const stripParent = this.stripCanvas.parentElement;
+        const stripCssW = stripParent.clientWidth;
+        const stripCssH = stripParent.clientHeight;
+
+        this.stripCanvas.width = Math.max(1, Math.floor(stripCssW * dpr));
+        this.stripCanvas.height = Math.max(1, Math.floor(stripCssH * dpr));
+        this.stripCanvas.style.width = stripCssW + "px";
+        this.stripCanvas.style.height = stripCssH + "px";
+        this.stripCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        this.stripW = stripCssW;
+        this.stripH = stripCssH;
+
+        if (this.stage === 1) this.detector.x = this.width * 0.75;
+      }
+
+      updatePhysics() {
+        const cy = this.height / 2;
+        const d = this.separation;
+
+        this.sources[0].x = this.width * 0.2;
+        this.sources[0].y = cy - d / 2;
+        this.sources[1].x = this.width * 0.2;
+        this.sources[1].y = cy + d / 2;
+
+        const r1 = Math.hypot(
+          this.detector.x - this.sources[0].x,
+          this.detector.y - this.sources[0].y
+        );
+        const r2 = Math.hypot(
+          this.detector.x - this.sources[1].x,
+          this.detector.y - this.sources[1].y
+        );
+        const dx = Math.abs(r1 - r2);
+
+        // If antiphase, add 0.5λ to the effective phase difference.
+        const effectiveRatio = dx / this.wavelength + this.phaseOffset;
+        const tolerance = 0.06;
+        const distanceFromInteger = Math.abs(effectiveRatio - Math.round(effectiveRatio));
+        const nearestHalf = Math.round(effectiveRatio - 0.5) + 0.5;
+        const distanceFromHalf = Math.abs(effectiveRatio - nearestHalf);
+        const isConstructive = distanceFromInteger <= tolerance;
+        const isDestructive = distanceFromHalf <= tolerance;
+
+        this.ui.r1.innerText = (r1 / this.wavelength).toFixed(2) + " λ";
+        this.ui.r2.innerText = (r2 / this.wavelength).toFixed(2) + " λ";
+        this.ui.dx.innerText = (dx / this.wavelength).toFixed(2) + " λ";
+        this.ui.n.innerText = (dx / this.wavelength).toFixed(2);
+
+        if (isConstructive) {
+          this.ui.status.innerText = "CONSTRUCTIVE (Near Max)";
+          this.ui.status.className =
+            "mt-2 text-center font-bold text-white py-1 px-3 rounded bg-green-500 transition-colors shadow-lg";
+        } else if (isDestructive) {
+          this.ui.status.innerText = "DESTRUCTIVE (Near Min)";
+          this.ui.status.className =
+            "mt-2 text-center font-bold text-white py-1 px-3 rounded bg-gray-800 transition-colors";
+        } else {
+          this.ui.status.innerText = "Intermediate";
+          this.ui.status.className =
+            "mt-2 text-center font-bold text-gray-700 py-1 px-3 rounded bg-yellow-400 transition-colors";
+        }
+
+        return { r1, r2, dx, effectiveRatio, isConstructive, isDestructive };
+      }
+
+      draw() {
+        const { ctx, width, height } = this;
+        const data = this.updatePhysics();
+
+        ctx.fillStyle = "#0f172a";
+        ctx.fillRect(0, 0, width, height);
+
+        // Stage 3: Waves
+        if (this.stage === 3) this.drawWaves(data);
+
+        // Stage 2 & 3: Analytic Lines
+        if (this.stage >= 2) this.drawNodalLines();
+
+        // Stage 2: draw r1/r2 linking lines + labels (requested)
+        if (this.stage === 2) this.drawRLinksStage2();
+
+        // Stage 1: Markers & Lines
+        if (this.stage === 1) {
+          this.draw1DMarkers();
+          this.draw1DLines(data);
+        }
+
+        // Sources
+        this.sources.forEach((s, i) => {
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 8, 0, Math.PI * 2);
+          ctx.fillStyle = s.color;
+          ctx.fill();
+          ctx.strokeStyle = "white";
+          ctx.lineWidth = 2;
+          ctx.stroke();
+
+          ctx.fillStyle = "white";
+          ctx.font = "12px Arial";
+          ctx.fillText(`S${i + 1}`, s.x - 25, s.y + 4);
+        });
+
+        // Detector
+        ctx.beginPath();
+        ctx.arc(this.detector.x, this.detector.y, 10, 0, Math.PI * 2);
+        ctx.fillStyle = "#22c55e";
+        ctx.fill();
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 3;
+        ctx.stroke();
+
+        if (data.isConstructive && this.running) {
+          ctx.beginPath();
+          ctx.arc(
+            this.detector.x,
+            this.detector.y,
+            15 + Math.sin(this.time * 4) * 5,
+            0,
+            Math.PI * 2
+          );
+          ctx.strokeStyle = `rgba(34, 197, 94, ${0.5 + Math.sin(this.time * 4) * 0.5})`;
+          ctx.stroke();
+        }
+
+        // Move the floating "P" label (stage>=2)
+        if (this.stage >= 2) {
+          const el = this.ui.detectorLabel;
+          el.classList.remove("hidden");
+          // Convert logical coordinates to coordinates inside the canvas panel.
+          const rect = this.canvas.getBoundingClientRect();
+          const left = (this.detector.x / this.width) * rect.width;
+          const top = (this.detector.y / this.height) * rect.height;
+
+          // Position label slightly above-right of detector
+          el.style.left = (left + 10) + "px";
+          el.style.top = (top - 18) + "px";
+        } else {
+          this.ui.detectorLabel.classList.add("hidden");
+        }
+
+        if (this.stage === 1) this.drawStrip(data);
+      }
+
+      // ===== Requested feature: Stage 2 r1/r2 lines + larger labels =====
+      drawRLinksStage2() {
+        const ctx = this.ctx;
+
+        const s1 = this.sources[0];
+        const s2 = this.sources[1];
+        const p = this.detector;
+
+        // Slightly thicker for visibility
+        const lw = Math.max(2.5, Math.min(4, this.width / 240));
+        ctx.lineWidth = lw;
+        ctx.setLineDash([]);
+
+        // Draw lines
+        ctx.beginPath();
+        ctx.moveTo(s1.x, s1.y);
+        ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = s1.color;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(s2.x, s2.y);
+        ctx.lineTo(p.x, p.y);
+        ctx.strokeStyle = s2.color;
+        ctx.stroke();
+
+        // Labels (slightly larger font)
+        const fontSize = Math.max(16, Math.min(22, this.width / 35));
+        ctx.font = `700 ${fontSize}px Arial`;
+        ctx.textAlign = "center";
+        ctx.textBaseline = "middle";
+
+        const drawLabelOnSegment = (a, b, text, offsetPx) => {
+          const mx = (a.x + b.x) / 2;
+          const my = (a.y + b.y) / 2;
+
+          // Perpendicular offset for readability
+          const dx = b.x - a.x;
+          const dy = b.y - a.y;
+          const len = Math.hypot(dx, dy) || 1;
+          const nx = -dy / len;
+          const ny = dx / len;
+
+          const x = mx + nx * offsetPx;
+          const y = my + ny * offsetPx;
+
+          // Background badge
+          const padX = 10;
+          const padY = 7;
+          const metrics = ctx.measureText(text);
+          const w = metrics.width + padX * 2;
+          const h = fontSize + padY * 2;
+
+          ctx.save();
+          ctx.fillStyle = "rgba(0,0,0,0.55)";
+          ctx.strokeStyle = "rgba(255,255,255,0.25)";
+          ctx.lineWidth = 1;
+          ctx.beginPath();
+          const r = 8;
+          // rounded rect
+          ctx.moveTo(x - w / 2 + r, y - h / 2);
+          ctx.arcTo(x + w / 2, y - h / 2, x + w / 2, y + h / 2, r);
+          ctx.arcTo(x + w / 2, y + h / 2, x - w / 2, y + h / 2, r);
+          ctx.arcTo(x - w / 2, y + h / 2, x - w / 2, y - h / 2, r);
+          ctx.arcTo(x - w / 2, y - h / 2, x + w / 2, y - h / 2, r);
+          ctx.closePath();
+          ctx.fill();
+          ctx.stroke();
+
+          // Text
+          ctx.fillStyle = "white";
+          ctx.fillText(text, x, y);
+          ctx.restore();
+        };
+
+        // Use subscript characters for clarity (matches existing UI r₁/r₂)
+        drawLabelOnSegment(s1, p, "r₁", -22);
+        drawLabelOnSegment(s2, p, "r₂", 22);
+      }
+
+      drawNodalLines() {
+        const ctx = this.ctx;
+        const lambda = this.wavelength;
+        const d = this.separation;
+        const cx = this.sources[0].x;
+        const cy = this.height / 2;
+
+        const maxN = Math.floor(d / lambda);
+
+        const drawHyperbola = (n, isDestructive) => {
+          let logicalDestructive = isDestructive;
+          if (this.phaseOffset !== 0) {
+            logicalDestructive = !isDestructive;
+          }
+
+          const pathDiff = n * lambda;
+          const a = pathDiff / 2;
+          const c = d / 2;
+
+          if (a >= c) return;
+
+          const b = Math.sqrt(c * c - a * a);
+
+          if (logicalDestructive) {
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+            ctx.setLineDash([8, 8]);
+          } else {
+            ctx.strokeStyle = "rgba(250, 204, 21, 0.6)";
+            ctx.setLineDash([]);
+          }
+          ctx.lineWidth = 2;
+
+          for (let branch = -1; branch <= 1; branch += 2) {
+            ctx.beginPath();
+            let first = true;
+
+            for (let x = 0; x <= this.width; x += 5) {
+              const x_rel = x - cx;
+              const y_rel = a * Math.sqrt(1 + (x_rel * x_rel) / (b * b));
+              const plotY = cy + branch * y_rel;
+
+              if (first) {
+                ctx.moveTo(x, plotY);
+                first = false;
+              } else {
+                ctx.lineTo(x, plotY);
+              }
+            }
+            ctx.stroke();
+          }
+        };
+
+        // Central order line (n=0)
+        const zeroIsDestructive = this.phaseOffset !== 0;
+
+        ctx.beginPath();
+        ctx.moveTo(0, cy);
+        ctx.lineTo(this.width, cy);
+        if (zeroIsDestructive) {
+          ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+          ctx.setLineDash([8, 8]);
+        } else {
+          ctx.strokeStyle = "rgba(250, 204, 21, 0.6)";
+          ctx.setLineDash([]);
+        }
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        // Higher orders
+        for (let k = 1; k <= maxN + 1; k++) {
+          drawHyperbola(k, false);
+          drawHyperbola(k - 0.5, true);
+        }
+
+        ctx.setLineDash([]);
+      }
+
+      draw1DMarkers() {
+        const ctx = this.ctx;
+        const screenX = this.detector.x;
+        const d = this.separation;
+        const cy = this.height / 2;
+
+        const getColors = (isHalfInt) => {
+          let isDestructive = isHalfInt;
+          if (this.phaseOffset !== 0) isDestructive = !isDestructive;
+
+          return isDestructive
+            ? { fill: "#9ca3af", text: null } // Gray
+            : { fill: "#fbbf24", text: "rgba(255,255,255,0.7)" }; // Yellow
+        };
+
+        const drawMarker = (targetDelta, label, isHalfInt) => {
+          if (targetDelta >= d * 0.99) return;
+
+          const a = targetDelta / 2;
+          const c = d / 2;
+          const b2 = c * c - a * a;
+          if (b2 <= 0) return;
+
+          const L = screenX - this.sources[0].x;
+          const y_rel = a * Math.sqrt(1 + (L * L) / b2);
+
+          const { fill, text } = getColors(isHalfInt);
+          const size = text ? 5 : 4;
+
+          [cy - y_rel, cy + y_rel].forEach((y) => {
+            ctx.beginPath();
+            ctx.arc(screenX, y, size, 0, Math.PI * 2);
+            ctx.fillStyle = fill;
+            ctx.fill();
+            if (text && label) {
+              ctx.fillStyle = text;
+              ctx.font = "10px Arial";
+              ctx.fillText(label, screenX - 12, y);
+            }
+          });
+        };
+
+        for (let k = 0; k < 10; k++) {
+          if (k * this.wavelength < d) drawMarker(k * this.wavelength, `${k}λ`, false);
+          if ((k + 0.5) * this.wavelength < d) drawMarker((k + 0.5) * this.wavelength, "", true);
+        }
+      }
+
+      draw1DLines(data) {
+        const ctx = this.ctx;
+
+        // Screen Line
+        ctx.beginPath();
+        ctx.moveTo(this.detector.x, 20);
+        ctx.lineTo(this.detector.x, this.height - 20);
+        ctx.strokeStyle = "rgba(255,255,255,0.2)";
+        ctx.setLineDash([5, 5]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = "rgba(255,255,255,0.5)";
+        ctx.fillText("Screen", this.detector.x - 20, 15);
+
+        // Lines to detector
+        ctx.beginPath();
+        ctx.moveTo(this.sources[0].x, this.sources[0].y);
+        ctx.lineTo(this.detector.x, this.detector.y);
+        ctx.strokeStyle = this.sources[0].color;
+        ctx.lineWidth = 2;
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.moveTo(this.sources[1].x, this.sources[1].y);
+        ctx.lineTo(this.detector.x, this.detector.y);
+        ctx.strokeStyle = this.sources[1].color;
+        ctx.stroke();
+
+        // Text labels
+        ctx.fillStyle = "white";
+        ctx.font = "14px Arial";
+        ctx.fillText(
+          "r₁",
+          (this.sources[0].x + this.detector.x) / 2,
+          (this.sources[0].y + this.detector.y) / 2 - 12
+        );
+        ctx.fillText(
+          "r₂",
+          (this.sources[1].x + this.detector.x) / 2,
+          (this.sources[1].y + this.detector.y) / 2 + 18
+        );
+      }
+
+      drawWaves(data) {
+        const ctx = this.ctx;
+        ctx.globalCompositeOperation = "screen";
+
+        const drawSourceWaves = (s, color, isPhaseShifted) => {
+          const maxR = Math.hypot(this.width, this.height);
+
+          const animationRate = this.slowMotion ? 0.06 : 0.6;
+          const t = this.time * this.frequency * animationRate;
+
+          let phaseOffset = t * this.wavelength;
+          if (isPhaseShifted) phaseOffset += this.wavelength * 0.5;
+
+          const startR = phaseOffset % this.wavelength;
+
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          for (let r = startR; r < maxR; r += this.wavelength) {
+            ctx.globalAlpha = Math.max(0, 1 - r / (maxR * 0.9));
+            ctx.beginPath();
+            ctx.arc(s.x, s.y, r, 0, Math.PI * 2);
+            ctx.stroke();
+          }
+        };
+
+        const s2Shift = this.phaseOffset !== 0;
+
+        drawSourceWaves(this.sources[0], "#450a0a", false);
+        drawSourceWaves(this.sources[1], "#172554", s2Shift);
+
+        ctx.globalCompositeOperation = "source-over";
+        ctx.globalAlpha = 1;
+      }
+
+      drawStrip(data) {
+        const ctx = this.stripCtx;
+        const w = this.stripW;
+        const h = this.stripH;
+
+        if (w <= 2 || h <= 2) return;
+
+        const k = (2 * Math.PI) / this.wavelength;
+
+        const animationRate = this.slowMotion ? 0.06 : 0.6;
+        const t = this.time * this.frequency * animationRate;
+
+        ctx.clearRect(0, 0, w, h);
+        ctx.fillStyle = "#111827";
+        ctx.fillRect(0, 0, w, h);
+
+        const graphW = w - 80;
+        const phaseAdd = this.phaseOffset !== 0 ? Math.PI : 0;
+
+        const drawWave = (r, color, yBase, phaseExtra) => {
+          ctx.beginPath();
+          ctx.strokeStyle = color;
+          ctx.lineWidth = 2;
+          for (let x = 0; x < graphW; x++) {
+            const distFromSource = r - (graphW - x);
+            const val = Math.sin(k * distFromSource - t + phaseExtra);
+            const y = yBase + val * 15;
+            if (x === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+          }
+          ctx.stroke();
+        };
+
+        drawWave(data.r1, "#F87171", h / 3, 0);
+        drawWave(data.r2, "#60A5FA", (h / 3) * 2, phaseAdd);
+
+        const phase1 = k * data.r1 - t;
+        const phase2 = k * data.r2 - t + phaseAdd;
+        const ySum = (Math.sin(phase1) + Math.sin(phase2)) * 15;
+
+        ctx.beginPath();
+        ctx.moveTo(graphW, 10);
+        ctx.lineTo(graphW, h - 10);
+        ctx.strokeStyle = "white";
+        ctx.setLineDash([2, 2]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(graphW + 40, h / 2 + ySum, 8, 0, Math.PI * 2);
+        ctx.fillStyle = Math.abs(ySum) < 5 ? "#4B5563" : "#22C55E";
+        ctx.fill();
+      }
+
+      loop(frameTime) {
+        if (this.previousFrameTime === null) this.previousFrameTime = frameTime;
+        const elapsed = Math.min((frameTime - this.previousFrameTime) / 1000, 0.05);
+        this.previousFrameTime = frameTime;
+        if (this.running) this.time += elapsed;
+        this.draw();
+        requestAnimationFrame(this.loop);
+      }
+    }
+
+    const sim = new Simulator();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="Teacher notes for a three-simulator lesson sequence on wave interference, superposition, path difference, and interference patterns."
+  />
+  <meta name="theme-color" content="#102a43" />
+  <title>Teacher Notes — Wave Interference Learning Path</title>
+
+  <style>
+    :root {
+      --navy: #102a43;
+      --navy-soft: #1d3f5e;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --blue-pale: #eaf2ff;
+      --red: #d84f4f;
+      --red-pale: #fff0ef;
+      --gold: #e6a82e;
+      --gold-pale: #fff7dd;
+      --green: #16825c;
+      --green-pale: #eaf8f2;
+      --ink: #162432;
+      --muted: #5b6b79;
+      --line: #dbe5ee;
+      --paper: #ffffff;
+      --surface: #f4f7fa;
+      --shadow: 0 14px 38px rgba(16, 42, 67, 0.10);
+      --radius-lg: 25px;
+      --radius-md: 16px;
+      --max: 1120px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 6% 5%, rgba(37, 99, 235, 0.09), transparent 23rem),
+        var(--surface);
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "Noto Sans", sans-serif;
+      line-height: 1.62;
+    }
+
+    a {
+      color: var(--blue-dark);
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 10px;
+      left: -9999px;
+      z-index: 100;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--navy);
+    }
+
+    .skip-link:focus {
+      left: 10px;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      border-bottom: 1px solid rgba(219, 229, 238, 0.88);
+      background: rgba(244, 247, 250, 0.92);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner {
+      width: min(var(--max), calc(100% - 32px));
+      min-height: 68px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--navy);
+      text-decoration: none;
+      font-weight: 830;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .top-actions a,
+    .top-actions button {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--navy);
+      background: var(--paper);
+      font: inherit;
+      font-size: 0.9rem;
+      font-weight: 760;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .top-actions a:hover,
+    .top-actions button:hover,
+    .top-actions a:focus-visible,
+    .top-actions button:focus-visible {
+      border-color: #a9c5ee;
+      outline: 3px solid rgba(37, 99, 235, 0.14);
+      outline-offset: 2px;
+    }
+
+    .page-shell {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 56px 0 70px;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1.12fr) minmax(320px, 0.88fr);
+      gap: 42px;
+      align-items: stretch;
+      margin-bottom: 34px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--blue-dark);
+      font-size: 0.8rem;
+      font-weight: 850;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      max-width: 800px;
+      color: var(--navy);
+      font-size: clamp(2.5rem, 5.2vw, 4.7rem);
+      line-height: 1;
+      letter-spacing: -0.055em;
+    }
+
+    .hero-copy {
+      max-width: 720px;
+      margin: 20px 0 0;
+      color: var(--muted);
+      font-size: 1.08rem;
+    }
+
+    .lesson-question {
+      margin-top: 22px;
+      padding: 17px 18px;
+      border-left: 5px solid var(--gold);
+      border-radius: 12px;
+      color: #65470c;
+      background: var(--gold-pale);
+    }
+
+    .lesson-question strong {
+      display: block;
+      margin-bottom: 3px;
+      color: #513804;
+    }
+
+    .route-card {
+      padding: 24px;
+      border-radius: var(--radius-lg);
+      color: #e7f1f9;
+      background: linear-gradient(145deg, var(--navy), #173e60);
+      box-shadow: var(--shadow);
+    }
+
+    .route-card h2 {
+      margin: 0 0 18px;
+      color: #fff;
+      font-size: 1.16rem;
+    }
+
+    .route-step {
+      display: grid;
+      grid-template-columns: 34px 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 12px 0;
+      border-top: 1px solid rgba(255, 255, 255, 0.13);
+    }
+
+    .route-step:first-of-type {
+      border-top: 0;
+    }
+
+    .route-number {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--navy);
+      background: #fff;
+      font-weight: 900;
+    }
+
+    .route-step strong {
+      display: block;
+      color: #fff;
+    }
+
+    .route-step span {
+      color: #bfd2e2;
+      font-size: 0.9rem;
+    }
+
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 13px;
+      margin-bottom: 34px;
+    }
+
+    .summary-card {
+      min-width: 0;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: var(--paper);
+      box-shadow: 0 7px 20px rgba(16, 42, 67, 0.05);
+    }
+
+    .summary-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.75rem;
+      font-weight: 820;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .summary-card strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--navy);
+      font-size: 1.02rem;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 235px minmax(0, 1fr);
+      gap: 30px;
+      align-items: start;
+    }
+
+    .contents {
+      position: sticky;
+      top: 91px;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255, 255, 255, 0.89);
+    }
+
+    .contents h2 {
+      margin: 0 0 9px;
+      color: var(--navy);
+      font-size: 0.84rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .contents ol {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .contents li + li {
+      margin-top: 4px;
+    }
+
+    .contents a {
+      display: block;
+      padding: 7px 9px;
+      border-radius: 8px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 680;
+    }
+
+    .contents a:hover,
+    .contents a:focus-visible {
+      color: var(--blue-dark);
+      background: var(--blue-pale);
+      outline: none;
+    }
+
+    .notes {
+      min-width: 0;
+    }
+
+    .note-section {
+      scroll-margin-top: 92px;
+      margin-bottom: 24px;
+      padding: 27px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-lg);
+      background: var(--paper);
+      box-shadow: 0 8px 24px rgba(16, 42, 67, 0.055);
+    }
+
+    .section-kicker {
+      margin: 0 0 5px;
+      color: var(--blue-dark);
+      font-size: 0.76rem;
+      font-weight: 860;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    .note-section h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(1.55rem, 3vw, 2.15rem);
+      line-height: 1.15;
+      letter-spacing: -0.03em;
+    }
+
+    .note-section h3 {
+      margin: 25px 0 9px;
+      color: var(--navy-soft);
+      font-size: 1.08rem;
+    }
+
+    .note-section p {
+      margin: 10px 0 0;
+    }
+
+    .note-section ul,
+    .note-section ol {
+      margin: 10px 0 0;
+      padding-left: 1.35rem;
+    }
+
+    .note-section li + li {
+      margin-top: 7px;
+    }
+
+    .objective-list {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 11px;
+      margin-top: 18px;
+    }
+
+    .objective {
+      padding: 14px 15px;
+      border-radius: 12px;
+      color: var(--navy-soft);
+      background: #f5f8fb;
+    }
+
+    .objective::before {
+      margin-right: 8px;
+      color: var(--green);
+      content: "✓";
+      font-weight: 900;
+    }
+
+    .formula-box {
+      margin-top: 18px;
+      padding: 17px;
+      display: grid;
+      gap: 10px;
+      border: 1px solid #bfd1ec;
+      border-radius: 13px;
+      background: var(--blue-pale);
+    }
+
+    .formula {
+      display: grid;
+      grid-template-columns: 190px 1fr;
+      gap: 16px;
+      align-items: baseline;
+    }
+
+    .formula strong {
+      color: var(--navy);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.08rem;
+      text-align: center;
+    }
+
+    .formula span {
+      color: #3d5870;
+      font-size: 0.93rem;
+    }
+
+    .lesson-stage {
+      margin-top: 20px;
+      padding: 20px;
+      border-left: 5px solid var(--blue);
+      border-radius: 13px;
+      background: #f7faff;
+    }
+
+    .lesson-stage.stage-2 {
+      border-left-color: var(--red);
+      background: #fff8f7;
+    }
+
+    .lesson-stage.stage-3 {
+      border-left-color: var(--green);
+      background: #f4fbf8;
+    }
+
+    .stage-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .stage-head h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.2rem;
+    }
+
+    .time-chip {
+      flex: 0 0 auto;
+      padding: 5px 9px;
+      border-radius: 999px;
+      color: #244962;
+      background: #e3edf5;
+      font-size: 0.78rem;
+      font-weight: 820;
+    }
+
+    .launch {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 13px;
+      font-weight: 820;
+    }
+
+    .prompt-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 15px;
+    }
+
+    .prompt,
+    .answer {
+      padding: 13px 14px;
+      border-radius: 11px;
+      font-size: 0.93rem;
+    }
+
+    .prompt {
+      color: #624609;
+      background: var(--gold-pale);
+    }
+
+    .answer {
+      color: #195b43;
+      background: var(--green-pale);
+    }
+
+    .prompt strong,
+    .answer strong {
+      display: block;
+      margin-bottom: 3px;
+    }
+
+    .say-box {
+      margin-top: 16px;
+      padding: 15px 17px;
+      border-radius: 12px;
+      color: #334f64;
+      background: #edf3f7;
+    }
+
+    .say-box strong {
+      color: var(--navy);
+    }
+
+    .caution {
+      margin-top: 16px;
+      padding: 15px 17px;
+      border: 1px solid #efc5c2;
+      border-radius: 12px;
+      color: #7c302d;
+      background: var(--red-pale);
+    }
+
+    .caution strong {
+      color: #662320;
+    }
+
+    .checks {
+      display: grid;
+      gap: 11px;
+      margin-top: 18px;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fbfcfd;
+    }
+
+    details + details {
+      margin-top: 10px;
+    }
+
+    summary {
+      padding: 14px 16px;
+      color: var(--navy);
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    summary:focus-visible {
+      border-radius: 10px;
+      outline: 3px solid rgba(37, 99, 235, 0.2);
+      outline-offset: 2px;
+    }
+
+    .detail-body {
+      padding: 0 16px 16px;
+      color: #3e5263;
+    }
+
+    .misconception-table {
+      width: 100%;
+      margin-top: 18px;
+      border-collapse: collapse;
+      font-size: 0.93rem;
+    }
+
+    .misconception-table th,
+    .misconception-table td {
+      padding: 13px 14px;
+      border: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    .misconception-table th {
+      color: var(--navy);
+      background: #eef3f7;
+    }
+
+    .misconception-table td:first-child {
+      width: 39%;
+      color: #7c302d;
+      font-weight: 720;
+      background: #fffafa;
+    }
+
+    .exit-ticket {
+      margin-top: 18px;
+      padding: 19px;
+      border: 2px solid var(--navy);
+      border-radius: 14px;
+    }
+
+    .exit-ticket ol {
+      margin-top: 8px;
+    }
+
+    .answer-key {
+      margin-top: 13px;
+      color: #195b43;
+      background: var(--green-pale);
+    }
+
+    footer {
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.64);
+    }
+
+    .footer-inner {
+      width: min(var(--max), calc(100% - 32px));
+      min-height: 86px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 22px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-inner p {
+      margin: 0;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .layout {
+        grid-template-columns: 1fr;
+      }
+
+      .contents {
+        position: static;
+      }
+
+      .contents ol {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 4px;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .top-actions button {
+        display: none;
+      }
+
+      .top-actions a:first-child {
+        display: none;
+      }
+
+      .page-shell {
+        padding-top: 40px;
+      }
+
+      h1 {
+        font-size: clamp(2.4rem, 13vw, 3.7rem);
+      }
+
+      .summary-grid,
+      .objective-list,
+      .prompt-grid,
+      .contents ol {
+        grid-template-columns: 1fr;
+      }
+
+      .note-section {
+        padding: 21px;
+      }
+
+      .formula {
+        grid-template-columns: 1fr;
+        gap: 3px;
+      }
+
+      .formula strong {
+        text-align: left;
+      }
+
+      .stage-head,
+      .footer-inner {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .misconception-table,
+      .misconception-table tbody,
+      .misconception-table tr,
+      .misconception-table th,
+      .misconception-table td {
+        display: block;
+        width: 100% !important;
+      }
+
+      .misconception-table thead {
+        display: none;
+      }
+
+      .misconception-table tr + tr {
+        margin-top: 12px;
+      }
+
+      .footer-inner {
+        padding: 22px 0;
+      }
+    }
+
+    @media print {
+      @page {
+        margin: 14mm;
+      }
+
+      body {
+        color: #000;
+        background: #fff;
+        font-size: 10pt;
+      }
+
+      .topbar,
+      .contents,
+      footer,
+      .launch {
+        display: none !important;
+      }
+
+      .page-shell {
+        width: 100%;
+        padding: 0;
+      }
+
+      .hero,
+      .layout {
+        display: block;
+      }
+
+      .route-card {
+        margin-top: 18px;
+        color: #000;
+        background: #eef3f7;
+        box-shadow: none;
+      }
+
+      .route-card h2,
+      .route-step strong,
+      .route-step span {
+        color: #000;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(4, 1fr);
+        margin-top: 18px;
+      }
+
+      .note-section {
+        break-inside: avoid;
+        box-shadow: none;
+      }
+
+      .lesson-stage,
+      details,
+      .exit-ticket {
+        break-inside: avoid;
+      }
+
+      details[open] .detail-body {
+        display: block;
+      }
+
+      details:not([open]) > :not(summary) {
+        display: block !important;
+      }
+
+      a {
+        color: #000;
+        text-decoration: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link" href="#notes">Skip to teacher notes</a>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="back-link" href="./interference.html"><span aria-hidden="true">←</span> Wave Interference</a>
+      <div class="top-actions">
+        <a href="#lesson-flow">Lesson flow</a>
+        <a href="#assessment">Assessment</a>
+        <button id="detailsButton" type="button" aria-pressed="false">Expand all notes</button>
+        <button type="button" onclick="window.print()">Print</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-shell" id="notes">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Teacher guide · Secondary physics</p>
+        <h1 id="page-title">Teaching Wave Interference</h1>
+        <p class="hero-copy">
+          A guided predict–observe–explain sequence using three linked simulations.
+          The representational load grows gradually: one-dimensional waves first,
+          path geometry next, and a full two-dimensional pattern last.
+        </p>
+        <div class="lesson-question">
+          <strong>Driving question</strong>
+          How can two waves from fixed sources produce loud and quiet—or bright and dark—regions at different positions?
+        </div>
+      </div>
+
+      <aside class="route-card" aria-label="Three-part lesson route">
+        <h2>Instructional route</h2>
+        <div class="route-step">
+          <span class="route-number">1</span>
+          <div><strong>Add</strong><span>Superposition at each point</span></div>
+        </div>
+        <div class="route-step">
+          <span class="route-number">2</span>
+          <div><strong>Explain</strong><span>Different paths → different arrival phases</span></div>
+        </div>
+        <div class="route-step">
+          <span class="route-number">3</span>
+          <div><strong>Map</strong><span>Equal conditions form interference loci</span></div>
+        </div>
+      </aside>
+    </section>
+
+    <section class="summary-grid" aria-label="Lesson overview">
+      <div class="summary-card"><span>Total time</span><strong>50–65 minutes</strong></div>
+      <div class="summary-card"><span>Grouping</span><strong>Pairs or whole class</strong></div>
+      <div class="summary-card"><span>Prior ideas</span><strong>λ, phase, displacement</strong></div>
+      <div class="summary-card"><span>Core routine</span><strong>Predict → test → explain</strong></div>
+    </section>
+
+    <div class="layout">
+      <nav class="contents" aria-label="Teacher notes contents">
+        <h2>On this page</h2>
+        <ol>
+          <li><a href="#outcomes">1. Outcomes</a></li>
+          <li><a href="#preparation">2. Preparation</a></li>
+          <li><a href="#lesson-flow">3. Lesson flow</a></li>
+          <li><a href="#questions">4. Hinge questions</a></li>
+          <li><a href="#misconceptions">5. Misconceptions</a></li>
+          <li><a href="#assessment">6. Assessment</a></li>
+          <li><a href="#support">7. Support &amp; extension</a></li>
+        </ol>
+      </nav>
+
+      <div class="notes">
+        <section class="note-section" id="outcomes">
+          <p class="section-kicker">Lesson foundation</p>
+          <h2>Learning outcomes</h2>
+          <p>By the end of the sequence, students should be able to:</p>
+
+          <div class="objective-list">
+            <div class="objective">Apply superposition by adding instantaneous displacements.</div>
+            <div class="objective">Use path difference to determine arrival phase difference.</div>
+            <div class="objective">Predict constructive, destructive, and partial interference.</div>
+            <div class="objective">Explain why maxima and minima form loci across a two-dimensional field.</div>
+            <div class="objective">Distinguish a shifted-source visual model from fixed-source physical geometry.</div>
+            <div class="objective">Relate a static phase snapshot to continuously oscillating waves.</div>
+          </div>
+
+          <h3>Mathematical thread</h3>
+          <div class="formula-box">
+            <div class="formula"><strong>y = y<sub>1</sub> + y<sub>2</sub></strong><span>Superposition adds displacement, including its sign, at the same place and time.</span></div>
+            <div class="formula"><strong>Δ = |r<sub>1</sub> − r<sub>2</sub>|</strong><span>Path difference compares how far the two waves travel to the same detector.</span></div>
+            <div class="formula"><strong>Δφ = 2πΔ / λ</strong><span>For in-phase coherent sources, path difference produces arrival phase difference.</span></div>
+            <div class="formula"><strong>Δ = nλ</strong><span>Constructive interference for in-phase sources, where n = 0, 1, 2, …</span></div>
+            <div class="formula"><strong>Δ = (n + ½)λ</strong><span>Destructive interference for equal-amplitude, in-phase sources.</span></div>
+          </div>
+        </section>
+
+        <section class="note-section" id="preparation">
+          <p class="section-kicker">Before students arrive</p>
+          <h2>Preparation</h2>
+          <ul>
+            <li>Open the <a href="./interference.html">Wave Interference learning path</a> and test all three links.</li>
+            <li>Use a projector for whole-class discussion or one device per pair. Pair roles can be <strong>controller</strong> and <strong>explainer</strong>; swap roles after each lab.</li>
+            <li>Ask students to record predictions before moving a slider or revealing the resultant. This short delay is essential—the simulator should test thinking, not replace it.</li>
+            <li>Prepare the words <strong>displacement</strong>, <strong>phase</strong>, <strong>coherent</strong>, <strong>path difference</strong>, <strong>resultant</strong>, and <strong>locus</strong>.</li>
+            <li>If time is limited, complete Lab 1 as a teacher demonstration, then let pairs investigate Labs 2 and 3.</li>
+          </ul>
+
+          <h3>Model assumptions</h3>
+          <ul>
+            <li>The sources are coherent: they have the same frequency and a stable phase relationship.</li>
+            <li>The simple maxima/minima rules shown here assume in-phase sources unless the source-phase control is changed.</li>
+            <li>Complete cancellation requires equal amplitudes at the detector. The simulations emphasize phase and path difference, so real-world spreading and damping are simplified.</li>
+          </ul>
+
+          <div class="caution">
+            <strong>Representation warning:</strong> The dashed sinusoidal curves compare wave displacements; they are not literal ropes laid along the travel paths. In Lab 2 Page 1, shifting a starting point is a visual device for exposing phase shift. Page 2 supplies the physical fixed-source geometry.
+          </div>
+        </section>
+
+        <section class="note-section" id="lesson-flow">
+          <p class="section-kicker">Suggested 50–65 minute sequence</p>
+          <h2>Lesson flow</h2>
+
+          <div class="lesson-stage">
+            <div class="stage-head">
+              <h3>Opening: make addition visible</h3>
+              <span class="time-chip">3–5 min</span>
+            </div>
+            <p>Sketch two upward pulses overlapping. Ask students to draw the medium at the instant of complete overlap. Do not yet use the terms constructive or destructive.</p>
+            <div class="prompt-grid">
+              <div class="prompt"><strong>Ask</strong>At the marker, what operation should we perform on the two displacements?</div>
+              <div class="answer"><strong>Listen for</strong>Add the signed vertical displacements at the same position and time.</div>
+            </div>
+          </div>
+
+          <div class="lesson-stage">
+            <div class="stage-head">
+              <h3>Lab 1: Superposition &amp; path difference</h3>
+              <span class="time-chip">10–15 min</span>
+            </div>
+            <a class="launch" href="./activities/interference/sim_1.html">Open Lab 1 <span aria-hidden="true">→</span></a>
+            <ol>
+              <li><strong>Pulse Superposition:</strong> reset, play in slow motion, and pause just before overlap. Students predict the white resultant. Test same-sign, then opposite-sign pulses.</li>
+              <li>Pause at partial overlap. Check several positions verbally: “blue is +2, red is −1; what must white be?”</li>
+              <li><strong>Wave Trains &amp; Path Difference:</strong> hide or mentally ignore the white resultant. Snap Δ/λ to 0, 0.5, 1.0, and 1.5. Predict first, then inspect the white wave.</li>
+              <li>Generalize only after the evidence: whole wavelengths restore phase; half-integer wavelengths reverse it.</li>
+            </ol>
+            <div class="say-box"><strong>Suggested teacher language:</strong> “Interference is not a new force. At every point, the medium has one actual displacement—the sum of the displacements each wave would produce there.”</div>
+            <div class="prompt-grid">
+              <div class="prompt"><strong>Ask</strong>At Δ = 0.50λ, why is the white line zero everywhere in this comparison?</div>
+              <div class="answer"><strong>Expected</strong>The equal-amplitude waves are 180° out of phase, so their signed displacements cancel point by point.</div>
+            </div>
+          </div>
+
+          <div class="lesson-stage stage-2">
+            <div class="stage-head">
+              <h3>Lab 2: Explain where phase difference comes from</h3>
+              <span class="time-chip">15–20 min</span>
+            </div>
+            <a class="launch" href="./activities/interference/sim_2.html">Open Lab 2 <span aria-hidden="true">→</span></a>
+            <ol>
+              <li><strong>Page 1—Move a source:</strong> begin at Δ = 0. Hide the resultant if helpful. Shift the red starting point and stop at 0.50λ. Use this page to make a spatial phase shift visible.</li>
+              <li>Ask students to describe what changed in the diagram: the relative starting position of the red wave.</li>
+              <li><strong>Page 2—Move the detector:</strong> reset to Δ = 0. Point out that S1 and S2 are now fixed. Move detector D so r<sub>1</sub> and r<sub>2</sub> become unequal.</li>
+              <li>Stop at Δ = 0.50λ. Ask which wave travelled farther and why a half-wavelength extra journey means a half-cycle later arrival.</li>
+              <li>Compare 1.00λ and 1.50λ. Then toggle the animation: the waves keep oscillating, but their phase relationship at D remains fixed.</li>
+            </ol>
+            <div class="say-box"><strong>Conceptual bridge:</strong> “Page 1 changes the starting position to show the shift. Page 2 keeps the sources fixed and changes the detector position. The cause is now different travel distance—and therefore different travel time.”</div>
+            <div class="say-box"><strong>Clarify the detector’s role:</strong> “Moving D does not create the interference pattern. The fixed sources already establish the field; D samples a different position within it.”</div>
+            <div class="caution"><strong>Do not say:</strong> “The waves cancel each other and disappear.” Energy is redistributed through the field; destructive interference at one location does not mean the waves cease to exist.</div>
+            <div class="prompt-grid">
+              <div class="prompt"><strong>Ask</strong>If both sources start together and never move, how can crest meet trough at D?</div>
+              <div class="answer"><strong>Expected</strong>One path is longer, so that wave takes longer and arrives with a different phase.</div>
+            </div>
+          </div>
+
+          <div class="lesson-stage stage-3">
+            <div class="stage-head">
+              <h3>Lab 3: Map the interference pattern</h3>
+              <span class="time-chip">15–20 min</span>
+            </div>
+            <a class="launch" href="./activities/interference/sim_3.html">Open Lab 3 <span aria-hidden="true">→</span></a>
+            <ol>
+              <li><strong>Stage 1—1D Path Difference:</strong> drag detector P and compare r<sub>1</sub>, r<sub>2</sub>, and Δx/λ. Find one constructive and one destructive position.</li>
+              <li><strong>Stage 2—2D Geometry:</strong> move P around the plane. Ask students to keep Δx/λ approximately constant. Trace the emerging locus.</li>
+              <li><strong>Stage 3—Full Waves:</strong> reveal the wavefronts only after students have predicted where maxima and minima should lie. Match the animated picture to the analytic lines.</li>
+              <li>Change source separation or wavelength and ask for a prediction before observing the new spacing.</li>
+              <li>Switch to anti-phase sources as an extension. Ask which constructive/destructive conditions exchange roles.</li>
+            </ol>
+            <div class="say-box"><strong>Suggested teacher language:</strong> “A bright or loud line is not a path taken by one wave. It is a set of detector positions that share the same path-difference condition.”</div>
+            <div class="prompt-grid">
+              <div class="prompt"><strong>Ask</strong>Why is the central perpendicular bisector constructive for in-phase sources?</div>
+              <div class="answer"><strong>Expected</strong>Every point on it is equidistant from the sources, so Δ = 0 and the waves arrive in phase.</div>
+            </div>
+          </div>
+
+          <div class="lesson-stage">
+            <div class="stage-head">
+              <h3>Synthesis: connect all three representations</h3>
+              <span class="time-chip">5 min</span>
+            </div>
+            <p>Ask pairs to complete one causal chain without looking at the screen:</p>
+            <div class="formula-box">
+              <div class="formula"><strong>detector position</strong><span>sets r<sub>1</sub> and r<sub>2</sub></span></div>
+              <div class="formula"><strong>path difference Δ</strong><span>sets arrival phase difference Δφ</span></div>
+              <div class="formula"><strong>phase alignment</strong><span>sets the amplitude of the resultant</span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="note-section" id="questions">
+          <p class="section-kicker">Check before moving on</p>
+          <h2>Hinge questions</h2>
+          <div class="checks">
+            <details>
+              <summary>1. Two equal upward displacements of 3 cm overlap. What is the resultant displacement?</summary>
+              <div class="detail-body"><strong>Answer:</strong> +6 cm. Superposition adds the signed displacements.</div>
+            </details>
+            <details>
+              <summary>2. For in-phase sources, a detector has r₁ = 4.2λ and r₂ = 5.7λ. What type of interference occurs?</summary>
+              <div class="detail-body"><strong>Answer:</strong> Destructive, because Δ = |5.7λ − 4.2λ| = 1.5λ, a half-integer multiple of λ.</div>
+            </details>
+            <details>
+              <summary>3. The detector moves but Δ remains 2λ. What happens to the interference condition?</summary>
+              <div class="detail-body"><strong>Answer:</strong> It remains constructive for in-phase sources. The individual distances may change while their difference stays 2λ.</div>
+            </details>
+            <details>
+              <summary>4. Does a dashed destructive line in Lab 3 mean no wave reaches that line?</summary>
+              <div class="detail-body"><strong>Answer:</strong> No. Both waves reach the line. Their instantaneous displacements oppose, producing a minimum resultant amplitude for equal amplitudes.</div>
+            </details>
+            <details>
+              <summary>5. What changes when the sources switch from in phase to anti-phase?</summary>
+              <div class="detail-body"><strong>Answer:</strong> For otherwise identical sources, the constructive and destructive path-difference conditions exchange: integer Δ/λ becomes destructive and half-integer Δ/λ becomes constructive.</div>
+            </details>
+          </div>
+        </section>
+
+        <section class="note-section" id="misconceptions">
+          <p class="section-kicker">Listen and respond</p>
+          <h2>Common misconceptions</h2>
+          <table class="misconception-table">
+            <thead>
+              <tr><th>Student idea</th><th>Instructional response</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>“The waves bounce off each other.”</td>
+                <td>Replay the pulses in Lab 1. Track each colored component through the overlap; each continues while the medium’s resultant temporarily changes.</td>
+              </tr>
+              <tr>
+                <td>“Destructive interference destroys energy.”</td>
+                <td>Say that a minimum is local. Interference redistributes energy; other positions have larger amplitude.</td>
+              </tr>
+              <tr>
+                <td>“Path difference is the distance between the sources.”</td>
+                <td>Point to r₁ and r₂ in Lab 2. Δ is the difference between two source-to-detector paths, not source separation d.</td>
+              </tr>
+              <tr>
+                <td>“A longer path always means destructive interference.”</td>
+                <td>Compare Δ = 0.5λ, 1.0λ, and 1.5λ. The important quantity is the extra path measured in wavelengths.</td>
+              </tr>
+              <tr>
+                <td>“The drawn sine curve is the route travelled by the wave.”</td>
+                <td>Separate the graph from the geometry: the curve encodes displacement or phase, while r₁ and r₂ are travel paths.</td>
+              </tr>
+              <tr>
+                <td>“The sources must move to change the phase at a detector.”</td>
+                <td>Use Lab 2 Page 2: keep both sources fixed, move D, and observe how different travel times change arrival phase.</td>
+              </tr>
+              <tr>
+                <td>“Moving the detector creates the maxima and minima.”</td>
+                <td>The detector samples the existing field. Lab 3 reveals the whole pattern that was present while Lab 2 visited one position at a time.</td>
+              </tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section class="note-section" id="assessment">
+          <p class="section-kicker">Make thinking visible</p>
+          <h2>Assessment</h2>
+
+          <h3>During the lesson</h3>
+          <ul>
+            <li>Require a prediction before each snap value or stage change.</li>
+            <li>Ask students to point to evidence in the display: displacement signs, r₁/r₂ values, or Δ/λ.</li>
+            <li>Accept “crest with crest” initially, then prompt for the more general phrase “arrive in phase.”</li>
+            <li>Ask one student to control the simulator and the other to narrate the causal chain.</li>
+          </ul>
+
+          <div class="exit-ticket">
+            <strong>Exit ticket · 4 minutes</strong>
+            <ol>
+              <li>State the principle of superposition in one sentence.</li>
+              <li>Two in-phase sources send equal-amplitude waves to P. If r₁ = 6.0λ and r₂ = 8.5λ, predict the interference at P and justify your answer.</li>
+              <li>Explain why moving detector P can change the resultant even though both sources remain fixed.</li>
+              <li>What does one constructive line in a two-source pattern represent?</li>
+            </ol>
+          </div>
+
+          <details class="answer-key">
+            <summary>Exit-ticket answer key</summary>
+            <div class="detail-body">
+              <ol>
+                <li>The resultant displacement at a point equals the signed sum of the displacements due to the individual waves at that point and time.</li>
+                <li>Δ = |8.5λ − 6.0λ| = 2.5λ, so equal-amplitude waves from in-phase sources arrive out of phase and interfere destructively.</li>
+                <li>Moving P changes r₁ and r₂, so it changes Δ, travel-time difference, and arrival phase difference.</li>
+                <li>It is a locus of positions sharing a constructive path-difference condition; it is not a trajectory of a wave.</li>
+              </ol>
+            </div>
+          </details>
+        </section>
+
+        <section class="note-section" id="support">
+          <p class="section-kicker">Adapt the sequence</p>
+          <h2>Support and extension</h2>
+
+          <h3>Support</h3>
+          <ul>
+            <li>Begin with only the two component waves visible. Reveal the resultant after students have added two marked displacements.</li>
+            <li>Use only the snap values 0, 0.5, and 1.0 before introducing the general n notation.</li>
+            <li>Provide a sentence frame: “At P, wave 1 travels ___ than wave 2, so it arrives ___ and the waves interfere ___.”</li>
+            <li>Pause animations during explanation. Motion can be reintroduced after students understand the static phase relationship.</li>
+            <li>Describe colors by role as well as color: “blue component,” “red component,” and “white resultant.”</li>
+          </ul>
+
+          <h3>Extension</h3>
+          <ul>
+            <li>Derive Δφ = 2πΔ/λ from the fact that one wavelength corresponds to one full 2π cycle.</li>
+            <li>In Lab 3, change λ and source separation d. Predict how fringe spacing changes before observing.</li>
+            <li>Switch to anti-phase sources and reconstruct the maxima/minima rules instead of memorizing them.</li>
+            <li>Discuss unequal amplitudes: at a destructive condition the resultant minimum is not zero unless the arriving amplitudes are equal.</li>
+            <li>Connect the same model to sound, water waves, double-slit light, and noise-cancelling systems, noting where a two-dimensional or three-dimensional treatment is needed.</li>
+          </ul>
+
+          <div class="say-box"><strong>Final distinction worth preserving:</strong> Superposition is the rule for adding waves everywhere. Interference is the observable pattern that results from that addition.</div>
+        </section>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p>Teacher Notes · Wave Interference Learning Path</p>
+      <p><a href="./interference.html">Return to the student-facing homepage</a></p>
+    </div>
+  </footer>
+
+  <script>
+    const detailsButton = document.getElementById("detailsButton");
+    const details = Array.from(document.querySelectorAll("details"));
+    let allExpanded = false;
+
+    detailsButton.addEventListener("click", () => {
+      allExpanded = !allExpanded;
+      details.forEach((item) => {
+        item.open = allExpanded;
+      });
+      detailsButton.textContent = allExpanded ? "Collapse all notes" : "Expand all notes";
+      detailsButton.setAttribute("aria-pressed", String(allExpanded));
+    });
+  </script>
+</body>
+</html>

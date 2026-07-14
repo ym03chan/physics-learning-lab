@@ -1,0 +1,928 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta
+    name="description"
+    content="A three-part interactive learning sequence about superposition, path difference, and wave interference patterns."
+  />
+  <meta name="theme-color" content="#102a43" />
+  <title>Wave Interference Learning Path | Physics Learning Lab</title>
+
+  <style>
+    :root {
+      --navy: #102a43;
+      --navy-soft: #1d3f5e;
+      --blue: #2563eb;
+      --blue-dark: #1d4ed8;
+      --blue-pale: #eaf2ff;
+      --red: #e45757;
+      --red-pale: #fff0ef;
+      --gold: #f2b84b;
+      --gold-pale: #fff7dd;
+      --teal: #16827c;
+      --ink: #152331;
+      --muted: #5b6b79;
+      --line: #dbe5ee;
+      --paper: #ffffff;
+      --surface: #f4f7fa;
+      --shadow: 0 18px 48px rgba(16, 42, 67, 0.11);
+      --radius-lg: 28px;
+      --radius-md: 19px;
+      --max: 1160px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 8%, rgba(37, 99, 235, 0.10), transparent 25rem),
+        radial-gradient(circle at 92% 17%, rgba(242, 184, 75, 0.14), transparent 23rem),
+        var(--surface);
+      font-family:
+        Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+        "Segoe UI", "Noto Sans", sans-serif;
+      line-height: 1.6;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .skip-link {
+      position: fixed;
+      top: 10px;
+      left: -9999px;
+      z-index: 100;
+      padding: 10px 14px;
+      border-radius: 10px;
+      color: #fff;
+      background: var(--navy);
+    }
+
+    .skip-link:focus {
+      left: 10px;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      border-bottom: 1px solid rgba(219, 229, 238, 0.86);
+      background: rgba(244, 247, 250, 0.9);
+      backdrop-filter: blur(14px);
+    }
+
+    .header-inner {
+      width: min(var(--max), calc(100% - 32px));
+      min-height: 70px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 11px;
+      color: var(--navy);
+      text-decoration: none;
+      font-weight: 850;
+      letter-spacing: -0.025em;
+    }
+
+    .brand-mark {
+      width: 39px;
+      height: 39px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      border-radius: 13px;
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), var(--navy));
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.23);
+    }
+
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-nav a {
+      padding: 8px 12px;
+      border-radius: 999px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.92rem;
+      font-weight: 750;
+    }
+
+    .header-nav a:hover,
+    .header-nav a:focus-visible {
+      color: var(--navy);
+      background: var(--paper);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.13);
+    }
+
+    main {
+      overflow: hidden;
+    }
+
+    .hero {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 76px 0 52px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.95fr);
+      gap: 60px;
+      align-items: center;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 18px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      color: var(--blue-dark);
+      background: var(--blue-pale);
+      font-size: 0.82rem;
+      font-weight: 850;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 0 5px rgba(37, 99, 235, 0.13);
+      content: "";
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(2.85rem, 6.2vw, 5.5rem);
+      line-height: 0.96;
+      letter-spacing: -0.06em;
+    }
+
+    h1 span {
+      display: block;
+      margin-top: 12px;
+      color: var(--blue);
+    }
+
+    .hero-copy {
+      max-width: 650px;
+      margin: 25px 0 0;
+      color: var(--muted);
+      font-size: clamp(1.04rem, 2vw, 1.2rem);
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 30px;
+    }
+
+    .button {
+      min-height: 48px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 18px;
+      border: 1px solid transparent;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 820;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .button:hover {
+      transform: translateY(-2px);
+    }
+
+    .button-primary {
+      color: #fff;
+      background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+      box-shadow: 0 12px 25px rgba(37, 99, 235, 0.25);
+    }
+
+    .button-secondary {
+      color: var(--navy);
+      border-color: var(--line);
+      background: rgba(255, 255, 255, 0.86);
+    }
+
+    .concept-visual {
+      position: relative;
+      min-height: 400px;
+      padding: 24px;
+      overflow: hidden;
+      border: 1px solid rgba(219, 229, 238, 0.9);
+      border-radius: var(--radius-lg);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+
+    .visual-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--muted);
+      font-size: 0.82rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .visual-label strong {
+      color: var(--navy);
+    }
+
+    .wave-board {
+      margin-top: 24px;
+      padding: 20px 18px 16px;
+      border-radius: 18px;
+      color: #fff;
+      background: linear-gradient(155deg, #132f4c, #0b1f34);
+    }
+
+    .wave-board svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .equation-row {
+      margin-top: 16px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr auto 1fr;
+      align-items: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .equation-chip {
+      min-height: 54px;
+      display: grid;
+      place-items: center;
+      padding: 8px;
+      border-radius: 13px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.04rem;
+      font-weight: 750;
+    }
+
+    .equation-chip.blue {
+      color: #1649a8;
+      background: var(--blue-pale);
+    }
+
+    .equation-chip.red {
+      color: #ad3434;
+      background: var(--red-pale);
+    }
+
+    .equation-chip.white {
+      color: var(--navy);
+      border: 1px solid var(--line);
+      background: #f8fafc;
+    }
+
+    .operator {
+      color: var(--muted);
+      font-weight: 900;
+    }
+
+    .path-note {
+      margin-top: 18px;
+      padding: 14px 15px;
+      border-left: 4px solid var(--gold);
+      border-radius: 11px;
+      color: #6a4a0b;
+      background: var(--gold-pale);
+      font-size: 0.94rem;
+    }
+
+    .section {
+      width: min(var(--max), calc(100% - 32px));
+      margin: 0 auto;
+      padding: 54px 0;
+    }
+
+    .section-head {
+      max-width: 760px;
+      margin-bottom: 30px;
+    }
+
+    .kicker {
+      margin: 0 0 7px;
+      color: var(--blue-dark);
+      font-size: 0.8rem;
+      font-weight: 850;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    h2 {
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(2rem, 4vw, 3.3rem);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .section-intro {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .path-grid {
+      position: relative;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .path-card {
+      position: relative;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: var(--paper);
+      box-shadow: 0 10px 28px rgba(16, 42, 67, 0.07);
+      transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+    }
+
+    .path-card:hover {
+      transform: translateY(-5px);
+      border-color: #bbceed;
+      box-shadow: var(--shadow);
+    }
+
+    .card-top {
+      min-height: 178px;
+      display: grid;
+      place-items: center;
+      padding: 22px;
+      background: #eff5fb;
+    }
+
+    .path-card:nth-child(2) .card-top {
+      background: #fff4ed;
+    }
+
+    .path-card:nth-child(3) .card-top {
+      background: #eff8f5;
+    }
+
+    .card-top svg {
+      width: 100%;
+      max-width: 270px;
+      height: 132px;
+    }
+
+    .step-number {
+      position: absolute;
+      top: 15px;
+      left: 15px;
+      width: 35px;
+      height: 35px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #fff;
+      background: var(--navy);
+      box-shadow: 0 6px 14px rgba(16, 42, 67, 0.2);
+      font-weight: 900;
+    }
+
+    .card-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      padding: 23px;
+    }
+
+    .card-verb {
+      margin: 0 0 8px;
+      color: var(--blue-dark);
+      font-size: 0.78rem;
+      font-weight: 900;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .path-card:nth-child(2) .card-verb {
+      color: #b74d2d;
+    }
+
+    .path-card:nth-child(3) .card-verb {
+      color: #126c66;
+    }
+
+    .path-card h3 {
+      margin: 0;
+      color: var(--navy);
+      font-size: 1.35rem;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+    }
+
+    .path-card p {
+      margin: 12px 0 0;
+      color: var(--muted);
+    }
+
+    .student-cue {
+      margin: 18px 0 0;
+      padding: 12px 13px;
+      border-radius: 11px;
+      color: var(--navy-soft);
+      background: #f5f8fb;
+      font-size: 0.9rem;
+    }
+
+    .student-cue strong {
+      display: block;
+      margin-bottom: 2px;
+      color: var(--navy);
+    }
+
+    .launch-link {
+      min-height: 46px;
+      margin-top: auto;
+      padding: 15px 0 0;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--blue-dark);
+      text-decoration: none;
+      font-weight: 850;
+    }
+
+    .launch-link::after {
+      content: "→";
+      transition: transform 160ms ease;
+    }
+
+    .launch-link:hover::after,
+    .launch-link:focus-visible::after {
+      transform: translateX(4px);
+    }
+
+    .launch-link:focus-visible {
+      border-radius: 7px;
+      outline: 3px solid rgba(37, 99, 235, 0.23);
+      outline-offset: 3px;
+    }
+
+    .rule-panel {
+      display: grid;
+      grid-template-columns: 0.82fr 1.18fr;
+      gap: 28px;
+      align-items: stretch;
+      padding: 30px;
+      border-radius: var(--radius-lg);
+      color: #eaf3fb;
+      background: linear-gradient(135deg, var(--navy), #173b5c);
+      box-shadow: var(--shadow);
+    }
+
+    .rule-copy h2 {
+      color: #fff;
+    }
+
+    .rule-copy p {
+      margin: 15px 0 0;
+      color: #c4d6e6;
+    }
+
+    .rule-list {
+      display: grid;
+      gap: 11px;
+    }
+
+    .rule {
+      display: grid;
+      grid-template-columns: 88px 1fr;
+      gap: 16px;
+      align-items: center;
+      padding: 15px;
+      border: 1px solid rgba(255, 255, 255, 0.13);
+      border-radius: 15px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .rule strong {
+      color: #fff;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.14rem;
+      text-align: center;
+    }
+
+    .rule span {
+      color: #d7e4ef;
+      font-size: 0.94rem;
+    }
+
+    .teacher-callout {
+      margin-top: 22px;
+      padding: 23px 25px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 28px;
+      border: 1px solid #f1d48b;
+      border-radius: var(--radius-md);
+      background: var(--gold-pale);
+    }
+
+    .teacher-callout h3 {
+      margin: 0;
+      color: #63440a;
+      font-size: 1.2rem;
+    }
+
+    .teacher-callout p {
+      margin: 5px 0 0;
+      color: #74561d;
+    }
+
+    .teacher-callout .button {
+      flex: 0 0 auto;
+      color: #fff;
+      background: #795917;
+    }
+
+    footer {
+      margin-top: 34px;
+      border-top: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.62);
+    }
+
+    .footer-inner {
+      width: min(var(--max), calc(100% - 32px));
+      min-height: 92px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+
+    .footer-inner p {
+      margin: 0;
+    }
+
+    .footer-inner a {
+      color: var(--blue-dark);
+      font-weight: 750;
+    }
+
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 38px;
+        padding-top: 58px;
+      }
+
+      .concept-visual {
+        min-height: 0;
+      }
+
+      .path-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .path-card {
+        display: grid;
+        grid-template-columns: minmax(210px, 0.72fr) 1.28fr;
+      }
+
+      .card-top {
+        min-height: 100%;
+      }
+
+      .rule-panel {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 650px) {
+      .header-inner {
+        min-height: 64px;
+      }
+
+      .brand span:last-child {
+        display: none;
+      }
+
+      .header-nav a:first-child {
+        display: none;
+      }
+
+      .hero {
+        padding-top: 44px;
+      }
+
+      h1 {
+        font-size: clamp(2.7rem, 15vw, 4.2rem);
+      }
+
+      .equation-row {
+        grid-template-columns: 1fr;
+      }
+
+      .operator {
+        height: 16px;
+        line-height: 16px;
+      }
+
+      .path-card {
+        display: flex;
+      }
+
+      .card-top {
+        min-height: 165px;
+      }
+
+      .rule-panel {
+        padding: 23px;
+      }
+
+      .rule {
+        grid-template-columns: 1fr;
+        gap: 5px;
+        text-align: center;
+      }
+
+      .teacher-callout,
+      .footer-inner {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .teacher-callout .button {
+        width: 100%;
+      }
+
+      .footer-inner {
+        padding: 24px 0;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <a class="skip-link" href="#main">Skip to the learning path</a>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="./index.html" aria-label="Return to Physics Learning Lab home">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 28 28" width="24" height="24" fill="none">
+            <path d="M2 14c3.2-7 6.4-7 9.6 0s6.4 7 9.6 0S27.6 7 30.8 14" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+          </svg>
+        </span>
+        <span>Physics Learning Lab</span>
+      </a>
+
+      <nav class="header-nav" aria-label="Page navigation">
+        <a href="#learning-path">Simulators</a>
+        <a href="./interference-teacher-notes.html">Teacher notes</a>
+      </nav>
+    </div>
+  </header>
+
+  <main id="main">
+    <section class="hero" aria-labelledby="page-title">
+      <div>
+        <div class="eyebrow">Three connected simulations</div>
+        <h1 id="page-title">Wave <span>Interference</span></h1>
+        <p class="hero-copy">
+          Build one idea in three steps: add two waves, explain their phase
+          difference, then map where constructive and destructive interference occur.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#learning-path">Begin the learning path <span aria-hidden="true">↓</span></a>
+          <a class="button button-secondary" href="./interference-teacher-notes.html">Open teacher notes</a>
+        </div>
+      </div>
+
+      <div class="concept-visual" aria-label="Diagram showing two component waves adding to make a resultant wave">
+        <div class="visual-label">
+          <span>Core idea</span>
+          <strong>superposition</strong>
+        </div>
+
+        <div class="wave-board">
+          <svg viewBox="0 0 430 190" role="img" aria-labelledby="wave-title wave-desc">
+            <title id="wave-title">Two waves and their resultant</title>
+            <desc id="wave-desc">A blue wave and a red wave are added point by point to produce a white resultant wave.</desc>
+            <path d="M18 48 C48 8 78 8 108 48 S168 88 198 48 S258 8 288 48 S348 88 412 48"
+              fill="none" stroke="#6fa9ff" stroke-width="5" stroke-linecap="round" stroke-dasharray="9 8"/>
+            <path d="M18 86 C48 59 78 59 108 86 S168 113 198 86 S258 59 288 86 S348 113 412 86"
+              fill="none" stroke="#ff7772" stroke-width="5" stroke-linecap="round" stroke-dasharray="9 8"/>
+            <path d="M18 154 C48 82 78 82 108 154 S168 226 198 154 S258 82 288 154 S348 226 412 154"
+              fill="none" stroke="#ffffff" stroke-width="7" stroke-linecap="round"/>
+            <text x="20" y="21" fill="#9dc2ff" font-size="14" font-weight="700">blue component</text>
+            <text x="20" y="112" fill="#ff9e9a" font-size="14" font-weight="700">red component</text>
+            <text x="278" y="125" fill="#ffffff" font-size="14" font-weight="700">resultant</text>
+          </svg>
+        </div>
+
+        <div class="equation-row" aria-label="Blue displacement plus red displacement equals resultant displacement">
+          <div class="equation-chip blue">y<sub>1</sub></div>
+          <span class="operator">+</span>
+          <div class="equation-chip red">y<sub>2</sub></div>
+          <span class="operator">=</span>
+          <div class="equation-chip white">y<sub>resultant</sub></div>
+        </div>
+
+        <div class="path-note">
+          The path difference <strong>Δ = |r<sub>1</sub> − r<sub>2</sub>|</strong>
+          determines how the two waves line up when they meet.
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="learning-path" aria-labelledby="path-title">
+      <div class="section-head">
+        <p class="kicker">Recommended order</p>
+        <h2 id="path-title">Add → Explain → Map</h2>
+        <p class="section-intro">
+          Complete the simulators in sequence. Each one answers the question raised by the previous one.
+        </p>
+      </div>
+
+      <div class="path-grid">
+        <article class="path-card">
+          <span class="step-number" aria-hidden="true">1</span>
+          <div class="card-top" aria-hidden="true">
+            <svg viewBox="0 0 300 140" fill="none">
+              <path d="M12 38H76C88 38 89 15 105 15s17 23 29 23h154" stroke="#2563eb" stroke-width="5" stroke-linecap="round" stroke-dasharray="8 7"/>
+              <path d="M288 70H224c-12 0-13-23-29-23s-17 23-29 23H12" stroke="#e45757" stroke-width="5" stroke-linecap="round" stroke-dasharray="8 7"/>
+              <path d="M12 110h92c14 0 15-42 34-42s20 42 34 42h116" stroke="#102a43" stroke-width="7" stroke-linecap="round"/>
+              <circle cx="138" cy="68" r="5" fill="#f2b84b"/>
+            </svg>
+          </div>
+          <div class="card-body">
+            <p class="card-verb">Add</p>
+            <h3>Superposition &amp; Path Difference</h3>
+            <p>
+              Start with pulses, then compare coherent wave trains. See the resultant form by adding the two displacements point by point.
+            </p>
+            <div class="student-cue">
+              <strong>Prediction to test</strong>
+              What should the white wave look like when crest meets crest—or crest meets trough?
+            </div>
+            <a class="launch-link" href="./activities/interference/sim_1.html" aria-label="Open Wave Interference Lab 1: Superposition and Path Difference">
+              Open Lab 1
+            </a>
+          </div>
+        </article>
+
+        <article class="path-card">
+          <span class="step-number" aria-hidden="true">2</span>
+          <div class="card-top" aria-hidden="true">
+            <svg viewBox="0 0 300 140" fill="none">
+              <circle cx="58" cy="43" r="10" fill="#2563eb"/>
+              <circle cx="58" cy="103" r="10" fill="#e45757"/>
+              <circle cx="245" cy="61" r="10" fill="#16827c"/>
+              <path d="M69 43L235 60" stroke="#2563eb" stroke-width="4" stroke-dasharray="8 7"/>
+              <path d="M68 101L236 63" stroke="#e45757" stroke-width="4" stroke-dasharray="8 7"/>
+              <path d="M52 26c-18-12-18-24 0-35M45 19c-10-7-10-15 0-22M52 120c-18 12-18 24 0 35M45 127c-10 7-10 15 0 22" stroke="#64748b" stroke-width="3" stroke-linecap="round"/>
+              <text x="34" y="47" fill="#fff" font-size="10" font-weight="800">S1</text>
+              <text x="34" y="107" fill="#fff" font-size="10" font-weight="800">S2</text>
+              <text x="241" y="65" fill="#fff" font-size="10" font-weight="800">D</text>
+              <text x="133" y="44" fill="#1d4ed8" font-size="13" font-weight="800">r₁</text>
+              <text x="135" y="94" fill="#b93d3d" font-size="13" font-weight="800">r₂</text>
+            </svg>
+          </div>
+          <div class="card-body">
+            <p class="card-verb">Explain</p>
+            <h3>Constructive &amp; Destructive Interference</h3>
+            <p>
+              Compare a shifted starting point with the physical two-source model: fixed sources and a moving detector create different travel distances.
+            </p>
+            <div class="student-cue">
+              <strong>Question to resolve</strong>
+              How can the arriving waves become out of phase when neither source moves?
+            </div>
+            <a class="launch-link" href="./activities/interference/sim_2.html" aria-label="Open Wave Interference Lab 2: Constructive and Destructive Interference">
+              Open Lab 2
+            </a>
+          </div>
+        </article>
+
+        <article class="path-card">
+          <span class="step-number" aria-hidden="true">3</span>
+          <div class="card-top" aria-hidden="true">
+            <svg viewBox="0 0 300 140" fill="none">
+              <circle cx="76" cy="70" r="7" fill="#2563eb"/>
+              <circle cx="224" cy="70" r="7" fill="#e45757"/>
+              <path d="M76 70C105 35 131 18 150 18s45 17 74 52M76 70c29 35 55 52 74 52s45-17 74-52" stroke="#f2b84b" stroke-width="5" stroke-linecap="round"/>
+              <path d="M76 70c20-21 46-31 74-31s54 10 74 31M76 70c20 21 46 31 74 31s54-10 74-31" stroke="#64748b" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 7"/>
+              <circle cx="150" cy="18" r="5" fill="#f2b84b"/>
+              <circle cx="150" cy="39" r="5" fill="#64748b"/>
+            </svg>
+          </div>
+          <div class="card-body">
+            <p class="card-verb">Map</p>
+            <h3>From Path Difference to Patterns</h3>
+            <p>
+              Move from one detector to a whole field. Connect path-difference values to the curved loci of maxima and minima.
+            </p>
+            <div class="student-cue">
+              <strong>Pattern to explain</strong>
+              Why do points with the same interference condition form curved lines?
+            </div>
+            <a class="launch-link" href="./activities/interference/sim_3.html" aria-label="Open Wave Interference Lab 3: From Path Difference to Interference Patterns">
+              Open Lab 3
+            </a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="rule-title">
+      <div class="rule-panel">
+        <div class="rule-copy">
+          <p class="kicker" style="color:#93c5fd">One thread through all three labs</p>
+          <h2 id="rule-title">Read the path difference</h2>
+          <p>
+            The simulations change representation, but the decision stays the same: compare Δ with the wavelength λ.
+          </p>
+        </div>
+
+        <div class="rule-list">
+          <div class="rule">
+            <strong>Δ = nλ</strong>
+            <span>In-phase sources: waves arrive aligned → constructive interference.</span>
+          </div>
+          <div class="rule">
+            <strong>Δ = (n + ½)λ</strong>
+            <span>In-phase sources: crest meets trough → destructive interference.</span>
+          </div>
+        </div>
+      </div>
+
+      <aside class="teacher-callout" aria-labelledby="teacher-title">
+        <div>
+          <h3 id="teacher-title">Teaching this sequence?</h3>
+          <p>Use the lesson flow, prediction prompts, expected answers, and misconception checks.</p>
+        </div>
+        <a class="button" href="./interference-teacher-notes.html">View teacher notes</a>
+      </aside>
+    </section>
+  </main>
+
+  <footer>
+    <div class="footer-inner">
+      <p>Wave Interference Learning Path · Physics Learning Lab</p>
+      <p><a href="./index.html">Return to the main learning lab</a></p>
+    </div>
+  </footer>
+</body>
+</html>
