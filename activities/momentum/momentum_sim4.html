@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Impulse Lab｜衝量實驗室</title>
+  <style>
+    :root {
+      --bg: #f4f7fc;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #667085;
+      --line: #d1d9e6;
+      --blue: #2563eb;
+      --blue-soft: #eff6ff;
+      --green: #059669;
+      --green-soft: #ecfdf5;
+      --red: #dc2626;
+      --red-soft: #fef2f2;
+      --amber: #d97706;
+      --amber-soft: #fffbeb;
+      --purple: #7c3aed;
+      --purple-soft: #f5f3ff;
+      --shadow: 0 12px 32px rgba(27, 39, 74, 0.08);
+      --shadow-hover: 0 20px 45px rgba(27, 39, 74, 0.12);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(37, 99, 235, 0.08), transparent 32rem),
+        radial-gradient(circle at top right, rgba(5, 150, 105, 0.06), transparent 30rem),
+        var(--bg);
+      color: var(--text);
+    }
+
+    button, input, select { font: inherit; }
+
+    .app {
+      width: min(1240px, calc(100vw - 28px));
+      margin: 0 auto;
+      padding: 12px 0 34px;
+    }
+
+    .top-utility-bar {
+      display: flex;
+      justify-content: flex-end;
+      padding-bottom: 12px;
+      padding-right: 12px;
+    }
+
+    .lang-btn {
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.95rem;
+      transition: color 0.2s ease;
+    }
+    
+    .lang-btn:hover {
+      color: var(--blue);
+      text-decoration: underline;
+    }
+
+    .hero {
+      background: rgba(255, 255, 255, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: var(--shadow);
+      border-radius: 28px;
+      padding: 24px 30px;
+      display: grid;
+      grid-template-columns: 1.2fr auto;
+      gap: 16px;
+      align-items: center;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      color: var(--blue);
+      background: var(--blue-soft);
+      border: 1px solid rgba(37, 99, 235, 0.1);
+      border-radius: 999px;
+      padding: 6px 14px;
+      font-size: 0.9rem;
+      margin-bottom: 12px;
+      letter-spacing: 0.02em;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(1.8rem, 3.5vw, 2.8rem);
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      font-weight: 900;
+    }
+
+    .hero p {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.6;
+      max-width: 800px;
+    }
+
+    .top-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .pill-btn, .ghost-btn, .primary-btn {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: #fff;
+      color: var(--text);
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.95rem;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      user-select: none;
+      touch-action: manipulation;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .pill-btn:hover, .ghost-btn:hover, .primary-btn:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 8px 20px rgba(27,39,74,0.12); 
+    }
+    
+    .primary-btn { 
+      background: var(--blue); 
+      color: #fff; 
+      border-color: var(--blue); 
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+    }
+    .primary-btn:hover {
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.4);
+    }
+    .ghost-btn.active { 
+      background: var(--text); 
+      color: #fff; 
+      border-color: var(--text); 
+    }
+
+    .mode-tabs {
+      margin: 24px 0;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    .mode-tabs.teacher-open { grid-template-columns: repeat(3, 1fr); }
+    .mode-tabs:not(.teacher-open) .extension-tab { display: none; }
+
+    .tab {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.7);
+      border-radius: 24px;
+      padding: 16px 20px;
+      cursor: pointer;
+      text-align: left;
+      box-shadow: 0 4px 15px rgba(27,39,74,0.03);
+      min-height: 96px;
+      transition: all 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .tab::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; height: 4px;
+      background: transparent;
+      transition: background 0.3s ease;
+    }
+
+    .tab:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); background: #fff; }
+    .tab.active { 
+      outline: 2px solid var(--blue); 
+      border-color: transparent; 
+      background: #fff; 
+      box-shadow: 0 10px 30px rgba(37, 99, 235, 0.1);
+    }
+    .tab.active::before { background: var(--blue); }
+    
+    .tab strong { display: block; font-size: 1.1rem; margin-bottom: 6px; font-weight: 800; color: #111827; }
+    .tab span { color: var(--muted); font-size: 0.95rem; line-height: 1.4; font-weight: 500; }
+
+    .step-strip {
+      margin: 0 0 24px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+    }
+
+    .step {
+      background: rgba(255, 255, 255, 0.9);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      padding: 12px 16px;
+      font-weight: 800;
+      color: #475569;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+    }
+
+    .step .num {
+      display: inline-grid;
+      place-items: center;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-size: 0.85rem;
+      font-weight: 900;
+      flex: 0 0 auto;
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1.95fr) minmax(320px, 0.95fr);
+      gap: 20px;
+      align-items: start;
+    }
+
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-head {
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      background: rgba(248, 250, 252, 0.5);
+    }
+
+    .card-head h2, .panel-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      color: #0f172a;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--amber-soft);
+      color: #b45309;
+      font-weight: 800;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      border: 1px solid rgba(217, 119, 6, 0.2);
+    }
+
+    .scene-wrap { padding: 20px; flex: 1; }
+
+    .scene-controls {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+      margin-top: 16px;
+    }
+
+    .scene {
+      width: 100%;
+      height: auto;
+      display: block;
+      background: linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.04);
+    }
+
+    .graph-wrap { padding: 0 20px 20px; }
+    .graph { 
+      width: 100%; 
+      height: auto; 
+      display: block; 
+      border-radius: 16px; 
+      background: #fff; 
+      border: 1px solid var(--line); 
+      box-shadow: inset 0 2px 10px rgba(0,0,0,0.02);
+    }
+
+    .side {
+      display: grid;
+      gap: 20px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .panel { padding: 20px; }
+
+    .equation-card {
+      background: #0f172a;
+      color: #f8fafc;
+      border-radius: 18px;
+      padding: 16px 20px;
+      margin-bottom: 16px;
+      line-height: 1.6;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.1), 0 8px 20px rgba(15, 23, 42, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .equation-card::after {
+      content: '';
+      position: absolute;
+      top: -50%; right: -20%;
+      width: 150px; height: 150px;
+      background: radial-gradient(circle, rgba(37,99,235,0.3) 0%, transparent 70%);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .equation-card .small { color: #94a3b8; font-size: 0.9rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px; }
+    .equation-card .big { font-size: 1.3rem; font-weight: 900; margin-bottom: 8px; color: #fff; }
+
+    .readout-grid { display: grid; gap: 12px; }
+
+    .mini-card {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .mini-card h3 {
+      margin: 0 0 6px;
+      font-size: 0.9rem;
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+
+    .mini-card .value {
+      font-size: 1.4rem;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+      color: #0f172a;
+    }
+
+    .mini-card .note {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 6px;
+      line-height: 1.5;
+      font-weight: 500;
+    }
+
+    .control-group { display: grid; gap: 16px; }
+
+    .control {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 16px;
+      background: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+
+    .control-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: baseline;
+      margin-bottom: 12px;
+    }
+
+    .control label { font-weight: 800; color: #1e293b; }
+    .control .num { color: var(--blue); font-weight: 900; white-space: nowrap; background: var(--blue-soft); padding: 2px 8px; border-radius: 6px; font-size: 0.9rem; }
+    
+    input[type="range"] { 
+      width: 100%; 
+      accent-color: var(--blue); 
+      height: 6px; 
+      background: #e2e8f0; 
+      border-radius: 8px; 
+      outline: none; 
+      -webkit-appearance: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: var(--blue);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(37,99,235,0.4);
+      transition: transform 0.1s;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+
+    .prompt-card {
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%);
+      border-radius: 18px;
+      padding: 16px;
+      line-height: 1.6;
+      box-shadow: 0 4px 12px rgba(5, 150, 105, 0.05);
+    }
+
+    .prompt-card strong { color: #065f46; font-size: 1.05rem; }
+
+    .qa-options {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .qa-options button {
+      text-align: left;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px 14px;
+      background: #fff;
+      cursor: pointer;
+      font-weight: 700;
+      color: #334155;
+      transition: all 0.2s ease;
+      font-size: 0.95rem;
+    }
+
+    .qa-options button:hover { border-color: #94a3b8; background: #f8fafc; }
+    .qa-options button.correct { border-color: rgba(5,150,105,0.6); background: var(--green-soft); color: #065f46; box-shadow: 0 2px 8px rgba(5,150,105,0.15); }
+    .qa-options button.wrong { border-color: rgba(220,38,38,0.6); background: var(--red-soft); color: #991b1b; box-shadow: 0 2px 8px rgba(220,38,38,0.15); }
+    
+    .feedback { margin-top: 12px; font-weight: 800; font-size: 0.95rem; line-height: 1.5; padding: 10px; border-radius: 8px; background: rgba(255,255,255,0.5); }
+
+    .teacher-panel { display: none; border-color: rgba(124,58,237,0.3); }
+    .teacher-panel.open { display: block; animation: fadeIn 0.3s ease; }
+    .teacher-panel .card-head { background: var(--purple-soft); border-bottom-color: rgba(124,58,237,0.2); }
+    .teacher-panel .panel-title { color: #5b21b6; }
+
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
+
+    .teacher-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    select, .small-input {
+      width: 100%;
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f8fafc;
+      color: var(--text);
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+    }
+    select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px var(--blue-soft); }
+
+    .switch-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 16px;
+      background: #fff;
+      font-weight: 800;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .switch-row:hover { background: #f8fafc; }
+
+    .formula-line {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      background: #f1f5f9;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 12px;
+      margin-top: 10px;
+      overflow-x: auto;
+      color: #334155;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .scaffold-line {
+      margin-top: 12px;
+      border: 1px solid rgba(124,58,237,0.3);
+      background: rgba(124,58,237,0.1);
+      color: #e9d5ff;
+      border-radius: 12px;
+      padding: 12px;
+      font-weight: 800;
+      line-height: 1.5;
+      font-size: 0.95rem;
+    }
+
+    .legend {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      font-size: 0.85rem;
+      color: var(--muted);
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-right: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .dot.blue { background: linear-gradient(135deg, #60a5fa, #2563eb); }
+    .dot.green { background: linear-gradient(135deg, #34d399, #059669); }
+    .dot.red { background: linear-gradient(135deg, #f87171, #dc2626); }
+    .dot.purple { background: linear-gradient(135deg, #a78bfa, #7c3aed); }
+
+    @media (max-width: 980px) {
+      .hero, .workspace { grid-template-columns: 1fr; }
+      .side { position: static; }
+      .mode-tabs, .mode-tabs.teacher-open { grid-template-columns: 1fr; }
+      .top-actions { justify-content: flex-start; }
+      .step-strip { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .app { width: min(100vw - 16px, 1240px); padding-top: 12px; }
+      .hero { padding: 20px; border-radius: 24px; }
+      .teacher-grid, .step-strip { grid-template-columns: 1fr; }
+      .card-head { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="top-utility-bar">
+      <button class="lang-btn" id="langBtn">English</button>
+    </div>
+
+    <header class="hero">
+      <div>
+        <div class="eyebrow" data-i18n="eyebrow">⚡ 高中衝量模擬器</div>
+        <h1 data-i18n="title">Impulse Lab：時間、力與動量改變</h1>
+        <p data-i18n="subtitle">用兩個清晰情境分辨：延長時間可以減少撞擊力，也可以在相同平均力下增加動量改變。</p>
+      </div>
+      <div class="top-actions">
+        <button class="ghost-btn" id="teacherBtn" data-i18n="teacherMode">老師模式</button>
+      </div>
+    </header>
+
+    <nav class="mode-tabs" id="modeTabs">
+      <button class="tab active" data-mode="safety">
+        <strong data-i18n="tabSafetyTitle">A｜安全停止</strong>
+        <span data-i18n="tabSafetySub">相同 Δp，時間越長，平均力越小</span>
+      </button>
+      <button class="tab" data-mode="push">
+        <strong data-i18n="tabPushTitle">B｜持續推動</strong>
+        <span data-i18n="tabPushSub">相同平均力，時間越長，Δp 越大</span>
+      </button>
+      <button class="tab extension-tab" data-mode="extension">
+        <strong data-i18n="tabExtTitle">C｜挑戰模式</strong>
+        <span data-i18n="tabExtSub">相同時間，Δp 越大，平均力越大</span>
+      </button>
+    </nav>
+
+    <section class="step-strip" aria-label="lesson steps">
+      <div class="step"><span class="num">1</span><span data-i18n="stepPredict">先預測</span></div>
+      <div class="step"><span class="num">2</span><span data-i18n="stepPlay">播放觀察</span></div>
+      <div class="step"><span class="num">3</span><span data-i18n="stepCompare">比較數值</span></div>
+      <div class="step"><span class="num">4</span><span data-i18n="stepExplain">完成解釋</span></div>
+    </section>
+
+    <main class="workspace">
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h2 id="sceneTitle">安全停止：硬地 vs 軟墊</h2>
+            <div class="legend" id="legend"></div>
+          </div>
+          <div class="badge" id="coreBadge">Same Δp → longer time → smaller force</div>
+        </div>
+        <div class="scene-wrap">
+          <svg class="scene" id="scene" viewBox="0 0 900 360" role="img" aria-label="Impulse simulator animation"></svg>
+          <div class="scene-controls">
+            <button class="primary-btn" id="playBtn" data-i18n="play">播放</button>
+            <button class="pill-btn" id="resetBtn" data-i18n="reset">重設</button>
+          </div>
+        </div>
+        <div class="graph-wrap">
+          <svg class="graph" id="graph" viewBox="0 0 900 380" role="img" aria-label="Force time graph"></svg>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="card">
+          <div class="card-head">
+            <h2 class="panel-title" data-i18n="studentPanel">學生面板</h2>
+            <span class="badge" id="modeLabel" style="background:var(--blue-soft);color:var(--blue);border-color:rgba(37,99,235,0.2)">Mode A</span>
+          </div>
+          <div class="panel">
+            <div id="equationBox" class="equation-card"></div>
+            <div id="readouts" class="readout-grid"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2 class="panel-title" data-i18n="controls">控制</h2>
+          </div>
+          <div class="panel">
+            <div id="controls" class="control-group"></div>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-head">
+            <h2 class="panel-title" data-i18n="checkThinking">檢查理解</h2>
+          </div>
+          <div class="panel">
+            <div id="prompt" class="prompt-card"></div>
+          </div>
+        </section>
+
+        <section class="card teacher-panel" id="teacherPanel">
+          <div class="card-head">
+            <h2 class="panel-title" data-i18n="teacherSettings">老師／大學級設定</h2>
+          </div>
+          <div class="panel teacher-grid" id="teacherControls"></div>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <script>
+    // =============================================================
+    //  Impulse Lab Simulator — First Principles Physics Engine
+    // =============================================================
+
+    const $ = (selector) => document.querySelector(selector);
+    const NS = "http://www.w3.org/2000/svg";
+
+    const i18n = {
+      zh: {
+        eyebrow: "⚡ 高中衝量模擬器",
+        title: "Impulse Lab：時間、力與動量改變",
+        subtitle: "用兩個清晰情境分辨：延長時間可以減少撞擊力，也可以在相同平均力下增加動量改變。",
+        teacherMode: "老師模式",
+        play: "播放",
+        pause: "暫停",
+        reset: "重設",
+        tabSafetyTitle: "A｜安全停止",
+        tabSafetySub: "相同 Δp，時間越長，平均力越小",
+        tabPushTitle: "B｜持續推動",
+        tabPushSub: "相同平均力，時間越長，Δp 越大",
+        tabExtTitle: "C｜挑戰模式",
+        tabExtSub: "相同時間，Δp 越大，平均力越大",
+        stepPredict: "先預測",
+        stepPlay: "播放觀察",
+        stepCompare: "比較數值",
+        stepExplain: "完成解釋",
+        studentPanel: "學生面板",
+        controls: "控制",
+        checkThinking: "檢查理解",
+        teacherSettings: "老師／大學級設定",
+        sceneSafety: "安全停止：硬地 vs 軟墊",
+        scenePush: "持續推動：短時間 vs 長時間",
+        sceneExt: "挑戰模式：慢速撞擊 vs 快速撞擊",
+        badgeSafety: "相同 Δp → 時間較長 → 力較小",
+        badgePush: "相同平均力 → 時間較長 → Δp 較大",
+        badgeExt: "相同時間 → Δp 較大 → 力較大",
+        hard: "硬地",
+        soft: "軟墊",
+        shortPush: "短時間推",
+        longPush: "長時間推",
+        slowHit: "慢速撞擊",
+        fastHit: "快速撞擊",
+        force: "平均力",
+        time: "作用時間",
+        contactTime: "撞擊時間",
+        impulse: "衝量 / 動量改變",
+        dp: "動量改變",
+        speed: "速率",
+        mass: "質量",
+        keyIdea: "核心概念",
+        showCalc: "顯示計算式",
+        surfaceA: "硬地接觸時間",
+        surfaceB: "軟墊接觸時間",
+        avgForce: "平均力",
+        shortTime: "短作用時間",
+        longTime: "長作用時間",
+        slowSpeed: "慢速初速",
+        fastSpeed: "快速初速",
+        fixedTime: "固定撞擊時間",
+        overlayGraphs: "重疊圖形對比",
+        forceProfile: "力—時間脈衝",
+        rectangular: "矩形：Fmax = Favg",
+        triangular: "三角形：Fmax = 2Favg",
+        halfSine: "半正弦：Fmax ≈ 1.57Favg",
+        signedValues: "顯示正負號",
+        peakForce: "顯示峰值力",
+        lockStudent: "簡化學生控制",
+        safetyPrompt: "兩個情況都令同一物體由相同速度停下。哪一個說法正確？",
+        safetyCorrect: "正確。Δp 相同；軟墊時間較長，所以平均力較小。",
+        safetyWrong: "再想想：兩個情況最後都停下，所以動量改變相同；真正不同的是作用時間。",
+        pushPrompt: "若平均力相同，推得更久會怎樣？",
+        pushCorrect: "正確。作用時間較長，衝量較大，所以動量改變較大。",
+        pushWrong: "再想想：Δp = Favg × Δt。平均力相同時，時間越長，Δp 越大。",
+        extPrompt: "若撞擊時間相同，速度較大的物體停下時會怎樣？",
+        extCorrect: "正確。初速較大，所以 Δp 較大；時間相同，因此平均力較大。",
+        extWrong: "再想想：Favg = Δp / Δt。若 Δt 相同，Δp 越大，力越大。",
+        optionA1: "硬地的平均力較大",
+        optionA2: "軟墊的動量改變較大",
+        optionA3: "兩者平均力相同",
+        optionB1: "動量改變變大",
+        optionB2: "動量改變不變",
+        optionB3: "平均力會變大",
+        optionC1: "快速撞擊的平均力較大",
+        optionC2: "兩者平均力一定相同",
+        optionC3: "快速撞擊的動量改變較小",
+        followNote: "注意：持續施加相同的力，時間越長，物體獲得的衝量越大，最終速度也越快。",
+        areaNote: "陰影面積 = 衝量 = 動量改變",
+        areaScaffoldSafety: "闊 × 高 = 面積；時間 × 平均力 = 衝量。兩邊面積相同，右邊較闊，所以高度較低。",
+        areaScaffoldPush: "高度相同，右邊較闊，所以面積較大；即是作用時間較長，動量改變較大。",
+        areaScaffoldExt: "闊度相同，高度越高，面積越大；即是時間相同時，動量改變越大，平均力越大。",
+        worksheetSafety: "句式：動量改變 ________；撞擊時間 ________；平均力 ________。",
+        worksheetPush: "句式：平均力 ________；作用時間 ________；動量改變 ________。",
+        worksheetExt: "句式：撞擊時間 ________；動量改變 ________；平均力 ________。",
+        modeA: "模式 A",
+        modeB: "模式 B",
+        modeC: "挑戰",
+        positiveDirection: "右方 = 正方向",
+        positiveDirectionDown: "下方 = 正方向",
+        forceAxis: "力",
+        timeAxis: "時間",
+        fAvg: "平均力",
+        fMax: "峰值力",
+        sameArea: "同面積",
+        biggerArea: "較大面積"
+      },
+      en: {
+        eyebrow: "⚡ High-school impulse simulator",
+        title: "Impulse Lab: Time, Force, and Momentum Change",
+        subtitle: "Compare two clean cases: increasing time can reduce impact force, or increase momentum change under the same average force.",
+        teacherMode: "Teacher Mode",
+        play: "Play",
+        pause: "Pause",
+        reset: "Reset",
+        tabSafetyTitle: "A｜Safety Stop",
+        tabSafetySub: "same Δp, longer time, smaller average force",
+        tabPushTitle: "B｜Continuous Push",
+        tabPushSub: "same average force, longer time, larger Δp",
+        tabExtTitle: "C｜Challenge Mode",
+        tabExtSub: "same time, larger Δp, larger force",
+        stepPredict: "Predict first",
+        stepPlay: "Play & observe",
+        stepCompare: "Compare values",
+        stepExplain: "Explain",
+        studentPanel: "Student Panel",
+        controls: "Controls",
+        checkThinking: "Check Understanding",
+        teacherSettings: "Teacher / University-level Settings",
+        sceneSafety: "Safety Stop: Hard Ground vs Soft Mat",
+        scenePush: "Continuous Push: Short Time vs Long Time",
+        sceneExt: "Challenge Mode: Slow Impact vs Fast Impact",
+        badgeSafety: "same Δp → longer time → smaller force",
+        badgePush: "same average force → longer time → larger Δp",
+        badgeExt: "same time → larger Δp → larger force",
+        hard: "Hard ground",
+        soft: "Soft mat",
+        shortPush: "Short push",
+        longPush: "Long push",
+        slowHit: "Slow impact",
+        fastHit: "Fast impact",
+        force: "Average force",
+        time: "Action time",
+        contactTime: "Contact time",
+        impulse: "Impulse / momentum change",
+        dp: "Momentum change",
+        speed: "Speed",
+        mass: "Mass",
+        keyIdea: "Key idea",
+        showCalc: "Show calculation",
+        surfaceA: "Hard-ground contact time",
+        surfaceB: "Soft-mat contact time",
+        avgForce: "Average force",
+        shortTime: "Short action time",
+        longTime: "Long action time",
+        slowSpeed: "Slow initial speed",
+        fastSpeed: "Fast initial speed",
+        fixedTime: "Fixed contact time",
+        overlayGraphs: "Overlay graphs",
+        forceProfile: "Force-time pulse",
+        rectangular: "Rectangular: Fmax = Favg",
+        triangular: "Triangular: Fmax = 2Favg",
+        halfSine: "Half-sine: Fmax ≈ 1.57Favg",
+        signedValues: "Show signs",
+        peakForce: "Show peak force",
+        lockStudent: "Simplify student controls",
+        safetyPrompt: "Both cases stop the same object from the same speed. Which statement is correct?",
+        safetyCorrect: "Correct. Δp is the same; the soft mat has longer contact time, so the average force is smaller.",
+        safetyWrong: "Think again: both cases end at rest, so the momentum change is the same. The contact time is different.",
+        pushPrompt: "If the average force is the same, what happens when the push lasts longer?",
+        pushCorrect: "Correct. Longer action time gives a larger impulse, so the momentum change is larger.",
+        pushWrong: "Think again: Δp = Favg × Δt. With the same average force, longer time gives larger Δp.",
+        extPrompt: "If contact time is the same, what happens when the faster object stops?",
+        extCorrect: "Correct. The faster object has larger Δp. With the same time, the average force is larger.",
+        extWrong: "Think again: Favg = Δp / Δt. If Δt is the same, larger Δp means larger force.",
+        optionA1: "The hard ground has larger average force",
+        optionA2: "The soft mat has larger momentum change",
+        optionA3: "Both average forces are the same",
+        optionB1: "Momentum change becomes larger",
+        optionB2: "Momentum change stays the same",
+        optionB3: "The average force becomes larger",
+        optionC1: "The fast impact has larger average force",
+        optionC2: "Both average forces must be the same",
+        optionC3: "The fast impact has smaller momentum change",
+        followNote: "Note: Applying the same force for a longer time gives a larger impulse, resulting in a higher final speed.",
+        areaNote: "Shaded area = impulse = momentum change",
+        areaScaffoldSafety: "width × height = area; time × average force = impulse. Both areas are equal; the right graph is wider, so it is lower.",
+        areaScaffoldPush: "The height is the same, but the right graph is wider, so the area is larger. Longer action time gives larger momentum change.",
+        areaScaffoldExt: "The width is the same. A taller graph has larger area. With the same time, larger Δp means larger average force.",
+        worksheetSafety: "Sentence frame: momentum change is ________; contact time is ________; average force is ________.",
+        worksheetPush: "Sentence frame: average force is ________; action time is ________; momentum change is ________.",
+        worksheetExt: "Sentence frame: contact time is ________; momentum change is ________; average force is ________.",
+        modeA: "Mode A",
+        modeB: "Mode B",
+        modeC: "Challenge",
+        positiveDirection: "Right = positive direction",
+        positiveDirectionDown: "Down = positive direction",
+        forceAxis: "force",
+        timeAxis: "time",
+        fAvg: "average force",
+        fMax: "peak force",
+        sameArea: "same area",
+        biggerArea: "larger area"
+      }
+    };
+
+    const state = {
+      lang: "zh",
+      mode: "safety",
+      playing: false,
+      t: 0,
+      teacherOpen: false,
+      showCalc: true,
+      showSigned: false,
+      showPeak: false,
+      simplified: true,
+      overlay: false,
+      forceProfile: "rectangular",
+      mass: 1.0,
+      viSafety: 6.0,
+      vfSafety: 0,
+      contactHard: 0.05,
+      contactSoft: 0.30,
+      pushForce: 10,
+      pushShort: 0.50,
+      pushLong: 1.50,
+      viPush: 0,
+      slowSpeed: 3.0,
+      fastSpeed: 6.0,
+      fixedContact: 0.10,
+      feedback: null,
+      selectedOption: null
+    };
+
+    function t(key) { return i18n[state.lang][key]; }
+
+    // -------------------------------
+    // Physics model
+    // -------------------------------
+    function momentum(m, v) { return m * v; }
+    function deltaP(m, vi, vf) { return m * (vf - vi); }
+    function averageForce(dp, dt) {
+      if (dt <= 0) return 0;
+      return dp / dt;
+    }
+    function impulseFromForce(Favg, dt) { return Favg * dt; }
+    function finalVelocity(vi, impulse, m) {
+      if (m <= 0) return 0;
+      return vi + impulse / m;
+    }
+
+    function peakFactor(profile) {
+      if (profile === "triangular") return 2;
+      if (profile === "halfSine") return Math.PI / 2;
+      return 1;
+    }
+
+    function getInstForce(tau, dt, Favg, profile) {
+      if (tau < 0 || tau > dt) return 0;
+      if (profile === "rectangular") return Favg;
+      if (profile === "triangular") {
+        if (tau < dt / 2) return 2 * Favg * (tau / (dt / 2));
+        return 2 * Favg * ((dt - tau) / (dt / 2));
+      }
+      if (profile === "halfSine") {
+        return (Math.PI / 2) * Favg * Math.sin((tau / dt) * Math.PI);
+      }
+      return Favg;
+    }
+
+    function compute() {
+      if (state.mode === "safety") {
+        const dp = deltaP(state.mass, state.viSafety, state.vfSafety);
+        const Fhard = averageForce(dp, state.contactHard);
+        const Fsoft = averageForce(dp, state.contactSoft);
+        return {
+          mode: "safety",
+          dp,
+          impulse: Math.abs(dp),
+          hard: { dt: state.contactHard, Favg: Fhard, Fpeak: Math.abs(Fhard) * peakFactor(state.forceProfile), label: t("hard") },
+          soft: { dt: state.contactSoft, Favg: Fsoft, Fpeak: Math.abs(Fsoft) * peakFactor(state.forceProfile), label: t("soft") }
+        };
+      }
+
+      if (state.mode === "push") {
+        const Js = impulseFromForce(state.pushForce, state.pushShort);
+        const Jl = impulseFromForce(state.pushForce, state.pushLong);
+        return {
+          mode: "push",
+          short: { dt: state.pushShort, Favg: state.pushForce, Fpeak: Math.abs(state.pushForce) * peakFactor(state.forceProfile), impulse: Js, vf: finalVelocity(state.viPush, Js, state.mass), label: t("shortPush") },
+          long: { dt: state.pushLong, Favg: state.pushForce, Fpeak: Math.abs(state.pushForce) * peakFactor(state.forceProfile), impulse: Jl, vf: finalVelocity(state.viPush, Jl, state.mass), label: t("longPush") }
+        };
+      }
+
+      const dpSlow = deltaP(state.mass, state.slowSpeed, 0);
+      const dpFast = deltaP(state.mass, state.fastSpeed, 0);
+      return {
+        mode: "extension",
+        slow: { speed: state.slowSpeed, dt: state.fixedContact, dp: dpSlow, Favg: averageForce(dpSlow, state.fixedContact), Fpeak: Math.abs(averageForce(dpSlow, state.fixedContact)) * peakFactor(state.forceProfile), label: t("slowHit") },
+        fast: { speed: state.fastSpeed, dt: state.fixedContact, dp: dpFast, Favg: averageForce(dpFast, state.fixedContact), Fpeak: Math.abs(averageForce(dpFast, state.fixedContact)) * peakFactor(state.forceProfile), label: t("fastHit") }
+      };
+    }
+
+    // -------------------------------
+    // SVG helpers
+    // -------------------------------
+    function el(name, attrs = {}, parent = null) {
+      const node = document.createElementNS(NS, name);
+      Object.entries(attrs).forEach(([k, v]) => node.setAttribute(k, v));
+      if (parent) parent.appendChild(node);
+      return node;
+    }
+
+    function text(svg, x, y, content, attrs = {}) {
+      const node = el("text", { x, y, ...attrs }, svg);
+      node.textContent = content;
+      return node;
+    }
+
+    function line(svg, x1, y1, x2, y2, attrs = {}) { return el("line", { x1, y1, x2, y2, ...attrs }, svg); }
+    function rect(svg, x, y, width, height, attrs = {}) { return el("rect", { x, y, width, height, ...attrs }, svg); }
+    function circle(svg, cx, cy, r, attrs = {}) { return el("circle", { cx, cy, r, ...attrs }, svg); }
+    function path(svg, d, attrs = {}) { return el("path", { d, ...attrs }, svg); }
+
+    function ensureMarker(svg, color) {
+      const hex = color.replace("#", "");
+      const id = `arrow-${svg.id || "svg"}-${hex}`;
+      let defs = svg.querySelector("defs");
+      if (!defs) defs = el("defs", {}, svg);
+      if (!svg.querySelector(`#${id}`)) {
+        const marker = el("marker", {
+          id, markerWidth: 10, markerHeight: 10, refX: 8, refY: 3,
+          orient: "auto", markerUnits: "strokeWidth"
+        }, defs);
+        path(marker, "M0,0 L0,6 L9,3 z", { fill: color });
+      }
+      return id;
+    }
+
+    function arrow(svg, x1, y1, x2, y2, color = "#2563eb", label = "") {
+      const id = ensureMarker(svg, color);
+      line(svg, x1, y1, x2, y2, { stroke: color, "stroke-width": 5, "stroke-linecap": "round", "marker-end": `url(#${id})` });
+      if (label) {
+        text(svg, (x1 + x2) / 2, (y1 + y2) / 2 - 12, label, { "font-size": 17, "font-weight": 900, stroke: "#fff", "stroke-width": 4, "text-anchor": "middle", "stroke-linejoin": "round" });
+        text(svg, (x1 + x2) / 2, (y1 + y2) / 2 - 12, label, { "font-size": 17, "font-weight": 900, fill: color, "text-anchor": "middle" });
+      }
+    }
+
+    function drawImpact(svg, x, y, scale, color) {
+      circle(svg, x, y, 6 * scale, { fill: "#ffffff", stroke: color, "stroke-width": 2 * scale });
+      const rays = 8;
+      for (let i = 0; i < rays; i++) {
+        const angle = (i / rays) * Math.PI * 2;
+        const r1 = 14 * scale;
+        const r2 = 32 * scale;
+        line(svg, x + Math.cos(angle) * r1, y + Math.sin(angle) * r1,
+                  x + Math.cos(angle) * r2, y + Math.sin(angle) * r2,
+                  { stroke: color, "stroke-width": 4 * scale, "stroke-linecap": "round" });
+      }
+    }
+
+    function fmt(value, unit = "", digits = 1, signedMode = state.showSigned) {
+      const mag = Math.abs(value).toFixed(digits);
+      if (!signedMode) return `${mag}${unit}`;
+      return `${value >= 0 ? "+" : "−"}${mag}${unit}`;
+    }
+
+    function absFixed(value, digits = 1) { return Math.abs(value).toFixed(digits); }
+
+    // -------------------------------
+    // Rendering
+    // -------------------------------
+    function renderAll() {
+      document.documentElement.lang = state.lang === "zh" ? "zh-Hant" : "en";
+      document.querySelectorAll("[data-i18n]").forEach(node => { node.textContent = t(node.dataset.i18n); });
+      $("#langBtn").textContent = state.lang === "zh" ? "English" : "繁體中文";
+      $("#teacherBtn").classList.toggle("active", state.teacherOpen);
+      $("#teacherPanel").classList.toggle("open", state.teacherOpen);
+      $("#modeTabs").classList.toggle("teacher-open", state.teacherOpen);
+      $("#playBtn").textContent = state.playing ? t("pause") : t("play");
+
+      document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab.dataset.mode === state.mode));
+
+      const r = compute();
+      renderHeader();
+      renderEquation();
+      renderReadouts(r);
+      renderControls();
+      renderTeacherControls();
+      renderPrompt();
+      renderScene(r);
+      renderGraph(r);
+    }
+
+    function renderDynamic() {
+      const r = compute();
+      renderScene(r);
+    }
+
+    function renderHeader() {
+      const titleMap = { safety: t("sceneSafety"), push: t("scenePush"), extension: t("sceneExt") };
+      const badgeMap = { safety: t("badgeSafety"), push: t("badgePush"), extension: t("badgeExt") };
+      const modeMap = { safety: t("modeA"), push: t("modeB"), extension: t("modeC") };
+      $("#sceneTitle").textContent = titleMap[state.mode];
+      $("#coreBadge").textContent = badgeMap[state.mode];
+      $("#modeLabel").textContent = modeMap[state.mode];
+      
+      let legendHtml = "";
+      if (state.mode === "safety") {
+        legendHtml = `<span><i class="dot red"></i>${t("hard")}</span><span><i class="dot green"></i>${t("soft")}</span>`;
+      } else if (state.mode === "push") {
+        legendHtml = `<span><i class="dot blue"></i>${t("shortPush")}</span><span><i class="dot green"></i>${t("longPush")}</span>`;
+      } else {
+        legendHtml = `<span><i class="dot blue"></i>${t("slowHit")}</span><span><i class="dot red"></i>${t("fastHit")}</span>`;
+      }
+      $("#legend").innerHTML = legendHtml;
+    }
+
+    function renderEquation() {
+      const box = $("#equationBox");
+      if (state.mode === "safety") {
+        box.innerHTML = `
+          <div class="small">${t("keyIdea")}</div>
+          <div class="big">F<sub>avg</sub> = Δp / Δt</div>
+          <div>${state.lang === "zh" ? "相同 Δp；Δt 越長，Favg 越小。" : "Same Δp; as Δt increases, Favg decreases."}</div>
+          <div class="scaffold-line">${t("worksheetSafety")}</div>
+        `;
+      } else if (state.mode === "push") {
+        box.innerHTML = `
+          <div class="small">${t("keyIdea")}</div>
+          <div class="big">Δp = F<sub>avg</sub> Δt</div>
+          <div>${state.lang === "zh" ? "相同 Favg；Δt 越長，Δp 越大。" : "Same Favg; as Δt increases, Δp increases."}</div>
+          <div class="scaffold-line">${t("worksheetPush")}</div>
+        `;
+      } else {
+        box.innerHTML = `
+          <div class="small">${t("keyIdea")}</div>
+          <div class="big">F<sub>avg</sub> = Δp / Δt</div>
+          <div>${state.lang === "zh" ? "相同 Δt；Δp 越大，Favg 越大。" : "Same Δt; as Δp increases, Favg increases."}</div>
+          <div class="scaffold-line">${t("worksheetExt")}</div>
+        `;
+      }
+    }
+
+    function renderReadouts(r) {
+      const box = $("#readouts");
+      if (state.mode === "safety") {
+        const dpText = fmt(r.dp, " kg m s⁻¹", 1);
+        box.innerHTML = `
+          ${mini(t("mass"), `${state.mass.toFixed(1)} kg`, `${t("speed")}: ${fmt(state.viSafety, " m s⁻¹", 1, state.showSigned)} → ${fmt(0, "", 0, state.showSigned)}`)}
+          ${mini(t("dp"), dpText, state.lang === "zh" ? "兩邊相同：同一物體由相同速度停下" : "Same in both cases: same object stops from the same speed")}
+          ${mini(t("hard"), `${fmt(r.hard.Favg, " N", 1)}`, `${t("contactTime")}: ${r.hard.dt.toFixed(2)} s${peakText(r.hard)}`)}
+          ${mini(t("soft"), `${fmt(r.soft.Favg, " N", 1)}`, `${t("contactTime")}: ${r.soft.dt.toFixed(2)} s${peakText(r.soft)}`)}
+          ${state.showCalc ? `<div class="formula-line">${calcForceLine(t("hard"), r.dp, r.hard.dt)}<br>${calcForceLine(t("soft"), r.dp, r.soft.dt)}</div>` : ""}
+        `;
+      } else if (state.mode === "push") {
+        box.innerHTML = `
+          ${mini(t("mass"), `${state.mass.toFixed(1)} kg`, `${t("avgForce")}: ${fmt(state.pushForce, " N", 1)}`)}
+          ${mini(t("shortPush"), `${fmt(r.short.impulse, " kg m s⁻¹", 1)}`, `${t("time")}: ${r.short.dt.toFixed(2)} s｜vf = ${fmt(r.short.vf, " m s⁻¹", 1, state.showSigned)}`)}
+          ${mini(t("longPush"), `${fmt(r.long.impulse, " kg m s⁻¹", 1)}`, `${t("time")}: ${r.long.dt.toFixed(2)} s｜vf = ${fmt(r.long.vf, " m s⁻¹", 1, state.showSigned)}`)}
+          <div class="mini-card" style="background: var(--amber-soft); border-color: rgba(217,119,6,.25)">
+            <h3>${t("keyIdea")}</h3>
+            <div class="note">${t("followNote")}</div>
+          </div>
+          ${state.showCalc ? `<div class="formula-line">${t("shortPush")}: Δp = ${fmt(state.pushForce, "", 1)} × ${r.short.dt.toFixed(2)} = ${fmt(r.short.impulse, "", 1)}<br>${t("longPush")}: Δp = ${fmt(state.pushForce, "", 1)} × ${r.long.dt.toFixed(2)} = ${fmt(r.long.impulse, "", 1)}</div>` : ""}
+        `;
+      } else {
+        box.innerHTML = `
+          ${mini(t("mass"), `${state.mass.toFixed(1)} kg`, `${t("fixedTime")}: ${state.fixedContact.toFixed(2)} s`)}
+          ${mini(t("slowHit"), `${fmt(r.slow.Favg, " N", 1)}`, `${t("speed")}: ${fmt(r.slow.speed, " m s⁻¹", 1, state.showSigned)}｜Δp = ${fmt(r.slow.dp, "", 1)}`)}
+          ${mini(t("fastHit"), `${fmt(r.fast.Favg, " N", 1)}`, `${t("speed")}: ${fmt(r.fast.speed, " m s⁻¹", 1, state.showSigned)}｜Δp = ${fmt(r.fast.dp, "", 1)}`)}
+          ${state.showCalc ? `<div class="formula-line">${calcForceLine(t("slowHit"), r.slow.dp, r.slow.dt)}<br>${calcForceLine(t("fastHit"), r.fast.dp, r.fast.dt)}</div>` : ""}
+        `;
+      }
+    }
+
+    function calcForceLine(label, dp, dt) {
+      if (state.showSigned) return `${label}: Favg = ${fmt(dp, "", 1, true)} / ${dt.toFixed(2)} = ${fmt(dp / dt, " N", 1, true)}`;
+      return `${label}: |Favg| = ${absFixed(dp,1)} / ${dt.toFixed(2)} = ${absFixed(dp / dt,1)} N`;
+    }
+
+    function mini(title, value, note) {
+      return `<div class="mini-card"><h3>${title}</h3><div class="value">${value}</div><div class="note">${note}</div></div>`;
+    }
+
+    function peakText(caseObj) {
+      if (!state.showPeak) return "";
+      return `｜${t("fMax")} ≈ ${caseObj.Fpeak.toFixed(1)} N`;
+    }
+
+    function renderControls() {
+      const c = $("#controls");
+      if (state.mode === "safety") {
+        c.innerHTML = `
+          ${slider("contactHard", t("surfaceA"), state.contactHard, 0.02, 0.20, 0.01, "s")}
+          ${slider("contactSoft", t("surfaceB"), state.contactSoft, 0.10, 0.60, 0.01, "s")}
+          ${!state.simplified ? slider("viSafety", state.lang === "zh" ? "撞擊前速度" : "Initial speed", state.viSafety, 1, 10, 0.5, "m s⁻¹") : ""}
+          ${toggle("showCalc", t("showCalc"), state.showCalc)}
+        `;
+      } else if (state.mode === "push") {
+        c.innerHTML = `
+          ${slider("pushShort", t("shortTime"), state.pushShort, 0.1, 1.2, 0.1, "s")}
+          ${slider("pushLong", t("longTime"), state.pushLong, 0.5, 3.0, 0.1, "s")}
+          ${!state.simplified ? slider("pushForce", t("avgForce"), state.pushForce, 2, 30, 1, "N") : ""}
+          ${toggle("showCalc", t("showCalc"), state.showCalc)}
+        `;
+      } else {
+        c.innerHTML = `
+          ${slider("slowSpeed", t("slowSpeed"), state.slowSpeed, 1, 8, 0.5, "m s⁻¹")}
+          ${slider("fastSpeed", t("fastSpeed"), state.fastSpeed, 2, 12, 0.5, "m s⁻¹")}
+          ${slider("fixedContact", t("fixedTime"), state.fixedContact, 0.03, 0.40, 0.01, "s")}
+          ${toggle("showCalc", t("showCalc"), state.showCalc)}
+          ${toggle("overlay", t("overlayGraphs"), state.overlay)}
+        `;
+      }
+
+      c.querySelectorAll("input[type=range]").forEach(input => {
+        input.addEventListener("input", e => {
+          state[e.target.dataset.key] = Number(e.target.value);
+          state.feedback = null;
+          state.t = 0; // Reset animation to start on slider change
+          if(!state.playing) renderAll();
+        });
+      });
+      c.querySelectorAll("input[type=checkbox]").forEach(input => {
+        input.addEventListener("change", e => {
+          state[e.target.dataset.key] = e.target.checked;
+          if(!state.playing) renderAll();
+        });
+      });
+    }
+
+    function slider(key, label, value, min, max, step, unit) {
+      return `
+        <div class="control">
+          <div class="control-row"><label for="${key}">${label}</label><span class="num">${Number(value).toFixed(step < 0.1 ? 2 : 1)} ${unit}</span></div>
+          <input id="${key}" data-key="${key}" type="range" min="${min}" max="${max}" step="${step}" value="${value}">
+        </div>
+      `;
+    }
+
+    function toggle(key, label, checked) {
+      return `
+        <label class="switch-row">
+          <span>${label}</span>
+          <input data-key="${key}" type="checkbox" ${checked ? "checked" : ""}>
+        </label>
+      `;
+    }
+
+    function renderTeacherControls() {
+      const c = $("#teacherControls");
+      c.innerHTML = `
+        <div class="control">
+          <div class="control-row"><label>${t("mass")}</label><span class="num">${state.mass.toFixed(1)} kg</span></div>
+          <input data-key="mass" type="range" min="0.5" max="5" step="0.5" value="${state.mass}">
+        </div>
+        <div class="control">
+          <label style="display:block; margin-bottom:8px; font-weight:800">${t("forceProfile")}</label>
+          <select id="profileSelect">
+            <option value="rectangular" ${state.forceProfile === "rectangular" ? "selected" : ""}>${t("rectangular")}</option>
+            <option value="triangular" ${state.forceProfile === "triangular" ? "selected" : ""}>${t("triangular")}</option>
+            <option value="halfSine" ${state.forceProfile === "halfSine" ? "selected" : ""}>${t("halfSine")}</option>
+          </select>
+        </div>
+        ${toggle("showSigned", t("signedValues"), state.showSigned)}
+        ${toggle("showPeak", t("peakForce"), state.showPeak)}
+        ${toggle("simplified", t("lockStudent"), state.simplified)}
+      `;
+      c.querySelectorAll("input[type=range]").forEach(input => input.addEventListener("input", e => { state[e.target.dataset.key] = Number(e.target.value); state.t=0; if(!state.playing) renderAll(); }));
+      c.querySelectorAll("input[type=checkbox]").forEach(input => input.addEventListener("change", e => { state[e.target.dataset.key] = e.target.checked; renderAll(); }));
+      $("#profileSelect").addEventListener("change", e => { state.forceProfile = e.target.value; renderAll(); });
+    }
+
+    function renderPrompt() {
+      const p = $("#prompt");
+      const modes = {
+        safety: {
+          question: t("safetyPrompt"),
+          options: [t("optionA2"), t("optionA1"), t("optionA3")],
+          correct: 1, good: t("safetyCorrect"), bad: t("safetyWrong")
+        },
+        push: {
+          question: t("pushPrompt"),
+          options: [t("optionB2"), t("optionB1"), t("optionB3")],
+          correct: 1, good: t("pushCorrect"), bad: t("pushWrong")
+        },
+        extension: {
+          question: t("extPrompt"),
+          options: [t("optionC2"), t("optionC3"), t("optionC1")],
+          correct: 2, good: t("extCorrect"), bad: t("extWrong")
+        }
+      };
+      const q = modes[state.mode];
+      p.innerHTML = `
+        <strong>${q.question}</strong>
+        <div class="qa-options">
+          ${q.options.map((op, i) => `<button data-index="${i}" class="${state.selectedOption === i ? (i === q.correct ? "correct" : "wrong") : ""}">${op}</button>`).join("")}
+        </div>
+        ${state.feedback ? `<div class="feedback" style="color:${state.feedback.ok ? "#065f46" : "#991b1b"}">${state.feedback.ok ? q.good : q.bad}</div>` : ""}
+      `;
+      p.querySelectorAll("button[data-index]").forEach(btn => {
+        btn.addEventListener("click", e => {
+          const idx = Number(e.target.dataset.index);
+          state.selectedOption = idx;
+          state.feedback = { ok: idx === q.correct };
+          renderAll();
+        });
+      });
+    }
+
+    function setupSVGDefs(svg) {
+      let defs = svg.querySelector("defs");
+      if (!defs) defs = el("defs", {}, svg);
+      defs.innerHTML = "";
+
+      // Background grid
+      const pattern = el("pattern", { id: "bgGrid", width: 40, height: 40, patternUnits: "userSpaceOnUse" }, defs);
+      path(pattern, "M 40 0 L 0 0 0 40", { fill: "none", stroke: "rgba(100, 116, 139, 0.1)", "stroke-width": 1 });
+
+      // Mat Gradient
+      const matGrad = el("linearGradient", { id: "matGrad", x1: "0", x2: "0", y1: "0", y2: "1" }, defs);
+      el("stop", { offset: "0%", "stop-color": "#4ade80" }, matGrad);
+      el("stop", { offset: "100%", "stop-color": "#16a34a" }, matGrad);
+
+      // Egg Gradient
+      const eggGrad = el("radialGradient", { id: "eggGrad", cx: "35%", cy: "35%", r: "70%" }, defs);
+      el("stop", { offset: "0%", "stop-color": "#ffffff" }, eggGrad);
+      el("stop", { offset: "100%", "stop-color": "#fcd34d" }, eggGrad);
+
+      // Dropshadow for graphs
+      const filter = el("filter", { id: "glow", x: "-20%", y: "-20%", width: "140%", height: "140%" }, defs);
+      el("feGaussianBlur", { stdDeviation: "4", result: "blur" }, filter);
+      el("feComposite", { in: "SourceGraphic", in2: "blur", operator: "over" }, filter);
+
+      // Wheel Gradient
+      const wheelGrad = el("radialGradient", { id: "wheelGrad", cx: "50%", cy: "50%", r: "50%" }, defs);
+      el("stop", { offset: "0%", "stop-color": "#475569" }, wheelGrad);
+      el("stop", { offset: "100%", "stop-color": "#0f172a" }, wheelGrad);
+
+      // Ball gradients
+      const blueBall = el("radialGradient", { id: "blueBall", cx: "30%", cy: "30%", r: "70%" }, defs);
+      el("stop", { offset: "0%", "stop-color": "#93c5fd" }, blueBall);
+      el("stop", { offset: "100%", "stop-color": "#1d4ed8" }, blueBall);
+
+      const redBall = el("radialGradient", { id: "redBall", cx: "30%", cy: "30%", r: "70%" }, defs);
+      el("stop", { offset: "0%", "stop-color": "#fca5a5" }, redBall);
+      el("stop", { offset: "100%", "stop-color": "#b91c1c" }, redBall);
+      
+      // Graph specific gradients
+      const redArea = el("linearGradient", { id: "redArea", x1: "0", x2: "0", y1: "0", y2: "1" }, defs);
+      el("stop", { offset: "0%", "stop-color": "rgba(220,38,38,0.3)" }, redArea);
+      el("stop", { offset: "100%", "stop-color": "rgba(220,38,38,0.0)" }, redArea);
+
+      const blueArea = el("linearGradient", { id: "blueArea", x1: "0", x2: "0", y1: "0", y2: "1" }, defs);
+      el("stop", { offset: "0%", "stop-color": "rgba(37,99,235,0.3)" }, blueArea);
+      el("stop", { offset: "100%", "stop-color": "rgba(37,99,235,0.0)" }, blueArea);
+
+      const greenArea = el("linearGradient", { id: "greenArea", x1: "0", x2: "0", y1: "0", y2: "1" }, defs);
+      el("stop", { offset: "0%", "stop-color": "rgba(5,150,105,0.3)" }, greenArea);
+      el("stop", { offset: "100%", "stop-color": "rgba(5,150,105,0.0)" }, greenArea);
+    }
+
+    function renderScene(r) {
+      const svg = $("#scene");
+      svg.innerHTML = "";
+      setupSVGDefs(svg);
+
+      rect(svg, 0, 0, 900, 360, { fill: "url(#bgGrid)" });
+      
+      if (state.mode !== "safety") {
+        // Floor line for horizontal scenarios
+        line(svg, 70, 270, 830, 270, { stroke: "#94a3b8", "stroke-width": 4, "stroke-linecap": "round" });
+        text(svg, 72, 50, t("positiveDirection"), { "font-size": 16, "font-weight": 800, fill: "#64748b" });
+        
+        // Dynamically shift the arrow to the right if English is selected to avoid text overlap
+        const startXArrow = state.lang === "en" ? 280 : 215;
+        arrow(svg, startXArrow, 45, startXArrow + 100, 45, "#64748b", "+");
+      } else {
+        // Vertical axis guide for Safety Drop
+        text(svg, 72, 50, t("positiveDirectionDown"), { "font-size": 16, "font-weight": 800, fill: "#64748b" });
+        const downArrowX = state.lang === "en" ? 150 : 100;
+        arrow(svg, downArrowX, 65, downArrowX, 115, "#64748b", "+");
+      }
+
+      if (state.mode === "safety") renderSafetyScene(svg, r);
+      if (state.mode === "push") renderPushScene(svg, r);
+      if (state.mode === "extension") renderExtensionScene(svg, r);
+    }
+
+    function eggShape(svg, cx, cy, squashY, cracked = false) {
+      // Create a perfect egg shape using elliptical arcs.
+      // cy is the BOTTOM center of the egg so it rests perfectly on floors.
+      const sx = 1 + (1 - squashY) * 0.5; // Widens as it squashes
+      const rx = 24 * sx;
+      const ryB = 24 * squashY; // Bottom is rounder
+      const ryT = 36 * squashY; // Top is taller/tapered
+      
+      const centerY = cy - ryB;
+
+      path(svg, `M ${cx} ${cy} A ${rx} ${ryB} 0 0 0 ${cx + rx} ${centerY} A ${rx} ${ryT} 0 0 0 ${cx} ${centerY - ryT} A ${rx} ${ryT} 0 0 0 ${cx - rx} ${centerY} A ${rx} ${ryB} 0 0 0 ${cx} ${cy} Z`, {
+        fill: "url(#eggGrad)", stroke: "#b45309", "stroke-width": 2
+      });
+      
+      if (cracked) {
+        path(svg, `M ${cx - 20*sx} ${centerY + 4*squashY} L ${cx - 8*sx} ${centerY - 8*squashY} L ${cx + 2*sx} ${centerY + 6*squashY} L ${cx + 12*sx} ${centerY - 4*squashY} L ${cx + 22*sx} ${centerY + 10*squashY}`, {
+            fill: "none", stroke: "#451a03", "stroke-width": 3, "stroke-linejoin": "round"
+        });
+        drawImpact(svg, cx, cy - 10, 0.7, "#f59e0b");
+      } else {
+        circle(svg, cx - 10, centerY - 2, 3, { fill: "#1f2937" });
+        circle(svg, cx + 10, centerY - 2, 3, { fill: "#1f2937" });
+        path(svg, `M ${cx-6} ${centerY+8} Q ${cx} ${centerY+14} ${cx+6} ${centerY+8}`, {fill:"none", stroke:"#1f2937", "stroke-width":2, "stroke-linecap":"round"});
+      }
+    }
+
+    function renderSafetyScene(svg, r) {
+      const t_fall = 1.2; 
+      
+      const xHard = 250;
+      const xSoft = 650;
+      const yStart = 80; // Adjusted for new egg geometry
+      const yFloor = 280;
+
+      let yHardBase = yStart, ySoftBase = yStart;
+      let contactPhase = false;
+      let tau = state.t - t_fall; 
+
+      if (state.t < t_fall) {
+        const fallRatio = state.t / t_fall;
+        const ease = fallRatio * fallRatio;
+        yHardBase = yStart + (yFloor - yStart) * ease;
+        ySoftBase = yStart + (yFloor - yStart) * ease;
+      } else {
+        contactPhase = true;
+        yHardBase = yFloor;
+        ySoftBase = yFloor;
+      }
+
+      let matDeflect = 0;
+      if (contactPhase) {
+        if (tau <= r.soft.dt) {
+          matDeflect = 35 * Math.sin((tau / r.soft.dt) * (Math.PI / 2));
+        } else {
+          matDeflect = 35 * Math.exp(-(tau - r.soft.dt) * 6);
+        }
+      }
+
+      let squashHard = 1;
+      let isCracked = false;
+      if (contactPhase) {
+        if (tau <= r.hard.dt) {
+           squashHard = 1 - 0.15 * Math.sin((tau / r.hard.dt) * (Math.PI / 2));
+        } else {
+           squashHard = 0.85; 
+           isCracked = true;
+        }
+      }
+
+      const yHard = yHardBase; 
+      const ySoft = ySoftBase + matDeflect; 
+
+      text(svg, xHard, 25, t("hard"), { "font-size": 22, "font-weight": 900, fill: "#0f172a", "text-anchor": "middle" });
+      rect(svg, xHard - 120, yFloor, 240, 30, { fill: "#cbd5e1", rx: 6, stroke: "#94a3b8", "stroke-width": 2 });
+
+      text(svg, xSoft, 25, t("soft"), { "font-size": 22, "font-weight": 900, fill: "#0f172a", "text-anchor": "middle" });
+      const matW = 260, matH = 42;
+      const mX = xSoft - matW/2;
+      
+      path(svg, `M ${mX} ${yFloor} Q ${xSoft} ${yFloor + matDeflect*2} ${mX + matW} ${yFloor} L ${mX + matW} ${yFloor + matH} L ${mX} ${yFloor + matH} Z`, { fill: "url(#matGrad)" });
+
+      eggShape(svg, xHard, yHard, squashHard, isCracked); 
+      eggShape(svg, xSoft, ySoft, 1, false);        
+
+      // Dynamic Real-time Force Arrows
+      if (!contactPhase) {
+         arrow(svg, xHard + 45, yHardBase - 40, xHard + 45, yHardBase, "#2563eb", "v");
+         arrow(svg, xSoft + 45, ySoftBase - 40, xSoft + 45, ySoftBase, "#2563eb", "v");
+      } else {
+         const maxPeak = Math.max(Math.abs(r.hard.Fpeak), Math.abs(r.soft.Fpeak));
+         
+         const F_hard_inst = getInstForce(tau, r.hard.dt, Math.abs(r.hard.Favg), state.forceProfile);
+         const F_soft_inst = getInstForce(tau, r.soft.dt, Math.abs(r.soft.Favg), state.forceProfile);
+
+         if (F_hard_inst > 0.1) { 
+           const fHardH = Math.min(180, 160 * (F_hard_inst / maxPeak));
+           arrow(svg, xHard + 55, yFloor, xHard + 55, yFloor - fHardH, "#dc2626", fmt(F_hard_inst, " N", 0));
+         }
+         if (F_soft_inst > 0.1) {
+           const fSoftH = Math.min(180, 160 * (F_soft_inst / maxPeak));
+           arrow(svg, xSoft + 55, yFloor + matDeflect, xSoft + 55, yFloor + matDeflect - fSoftH, "#059669", fmt(F_soft_inst, " N", 0));
+         }
+      }
+
+      text(svg, xHard, yFloor + 55, `${t("contactTime")}: ${r.hard.dt.toFixed(2)} s`, { "font-size": 16, "font-weight": 800, fill: "#64748b", "text-anchor": "middle" });
+      text(svg, xSoft, yFloor + 65, `${t("contactTime")}: ${r.soft.dt.toFixed(2)} s`, { "font-size": 16, "font-weight": 800, fill: "#64748b", "text-anchor": "middle" });
+    }
+
+    function renderPushScene(svg, r) {
+      const startX = 140;
+      const startX2 = 540;
+      const t_start = 0.2; // brief delay before push
+      
+      let x1 = startX, x2 = startX2;
+      let pushingShort = false, pushingLong = false;
+      let postPushShort = false, postPushLong = false;
+      let v1_current = 0, v2_current = 0;
+      
+      let handX1 = startX;
+      let handX2 = startX2;
+
+      let t_push_s = Math.max(0, state.t - t_start);
+
+      // Dynamic scale factor to keep carts strictly within the screen
+      const t_total = 2.8; 
+      function getPhysicalDist(dt, vf) {
+        if(dt <= 0) return 0;
+        const a = vf / dt;
+        const t_p = Math.min(dt, t_total);
+        const t_c = Math.max(0, t_total - dt);
+        const v_p = a * t_p;
+        return 0.5 * a * t_p * t_p + v_p * t_c;
+      }
+      
+      const dist1 = getPhysicalDist(r.short.dt, r.short.vf);
+      const dist2 = getPhysicalDist(r.long.dt, r.long.vf);
+      const maxDist = Math.max(dist1, dist2, 0.1); 
+      const scaleFactor = 230 / maxDist; // Fastest cart will travel exactly 230px safely
+
+      if (t_push_s > 0) {
+        // Short push kinematics
+        if (t_push_s < r.short.dt) {
+          pushingShort = true;
+          let a = r.short.vf / r.short.dt;
+          let dx = 0.5 * a * t_push_s * t_push_s * scaleFactor; 
+          x1 = startX + dx; 
+          v1_current = a * t_push_s;
+          handX1 = x1; 
+        } else {
+          postPushShort = true;
+          let dx_push = 0.5 * (r.short.vf / r.short.dt) * r.short.dt * r.short.dt * scaleFactor;
+          let t_coast = t_push_s - r.short.dt;
+          x1 = startX + dx_push + r.short.vf * t_coast * scaleFactor;
+          v1_current = r.short.vf;
+          handX1 = startX + dx_push; 
+        }
+        
+        // Long push kinematics
+        if (t_push_s < r.long.dt) {
+          pushingLong = true;
+          let a = r.long.vf / r.long.dt;
+          let dx = 0.5 * a * t_push_s * t_push_s * scaleFactor; 
+          x2 = startX2 + dx; 
+          v2_current = a * t_push_s;
+          handX2 = x2; 
+        } else {
+          postPushLong = true;
+          let dx_push = 0.5 * (r.long.vf / r.long.dt) * r.long.dt * r.long.dt * scaleFactor;
+          let t_coast = t_push_s - r.long.dt;
+          x2 = startX2 + dx_push + r.long.vf * t_coast * scaleFactor;
+          v2_current = r.long.vf;
+          handX2 = startX2 + dx_push; 
+        }
+      }
+
+      text(svg, 210, 95, t("shortPush"), { "font-size": 22, "font-weight": 900, fill: "#0f172a", "text-anchor": "middle" });
+      text(svg, 650, 95, t("longPush"), { "font-size": 22, "font-weight": 900, fill: "#0f172a", "text-anchor": "middle" });
+
+      if (v1_current > 0 && v1_current < r.short.vf) line(svg, x1-60, 240, x1-100, 240, {stroke:"#cbd5e1", "stroke-width": 3, "stroke-linecap":"round"});
+      if (v2_current > 0 && v2_current < r.long.vf) line(svg, x2-60, 240, x2-120, 240, {stroke:"#cbd5e1", "stroke-width": 3, "stroke-linecap":"round"});
+
+      // Only drop hands AFTER the push is complete to avoid negative time jumps at t=0
+      let drop1 = postPushShort ? Math.min(15, (t_push_s - r.short.dt)*40) : 0;
+      let drop2 = postPushLong ? Math.min(15, (t_push_s - r.long.dt)*40) : 0;
+
+      // Draw hands first (lower layer)
+      hand(svg, handX1 - 70, 236 + drop1, 1);
+      hand(svg, handX2 - 70, 236 + drop2, 1);
+
+      // Draw trolleys second
+      trolley(svg, x1, 240, "url(#blueBall)");
+      trolley(svg, x2, 240, "url(#matGrad)");
+
+      // Dynamic Real-time Force Arrows
+      const F_short_inst = getInstForce(t_push_s, r.short.dt, Math.abs(state.pushForce), state.forceProfile);
+      const F_long_inst = getInstForce(t_push_s, r.long.dt, Math.abs(state.pushForce), state.forceProfile);
+
+      if(F_short_inst > 0.1) arrow(svg, handX1 - 80, 195, handX1 - 20, 195, "#2563eb", `${fmt(F_short_inst, " N", 0)}`);
+      if(F_long_inst > 0.1) arrow(svg, handX2 - 80, 195, handX2 - 20, 195, "#2563eb", `${fmt(F_long_inst, " N", 0)}`);
+
+      text(svg, 210, 335, `${t("time")}: ${r.short.dt.toFixed(2)} s｜Δp=${fmt(r.short.impulse, "", 1)}`, { "font-size": 16, "font-weight": 800, fill: "#64748b", "text-anchor": "middle" });
+      text(svg, 650, 335, `${t("time")}: ${r.long.dt.toFixed(2)} s｜Δp=${fmt(r.long.impulse, "", 1)}`, { "font-size": 16, "font-weight": 800, fill: "#64748b", "text-anchor": "middle" });
+    }
+
+    function trolley(svg, cx, cy, fillUrl) {
+      rect(svg, cx - 45, cy - 30, 90, 42, { fill: fillUrl, stroke: "#0f172a", "stroke-width": 3, rx: 12 });
+      rect(svg, cx - 25, cy - 20, 50, 15, { fill: "rgba(255,255,255,0.4)", rx: 4 }); 
+      circle(svg, cx - 26, cy + 18, 12, { fill: "url(#wheelGrad)" });
+      circle(svg, cx + 26, cy + 18, 12, { fill: "url(#wheelGrad)" });
+      circle(svg, cx - 26, cy + 18, 4, { fill: "#cbd5e1" });
+      circle(svg, cx + 26, cy + 18, 4, { fill: "#cbd5e1" });
+    }
+
+    function hand(svg, gx, y, s) {
+      // Arm/Sleeve
+      path(svg, `M ${gx-45*s} ${y-12*s} L ${gx-10*s} ${y-12*s} L ${gx-10*s} ${y+12*s} L ${gx-45*s} ${y+12*s} Z`, { fill: "#cbd5e1", stroke: "#64748b", "stroke-width": 2*s, "stroke-linejoin": "round" });
+      // Palm
+      rect(svg, gx - 15*s, y - 18*s, 30*s, 36*s, { fill: "#fcd34d", stroke: "#b45309", "stroke-width": 2*s, rx: 8*s });
+      // Folded fingers (Knuckles pushing flat against the trolley)
+      rect(svg, gx + 15*s, y - 16*s, 10*s, 10*s, { fill: "#fcd34d", stroke: "#b45309", "stroke-width": 2*s, rx: 4*s });
+      rect(svg, gx + 15*s, y - 4*s, 10*s, 10*s, { fill: "#fcd34d", stroke: "#b45309", "stroke-width": 2*s, rx: 4*s });
+      rect(svg, gx + 15*s, y + 8*s, 10*s, 10*s, { fill: "#fcd34d", stroke: "#b45309", "stroke-width": 2*s, rx: 4*s });
+      // Thumb folded over the top
+      path(svg, `M ${gx-5*s} ${y-18*s} Q ${gx+10*s} ${y-26*s} ${gx+15*s} ${y-12*s} Q ${gx+5*s} ${y-4*s} ${gx-5*s} ${y-10*s} Z`, { fill: "#fbbf24", stroke: "#b45309", "stroke-width": 2*s, "stroke-linejoin": "round" });
+    }
+
+    function renderExtensionScene(svg, r) {
+      const t_impact = 1.0;
+      let xSlow = 115, xFast = 510;
+      let contactSlow = false, contactFast = false;
+
+      // Kinematics to force collision at exactly t_impact
+      if (state.t < t_impact) {
+         xSlow = 115 + (255 / t_impact) * state.t; // travel from 115 to 370
+         xFast = 510 + (280 / t_impact) * state.t; // travel from 510 to 790
+      } else {
+         xSlow = 370;
+         xFast = 790;
+         contactSlow = true;
+         contactFast = true;
+      }
+
+      text(svg, 210, 95, t("slowHit"), { "font-size": 22, "font-weight": 900, fill: "#0f172a", "text-anchor": "middle" });
+      text(svg, 650, 95, t("fastHit"), { "font-size": 22, "font-weight": 900, fill: "#0f172a", "text-anchor": "middle" });
+      
+      rect(svg, 370, 206, 20, 84, { fill: "#334155", rx: 4 });
+      rect(svg, 790, 206, 20, 84, { fill: "#334155", rx: 4 });
+      
+      // Dynamic elastic collision squash
+      let rSlowDynamic = 32, rFastDynamic = 32;
+      let tau = state.t - t_impact;
+      
+      if (contactSlow && tau <= r.slow.dt) {
+         rSlowDynamic = 32 - Math.sin((tau / r.slow.dt) * Math.PI) * 4;
+      }
+      if (contactFast && tau <= r.fast.dt) {
+         rFastDynamic = 32 - Math.sin((tau / r.fast.dt) * Math.PI) * 8; // Faster smashes more
+      }
+
+      circle(svg, xSlow, 240, rSlowDynamic, { fill: "url(#blueBall)", stroke: "#1e3a8a", "stroke-width": 2 });
+      circle(svg, xFast, 240, rFastDynamic, { fill: "url(#redBall)", stroke: "#7f1d1d", "stroke-width": 2 });
+
+      // Dynamic Real-time Force Arrows
+      const F_slow_inst = getInstForce(tau, r.slow.dt, Math.abs(r.slow.Favg), state.forceProfile);
+      const F_fast_inst = getInstForce(tau, r.fast.dt, Math.abs(r.fast.Favg), state.forceProfile);
+
+      if (!contactSlow) {
+        arrow(svg, xSlow - 82, 195, xSlow - 25, 195, "#2563eb", `${fmt(r.slow.speed, " m/s", 1, state.showSigned)}`);
+      } else if (F_slow_inst > 0.1) {
+        arrow(svg, xSlow + 35 + F_slow_inst*0.5, 195, xSlow + 35, 195, "#64748b", `${fmt(F_slow_inst, " N", 0)}`);
+      }
+
+      if (!contactFast) {
+        arrow(svg, xFast - 115, 195, xFast - 25, 195, "#dc2626", `${fmt(r.fast.speed, " m/s", 1, state.showSigned)}`);
+      } else if (F_fast_inst > 0.1) {
+        arrow(svg, xFast + 35 + F_fast_inst*0.5, 195, xFast + 35, 195, "#64748b", `${fmt(F_fast_inst, " N", 0)}`);
+      }
+      
+      if (contactSlow && tau < 0.1) drawImpact(svg, 370, 240, 1, "#3b82f6");
+      if (contactFast && tau < 0.1) drawImpact(svg, 790, 240, 1.5, "#ef4444");
+
+      text(svg, 210, 335, `Δp=${fmt(r.slow.dp,"",1)}｜Favg=${fmt(r.slow.Favg," N",1)}`, { "font-size": 16, "font-weight": 800, fill: "#64748b", "text-anchor": "middle" });
+      text(svg, 650, 335, `Δp=${fmt(r.fast.dp,"",1)}｜Favg=${fmt(r.fast.Favg," N",1)}`, { "font-size": 16, "font-weight": 800, fill: "#64748b", "text-anchor": "middle" });
+    }
+
+    function renderGraph(r) {
+      const svg = $("#graph");
+      svg.innerHTML = "";
+      setupSVGDefs(svg);
+
+      rect(svg, 0, 0, 900, 380, { fill: "url(#bgGrid)" });
+      
+      if (state.overlay) {
+        // Single Overlaid Axis
+        arrow(svg, 60, 260, 890, 260, "#64748b"); 
+        arrow(svg, 60, 260, 60, 35, "#64748b"); 
+        text(svg, 860, 280, t("timeAxis"), { "font-size": 14, "font-weight": 900, fill: "#475569" });
+        text(svg, 20, 45, t("forceAxis"), { "font-size": 14, "font-weight": 900, fill: "#475569" });
+        text(svg, 450, 20, t("areaNote"), { "font-size": 18, "font-weight": 900, fill: "#7c3aed", "text-anchor": "middle" });
+
+        const sX = 120; // Shared origin
+        if (state.mode === "safety") {
+          const maxPeak = Math.max(r.hard.Fpeak, r.soft.Fpeak);
+          // Draw wider pulse first
+          drawPulse(svg, { x: sX, baseY: 260, dt: r.soft.dt, Favg: Math.abs(r.soft.Favg), maxPeak, label: t("soft"), color: "#059669", gradFill: "url(#greenArea)", areaLabel: t("sameArea"), bottomOffset: 45 });
+          drawPulse(svg, { x: sX, baseY: 260, dt: r.hard.dt, Favg: Math.abs(r.hard.Favg), maxPeak, label: t("hard"), color: "#dc2626", gradFill: "url(#redArea)", areaLabel: t("sameArea") });
+        } else if (state.mode === "push") {
+          const maxPeak = Math.max(r.short.Fpeak, r.long.Fpeak);
+          // Draw wider pulse first
+          drawPulse(svg, { x: sX, baseY: 260, dt: r.long.dt, Favg: Math.abs(r.long.Favg), maxPeak, label: t("longPush"), color: "#059669", gradFill: "url(#greenArea)", areaLabel: `Δp=${r.long.impulse.toFixed(1)}`, bottomOffset: 45 });
+          drawPulse(svg, { x: sX, baseY: 260, dt: r.short.dt, Favg: Math.abs(r.short.Favg), maxPeak, label: t("shortPush"), color: "#2563eb", gradFill: "url(#blueArea)", areaLabel: `Δp=${r.short.impulse.toFixed(1)}` });
+        } else {
+          const maxPeak = Math.max(r.slow.Fpeak, r.fast.Fpeak);
+          // Overlap perfectly, stagger labels
+          drawPulse(svg, { x: sX, baseY: 260, dt: r.fast.dt, Favg: Math.abs(r.fast.Favg), maxPeak, label: t("fastHit"), color: "#dc2626", gradFill: "url(#redArea)", fixedWidth: 170, areaLabel: `|Δp|=${absFixed(r.fast.dp,1)}`, bottomOffset: 45 });
+          drawPulse(svg, { x: sX, baseY: 260, dt: r.slow.dt, Favg: Math.abs(r.slow.Favg), maxPeak, label: t("slowHit"), color: "#2563eb", gradFill: "url(#blueArea)", fixedWidth: 170, areaLabel: `|Δp|=${absFixed(r.slow.dp,1)}` });
+        }
+      } else {
+        // Split Axes
+        // Left Axis
+        arrow(svg, 60, 260, 460, 260, "#64748b"); 
+        arrow(svg, 60, 260, 60, 35, "#64748b"); 
+        text(svg, 430, 280, t("timeAxis"), { "font-size": 14, "font-weight": 900, fill: "#475569" });
+        text(svg, 20, 45, t("forceAxis"), { "font-size": 14, "font-weight": 900, fill: "#475569" });
+
+        // Right Axis
+        arrow(svg, 490, 260, 890, 260, "#64748b"); 
+        arrow(svg, 490, 260, 490, 35, "#64748b"); 
+        text(svg, 860, 280, t("timeAxis"), { "font-size": 14, "font-weight": 900, fill: "#475569" });
+        text(svg, 450, 45, t("forceAxis"), { "font-size": 14, "font-weight": 900, fill: "#475569" });
+
+        text(svg, 450, 20, t("areaNote"), { "font-size": 18, "font-weight": 900, fill: "#7c3aed", "text-anchor": "middle" });
+
+        if (state.mode === "safety") {
+          const maxPeak = Math.max(r.hard.Fpeak, r.soft.Fpeak);
+          drawPulse(svg, { x: 100, baseY: 260, dt: r.hard.dt, Favg: Math.abs(r.hard.Favg), maxPeak, label: t("hard"), color: "#dc2626", gradFill: "url(#redArea)", areaLabel: t("sameArea") });
+          drawPulse(svg, { x: 530, baseY: 260, dt: r.soft.dt, Favg: Math.abs(r.soft.Favg), maxPeak, label: t("soft"), color: "#059669", gradFill: "url(#greenArea)", areaLabel: t("sameArea") });
+          graphScaffold(svg, t("areaScaffoldSafety"));
+        } else if (state.mode === "push") {
+          const maxPeak = Math.max(r.short.Fpeak, r.long.Fpeak);
+          drawPulse(svg, { x: 100, baseY: 260, dt: r.short.dt, Favg: Math.abs(r.short.Favg), maxPeak, label: t("shortPush"), color: "#2563eb", gradFill: "url(#blueArea)", areaLabel: `Δp=${r.short.impulse.toFixed(1)}` });
+          drawPulse(svg, { x: 530, baseY: 260, dt: r.long.dt, Favg: Math.abs(r.long.Favg), maxPeak, label: t("longPush"), color: "#059669", gradFill: "url(#greenArea)", areaLabel: `Δp=${r.long.impulse.toFixed(1)}` });
+          graphScaffold(svg, t("areaScaffoldPush"));
+        } else {
+          const maxPeak = Math.max(r.slow.Fpeak, r.fast.Fpeak);
+          drawPulse(svg, { x: 100, baseY: 260, dt: r.slow.dt, Favg: Math.abs(r.slow.Favg), maxPeak, label: t("slowHit"), color: "#2563eb", gradFill: "url(#blueArea)", fixedWidth: 170, areaLabel: `|Δp|=${absFixed(r.slow.dp,1)}` });
+          drawPulse(svg, { x: 530, baseY: 260, dt: r.fast.dt, Favg: Math.abs(r.fast.Favg), maxPeak, label: t("fastHit"), color: "#dc2626", gradFill: "url(#redArea)", fixedWidth: 170, areaLabel: `|Δp|=${absFixed(r.fast.dp,1)}` });
+          graphScaffold(svg, t("areaScaffoldExt"));
+        }
+      }
+    }
+
+    function graphScaffold(svg, content) {
+      rect(svg, 95, 335, 710, 32, { fill: "rgba(237,233,254, 0.8)", rx: 8, stroke: "rgba(124,58,237,0.3)" });
+      text(svg, 450, 356, content, { "font-size": 14, "font-weight": 800, fill: "#5b21b6", "text-anchor": "middle" });
+    }
+
+    function drawPulse(svg, { x, baseY, dt, Favg, maxPeak, label, color, gradFill, fixedWidth = null, areaLabel = "", bottomOffset = 0 }) {
+      const timeScale = state.mode === "push" ? 110 : 450;
+      const maxHeight = 160;
+      const peak = Favg * peakFactor(state.forceProfile);
+      const w = fixedWidth || Math.max(16, dt * timeScale);
+      const h = Math.max(4, (peak / maxPeak) * maxHeight);
+
+      if (state.forceProfile === "rectangular") {
+        rect(svg, x, baseY - h, w, h, { fill: gradFill, stroke: color, "stroke-width": 3, rx: 2, filter: "url(#glow)" });
+      } else if (state.forceProfile === "triangular") {
+        path(svg, `M${x},${baseY} L${x + w/2},${baseY - h} L${x + w},${baseY} Z`, { fill: gradFill, stroke: color, "stroke-width": 3, "stroke-linejoin": "round", filter: "url(#glow)" });
+      } else {
+        const steps = 60;
+        let d = `M${x},${baseY}`;
+        for (let i = 0; i <= steps; i++) {
+          const xx = x + (i / steps) * w;
+          const yy = baseY - Math.sin(Math.PI * i / steps) * h;
+          d += ` L${xx},${yy}`;
+        }
+        d += ` L${x + w},${baseY} Z`;
+        path(svg, d, { fill: gradFill, stroke: color, "stroke-width": 3, "stroke-linejoin": "round", filter: "url(#glow)" });
+      }
+
+      if (state.forceProfile !== "rectangular") {
+        const hAvg = (Favg / maxPeak) * maxHeight;
+        line(svg, x, baseY - hAvg, x + w, baseY - hAvg, { stroke: color, "stroke-width": 2, "stroke-dasharray": "6,4", opacity: 0.6 });
+      }
+
+      text(svg, x + w/2, baseY + 24 + bottomOffset, label, { "font-size": 17, "font-weight": 900, fill: "#0f172a", "text-anchor": "middle" });
+      text(svg, x + w/2, baseY - h - 14, `${t("fAvg")}: ${Favg.toFixed(1)} N`, { "font-size": 15, "font-weight": 900, fill: color, "text-anchor": "middle" });
+      
+      if (state.showPeak && state.forceProfile !== "rectangular") {
+        text(svg, x + w/2, baseY - h - 32, `${t("fMax")} ≈ ${peak.toFixed(1)} N`, { "font-size": 13, "font-weight": 800, fill: color, "text-anchor": "middle" });
+      }
+      if (areaLabel) {
+        text(svg, x + w/2, baseY - h/2 + 6, areaLabel, { "font-size": 15, "font-weight": 900, fill: color, "text-anchor": "middle" });
+      }
+      
+      path(svg, `M${x},${baseY+35+bottomOffset} L${x},${baseY+40+bottomOffset} L${x+w},${baseY+40+bottomOffset} L${x+w},${baseY+35+bottomOffset}`, { fill: "none", stroke: color, "stroke-width": 2 });
+      text(svg, x + w/2, baseY+58+bottomOffset, `${dt.toFixed(2)} s`, { "font-size": 14, "font-weight": 800, fill: color, "text-anchor": "middle" });
+    }
+
+    // -------------------------------
+    // Interaction and animation
+    // -------------------------------
+    let animFrame = null;
+
+    function setMode(mode) {
+      if (mode === "extension" && !state.teacherOpen) return;
+      state.mode = mode;
+      state.feedback = null;
+      state.selectedOption = null;
+      state.t = 0;
+      state.playing = false;
+      if(animFrame) cancelAnimationFrame(animFrame);
+      renderAll();
+    }
+
+    function reset() {
+      Object.assign(state, {
+        playing: false,
+        t: 0,
+        showCalc: true,
+        showSigned: false,
+        showPeak: false,
+        simplified: true,
+        forceProfile: "rectangular",
+        mass: 1.0,
+        viSafety: 6.0,
+        vfSafety: 0,
+        contactHard: 0.05,
+        contactSoft: 0.30,
+        pushForce: 10,
+        pushShort: 0.50,
+        pushLong: 1.50,
+        viPush: 0,
+        slowSpeed: 3.0,
+        fastSpeed: 6.0,
+        fixedContact: 0.10,
+        feedback: null,
+        selectedOption: null
+      });
+      if(animFrame) cancelAnimationFrame(animFrame);
+      renderAll();
+    }
+
+    let lastStamp = null;
+    function tick(stamp) {
+      if (!state.playing) return;
+      if (lastStamp === null) lastStamp = stamp;
+      const dt = (stamp - lastStamp) / 1000;
+      lastStamp = stamp;
+      
+      state.t += dt;
+      
+      // Stop the animation cycle completely after 3 seconds
+      if (state.t >= 3.0) {
+          state.t = 3.0; // clamp at the end-state
+          state.playing = false;
+          renderDynamic();
+          $("#playBtn").textContent = t("play");
+          return; 
+      }
+      
+      renderDynamic();
+      animFrame = requestAnimationFrame(tick);
+    }
+
+    $("#modeTabs").addEventListener("click", e => {
+      const tab = e.target.closest(".tab");
+      if (tab) setMode(tab.dataset.mode);
+    });
+
+    $("#playBtn").addEventListener("click", () => {
+      // If pressing play when at the end, restart from the beginning
+      if (state.t >= 3.0) {
+         state.t = 0; 
+      }
+      
+      state.playing = !state.playing;
+      
+      if (state.playing) {
+        lastStamp = null;
+        if(animFrame) cancelAnimationFrame(animFrame);
+        animFrame = requestAnimationFrame(tick);
+      } else {
+        if(animFrame) cancelAnimationFrame(animFrame);
+      }
+      renderAll();
+    });
+
+    $("#resetBtn").addEventListener("click", reset);
+    $("#teacherBtn").addEventListener("click", () => {
+      state.teacherOpen = !state.teacherOpen;
+      if (!state.teacherOpen && state.mode === "extension") setMode("safety");
+      else renderAll();
+    });
+    $("#langBtn").addEventListener("click", () => { 
+      state.lang = state.lang === "zh" ? "en" : "zh"; 
+      state.feedback = null; 
+      renderAll(); 
+    });
+
+    // Initial render
+    renderAll();
+  </script>
+</body>
+</html>

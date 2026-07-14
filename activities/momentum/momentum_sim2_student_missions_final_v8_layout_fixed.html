@@ -1,0 +1,1785 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>碰撞分類器 — 引導式 v–t 圖分析</title>
+<style>
+  :root {
+    --bg: #edf3f8;
+    --panel: #ffffff;
+    --panel-soft: #f7fafc;
+    --text: #1c2733;
+    --muted: #647488;
+    --line: #d7e1ea;
+    --blue: #2d7ff9;
+    --orange: #ff7a00;
+    --green: #17835d;
+    --red: #c93f3f;
+    --amber: #b97000;
+    --shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+    --radius: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: linear-gradient(180deg, #edf3f8 0%, #e8f0f7 100%);
+    color: var(--text);
+    line-height: 1.35;
+  }
+  .app {
+    max-width: 1320px;
+    margin: 22px auto;
+    padding: 0 16px 28px;
+  }
+  .topbar, .panel {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+  }
+  .topbar {
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 1.6fr 1.2fr 1.5fr;
+    gap: 14px;
+    align-items: center;
+  }
+  h1 {
+    margin: 0 0 4px;
+    font-size: clamp(1.35rem, 2vw, 1.85rem);
+    line-height: 1.18;
+  }
+  h2 {
+    margin: 0;
+    font-size: 1.05rem;
+  }
+  .subtle, .small {
+    color: var(--muted);
+  }
+  .subtle { font-size: 0.95rem; }
+  .small { font-size: 0.88rem; }
+  .controls, .toolbar, .legend, .action-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .toolbar { justify-content: flex-end; }
+  .lang-toggle { font-weight: 700; white-space: nowrap; }
+  select, button, input {
+    font: inherit;
+  }
+  select, .text-input {
+    border: 1px solid #cad7e4;
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 12px;
+  }
+  .text-input { width: 100%; }
+  button {
+    border: 1px solid #cad7e4;
+    border-radius: 10px;
+    background: #fff;
+    padding: 10px 12px;
+    cursor: pointer;
+    transition: box-shadow .15s ease, transform .05s ease, background .15s ease;
+  }
+  button:hover { box-shadow: 0 4px 12px rgba(0,0,0,.08); }
+  button:active { transform: translateY(1px); }
+  button.primary { background: var(--blue); border-color: var(--blue); color: #fff; }
+  button.secondary { background: #f1f7ff; color: var(--blue); border-color: #cfe1ff; }
+  button.warn { background: #fff6ee; color: var(--amber); border-color: #ffd7b3; }
+  button.success { background: #effcf6; color: var(--green); border-color: #c7e8d8; }
+  button.toggle.active { background: #1f2d3a; color: #fff; border-color: #1f2d3a; }
+  button.choice.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .main {
+    display: grid;
+    grid-template-columns: 1.45fr 1fr;
+    gap: 16px;
+    margin-top: 16px;
+  }
+  .panel-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    background: linear-gradient(180deg, #fbfdff 0%, #f7fafc 100%);
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+  }
+  .panel-body { padding: 14px 16px 16px; }
+  .stack { display: grid; gap: 16px; }
+  .visual-stack { align-content: start; }
+  .mass-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+  .chip {
+    background: #f4f8fd;
+    border: 1px solid #d9e5f1;
+    border-radius: 999px;
+    padding: 8px 10px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    white-space: nowrap;
+  }
+  .dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+  .blue { background: var(--blue); }
+  .orange { background: var(--orange); }
+  #track {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 14px;
+    border: 1px solid #dae5ef;
+    background: linear-gradient(180deg, #fbfdff 0%, #f4f8fc 100%);
+  }
+  .graph-wrapper { position: relative; }
+  #graph {
+    width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 14px;
+    border: 1px solid #dae5ef;
+    background: #fcfdff;
+    touch-action: none;
+  }
+  .readout {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    min-width: 150px;
+    background: rgba(255,255,255,.96);
+    border: 1px solid #d9e3ec;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    padding: 8px 10px;
+    font-size: .92rem;
+  }
+  .info-box, .field, .calc-row, .reason-row {
+    background: var(--panel-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+  }
+  .info-box, .field { padding: 12px; }
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .field label { display: block; font-weight: 600; margin-bottom: 6px; }
+  .input-with-unit { display: flex; gap: 8px; align-items: center; }
+  .calc-grid, .reason-grid { display: grid; gap: 10px; }
+  .calc-row, .reason-row {
+    padding: 10px 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+  .calc-row strong { font-size: 1.02rem; }
+
+  .formula-support {
+    margin: 12px 0;
+    padding: 12px;
+    border: 1px solid #dbe7f2;
+    border-radius: 14px;
+    background: #ffffff;
+    display: grid;
+    gap: 10px;
+  }
+  .formula-support-title { font-weight: 700; color: #2f4054; }
+  .formula-support-note { color: var(--muted); font-size: .9rem; }
+  .formula-grid {
+    display: grid;
+    gap: 10px;
+  }
+  .formula-line, .formula-row2 {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: .94rem;
+  }
+  .formula-row2 {
+    display: grid;
+    grid-template-columns: minmax(92px, 128px) 1fr;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e2ebf4;
+    border-radius: 12px;
+    background: #fbfdff;
+  }
+  .formula-lhs {
+    font-weight: 800;
+    color: #263545;
+    white-space: nowrap;
+  }
+  .formula-equation {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .formula-term {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 10px;
+    border: 1px solid #e2ebf4;
+    border-radius: 12px;
+    background: #fff;
+  }
+  .formula-plus, .formula-equals {
+    font-weight: 800;
+    color: #263545;
+  }
+  .formula-coef {
+    font-weight: 800;
+    color: #53677b;
+  }
+  .velocity-power {
+    display: inline-flex;
+    align-items: flex-start;
+    gap: 2px;
+  }
+  .formula-line {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    padding: 10px;
+    border: 1px solid #e2ebf4;
+    border-radius: 12px;
+    background: #fbfdff;
+    line-height: 1.8;
+  }
+  .formula-blank {
+    width: 76px;
+    padding: 8px 9px;
+    border: 1px solid #cbd8e6;
+    border-radius: 10px;
+    background: #fbfdff;
+    font: inherit;
+    text-align: center;
+  }
+  .formula-blank.mass { border-color: rgba(45, 127, 249, .35); background: #f7fbff; }
+  .formula-blank.velocity { border-color: rgba(255, 122, 0, .38); background: #fffaf5; }
+  @media (max-width: 680px) {
+    .formula-row2 { grid-template-columns: 1fr; }
+    .formula-equation { gap: 6px; }
+    .formula-term { width: 100%; justify-content: center; }
+  }
+
+  .verdict.ok { color: var(--green); font-weight: 700; }
+  .verdict.bad { color: var(--red); font-weight: 700; }
+  .choice-bar { display: flex; gap: 8px; flex-wrap: wrap; }
+  .choice-bar button { min-width: 112px; }
+  #feedback {
+    min-height: 94px;
+    border-radius: 14px;
+    border: 1px solid var(--line);
+    background: #f8fafc;
+    padding: 12px;
+  }
+  #feedback.success { background: #effcf6; border-color: #c7e8d8; }
+  #feedback.error { background: #fff3f3; border-color: #efcfcf; }
+  details {
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    background: #fbfdff;
+  }
+  summary {
+    cursor: pointer;
+    padding: 10px 12px;
+    font-weight: 600;
+  }
+  .teacher-content { padding: 0 12px 12px; }
+  .teacher-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 16px;
+  }
+  .foot { margin-top: 10px; color: var(--muted); font-size: .88rem; }
+
+  .mission-panel { margin-top: 16px; }
+  .mission-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
+    border-bottom: 1px solid var(--line);
+    padding: 16px 18px;
+  }
+  .mission-head h2 { margin: 0; font-size: 1.05rem; }
+  .mission-body { padding: 16px 18px 18px; display: grid; gap: 12px; }
+  .mission-grid {
+    display: grid;
+    grid-template-columns: 1.15fr 1fr 1fr;
+    gap: 12px;
+  }
+  .mission-card {
+    background: var(--panel-soft);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+  }
+  .mission-card strong { display: block; margin-bottom: 5px; }
+  .mission-progress { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mission-chip {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #d9e5f1;
+    border-radius: 999px;
+    padding: 7px 10px;
+    background: #f4f8fd;
+    font-size: .9rem;
+    color: var(--muted);
+  }
+  .mission-chip.current { background: #f1f7ff; border-color: #a8c7ff; color: var(--blue); font-weight: 700; }
+  .mission-chip.done { background: #effcf6; border-color: #c7e8d8; color: var(--green); font-weight: 700; }
+  .scaffold-badge {
+    display: inline-flex;
+    align-items: center;
+    border-radius: 999px;
+    padding: 7px 10px;
+    background: #fff6ee;
+    color: var(--amber);
+    border: 1px solid #ffd7b3;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .mission-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .info-box.faded { opacity: .72; }
+  textarea.text-input { min-height: 76px; resize: vertical; }
+
+
+  .total-check-box {
+    background: #fbfdff;
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+    display: grid;
+    gap: 10px;
+  }
+  .total-check-head {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    align-items: center;
+  }
+  .total-input-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .total-input-row {
+    background: var(--panel-soft);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 10px;
+  }
+  .total-input-row label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+  .total-input-row .status {
+    min-height: 20px;
+    font-weight: 800;
+    margin-top: 5px;
+  }
+  .total-input-row .status.ok { color: var(--green); }
+  .total-input-row .status.bad { color: var(--red); }
+  .formula-box-hidden-note {
+    background: #fff6ee;
+    border: 1px solid #ffd7b3;
+    color: var(--amber);
+    border-radius: 12px;
+    padding: 10px 12px;
+  }
+
+  @media (min-width: 1081px) and (max-width: 1500px) {
+    .main { grid-template-columns: 1fr; }
+    .visual-stack {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      align-items: start;
+    }
+    .visual-stack .panel-body canvas {
+      max-width: 100%;
+      margin-left: auto;
+      margin-right: auto;
+    }
+  }
+
+  @media (max-width: 1080px) {
+    .topbar { grid-template-columns: 1fr; }
+    .main { grid-template-columns: 1fr; }
+    .visual-stack { grid-template-columns: 1fr; }
+    .visual-stack .panel-body canvas {
+      max-width: 980px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .mission-grid { grid-template-columns: 1fr; }
+    .total-input-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 680px) {
+    .fields-grid, .teacher-grid { grid-template-columns: 1fr; }
+    .choice-bar { flex-direction: column; }
+    .choice-bar button { width: 100%; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div>
+      <h1>碰撞分類器</h1>
+      <div class="subtle">利用 <strong>v–t 圖</strong> 讀取速度，並把數值直接輸入右側，然後判斷：<strong>總動量是否守恆？</strong> <strong>總動能是否守恆？</strong> 最後分類碰撞。</div>
+    </div>
+    <div class="controls">
+      <label for="caseSelect"><strong>個案：</strong></label>
+      <select id="caseSelect"></select>
+    </div>
+    <div class="toolbar">
+      <button id="langToggle" class="secondary lang-toggle">中文（繁體）/ English</button>
+      <button id="resetBtn" class="warn">重設答案</button>
+    </div>
+  </div>
+
+  <section class="panel mission-panel">
+    <div class="mission-head">
+      <h2 id="missionTitle">三關碰撞任務</h2>
+      <div id="scaffoldBadge" class="scaffold-badge">完整支援</div>
+    </div>
+    <div class="mission-body">
+      <div class="mission-progress" id="missionProgress"></div>
+      <div class="mission-grid">
+        <div class="mission-card">
+          <strong id="missionRuleTitle">任務規則</strong>
+          <div class="small" id="missionRuleText">任務一可從 1–6 任選一個個案；之後系統會只保留未完成碰撞類型的個案。</div>
+        </div>
+        <div class="mission-card">
+          <strong id="pairRoleTitle">二人合作</strong>
+          <div class="small" id="pairRoleText">任務一：A 操作模擬器和讀圖；B 計算總動量、總動能和檢查符號。任務二交換角色。</div>
+        </div>
+        <div class="mission-card">
+          <strong id="scaffoldTitle">支援程度</strong>
+          <div class="small" id="scaffoldText">任務一提供完整公式和步驟提示；任務二開始減少提示；任務三要求更獨立地寫出證據。</div>
+        </div>
+      </div>
+      <div class="mission-actions">
+        <button id="nextMissionBtn" class="primary" hidden>下一個任務</button>
+        <button id="missionResetBtn">重新開始任務</button>
+      </div>
+    </div>
+  </section>
+
+  <div class="main">
+    <div class="stack visual-stack">
+      <section class="panel">
+        <div class="panel-header">
+          <h2 id="animPanelTitle">一維碰撞動畫</h2>
+          <div class="toolbar" style="margin: 0 auto;">
+            <button id="playBtn" class="primary">▶ 播放</button>
+            <button id="replayBtn">↺ 重播</button>
+            <button id="slowBtn" class="secondary">慢動作：關</button>
+          </div>
+          <div class="legend"><span><span class="dot blue"></span> 小車 A</span><span><span class="dot orange"></span> 小車 B</span></div>
+        </div>
+        <div class="panel-body">
+          <div class="mass-strip">
+            <div class="chip"><span class="dot blue"></span><span id="massA">A: 1.00 kg</span></div>
+            <div class="small"><strong>符號約定：</strong>向右為正，向左為負</div>
+            <div class="chip"><span class="dot orange"></span><span id="massB">B: 1.00 kg</span></div>
+          </div>
+          <canvas id="track" width="880" height="240"></canvas>
+          <div class="foot">這些個案是一維孤立系統碰撞，所以系統的總動量應守恆。</div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2 id="graphPanelTitle">速度–時間圖</h2>
+          <div class="legend">
+            <span><span class="dot blue"></span> v<sub>A</sub>(t)</span>
+            <span><span class="dot orange"></span> v<sub>B</sub>(t)</span>
+            <span class="small">請直接把速度數值輸入右側</span>
+          </div>
+        </div>
+        <div class="panel-body graph-wrapper">
+          <canvas id="graph" width="880" height="330"></canvas>
+          <div class="readout" id="graphReadout">
+            <div><strong>t</strong> = — s</div>
+            <div style="color:var(--blue)"><strong>v<sub>A</sub></strong> = — m/s</div>
+            <div style="color:var(--orange)"><strong>v<sub>B</sub></strong> = — m/s</div>
+          </div>
+          <div class="foot">讀取碰撞前後的平坦區域，然後把速度值輸入右側。陰影帶表示碰撞時間。</div>
+        </div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="panel-header">
+        <h2 id="analysisPanelTitle">學生分析區</h2>
+        <div class="small" id="analysisFlowLabel">記錄 → 計算 → 推理 → 分類</div>
+      </div>
+      <div class="panel-body stack">
+        <div class="info-box" id="formulaBox">
+          <div><strong id="formulaTitleLabel">公式</strong></div>
+          <div>p = mv</div>
+          <div>KE = ½mv²</div>
+          <div class="small" id="formulaNote" style="margin-top:6px;">請先從圖中讀取四個速度，然後把數值直接輸入，不要只靠動畫猜測。</div>
+        </div>
+
+        <div class="fields-grid">
+          <div class="field">
+            <label for="uA" style="color: var(--blue);">碰撞前 u<sub>A</sub></label>
+            <div class="input-with-unit"><input id="uA" class="text-input" type="number" step="0.01"><span>m/s</span></div>
+          </div>
+          <div class="field">
+            <label for="uB" style="color: var(--orange);">碰撞前 u<sub>B</sub></label>
+            <div class="input-with-unit"><input id="uB" class="text-input" type="number" step="0.01"><span>m/s</span></div>
+          </div>
+          <div class="field">
+            <label for="vA" style="color: var(--blue);">碰撞後 v<sub>A</sub></label>
+            <div class="input-with-unit"><input id="vA" class="text-input" type="number" step="0.01"><span>m/s</span></div>
+          </div>
+          <div class="field">
+            <label for="vB" style="color: var(--orange);">碰撞後 v<sub>B</sub></label>
+            <div class="input-with-unit"><input id="vB" class="text-input" type="number" step="0.01"><span>m/s</span></div>
+          </div>
+        </div>
+
+        <div class="action-row">
+          <button id="calcBtn" class="success">計算總量</button>
+          <div class="small" id="calcNoteLabel">請把四個速度直接輸入，再按「計算總量」。</div>
+        </div>
+
+        <div class="calc-grid">
+          <div class="calc-row"><span>碰撞前總動量</span><strong id="pBefore">— kg·m/s</strong></div>
+          <div class="calc-row"><span>碰撞後總動量</span><strong id="pAfter">— kg·m/s</strong></div>
+          <div class="calc-row"><span>碰撞前總動能</span><strong id="keBefore">— J</strong></div>
+          <div class="calc-row"><span>碰撞後總動能</span><strong id="keAfter">— J</strong></div>
+        </div>
+
+        <div class="total-check-box" id="totalCheckBox" hidden>
+          <div class="total-check-head">
+            <div>
+              <strong id="totalCheckTitle">總量計算檢查</strong>
+              <div class="small" id="totalCheckNote">任務二和三需要先自行計算四個總量，再提交分類。</div>
+            </div>
+            <button id="checkTotalsBtn" class="success">檢查總量計算</button>
+          </div>
+          <div id="formulaSupportBox" class="formula-support" hidden></div>
+          <div class="total-input-grid">
+            <div class="total-input-row">
+              <label for="studentPBefore" id="studentPBeforeLabel">碰撞前總動量</label>
+              <div class="input-with-unit"><input id="studentPBefore" class="text-input" type="number" step="0.001"><span>kg·m/s</span></div>
+              <div class="status" id="studentPBeforeStatus"></div>
+            </div>
+            <div class="total-input-row">
+              <label for="studentPAfter" id="studentPAfterLabel">碰撞後總動量</label>
+              <div class="input-with-unit"><input id="studentPAfter" class="text-input" type="number" step="0.001"><span>kg·m/s</span></div>
+              <div class="status" id="studentPAfterStatus"></div>
+            </div>
+            <div class="total-input-row">
+              <label for="studentKEBefore" id="studentKEBeforeLabel">碰撞前總動能</label>
+              <div class="input-with-unit"><input id="studentKEBefore" class="text-input" type="number" step="0.001"><span>J</span></div>
+              <div class="status" id="studentKEBeforeStatus"></div>
+            </div>
+            <div class="total-input-row">
+              <label for="studentKEAfter" id="studentKEAfterLabel">碰撞後總動能</label>
+              <div class="input-with-unit"><input id="studentKEAfter" class="text-input" type="number" step="0.001"><span>J</span></div>
+              <div class="status" id="studentKEAfterStatus"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="reason-grid">
+          <div class="reason-row">
+            <span><strong>總動量是否守恆？</strong></span>
+            <div class="choice-bar" id="momentumChoices">
+              <button class="choice" data-group="momentum" data-value="yes">是</button>
+              <button class="choice" data-group="momentum" data-value="no">否</button>
+            </div>
+          </div>
+          <div class="reason-row">
+            <span><strong>總動能是否守恆？</strong></span>
+            <div class="choice-bar" id="energyChoices">
+              <button class="choice" data-group="energy" data-value="yes">是</button>
+              <button class="choice" data-group="energy" data-value="no">否</button>
+            </div>
+          </div>
+          <div class="reason-row">
+            <span><strong>這是甚麼類型的碰撞？</strong></span>
+            <div class="choice-bar" id="typeChoices">
+              <button class="choice" data-group="type" data-value="elastic">彈性碰撞</button>
+              <button class="choice" data-group="type" data-value="inelastic">非彈性碰撞</button>
+              <button class="choice" data-group="type" data-value="completely_inelastic">完全非彈性碰撞</button>
+            </div>
+          </div>
+        </div>
+        </div>
+
+        <button id="submitBtn" class="primary">提交推理與分類</button>
+
+        <div id="feedback">
+          <strong>準備好。</strong>
+          <div class="small">播放個案、讀取圖像、輸入四個速度、計算總量，然後先回答兩個推理問題，再選擇碰撞類型。</div>
+        </div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<script>
+(() => {
+  const totalDuration = 4.0;
+  const collisionStart = 1.90;
+  const collisionDuration = 0.20;
+  const dt = 0.02;
+
+  const cases = [
+    { id: 'c1', label: '個案 1', mA: 1.00, mB: 0.50, uA: 0.36, uB: 0.00, type: 'completely_inelastic', e: 0.00 },
+    { id: 'c2', label: '個案 2', mA: 0.50, mB: 0.50, uA: 0.53, uB: 0.00, type: 'inelastic', e: 0.53 },
+    { id: 'c3', label: '個案 3', mA: 1.00, mB: 0.50, uA: 0.63, uB: 0.00, type: 'elastic', e: 1.00 },
+    { id: 'c4', label: '個案 4', mA: 1.00, mB: 1.00, uA: 0.50, uB: 0.00, type: 'elastic', e: 1.00 },
+    { id: 'c5', label: '個案 5', mA: 1.00, mB: 1.00, uA: 0.40, uB: -0.20, type: 'inelastic', e: 0.50 },
+    { id: 'c6', label: '個案 6', mA: 1.00, mB: 1.50, uA: 0.60, uB: -0.20, type: 'completely_inelastic', e: 0.00 }
+  ];
+
+  const els = {
+    caseSelect: document.getElementById('caseSelect'),
+    missionTitle: document.getElementById('missionTitle'),
+    animPanelTitle: document.getElementById('animPanelTitle'),
+    graphPanelTitle: document.getElementById('graphPanelTitle'),
+    analysisPanelTitle: document.getElementById('analysisPanelTitle'),
+    analysisFlowLabel: document.getElementById('analysisFlowLabel'),
+    formulaTitleLabel: document.getElementById('formulaTitleLabel'),
+    calcNoteLabel: document.getElementById('calcNoteLabel'),
+    missionProgress: document.getElementById('missionProgress'),
+    missionRuleTitle: document.getElementById('missionRuleTitle'),
+    missionRuleText: document.getElementById('missionRuleText'),
+    pairRoleTitle: document.getElementById('pairRoleTitle'),
+    pairRoleText: document.getElementById('pairRoleText'),
+    scaffoldTitle: document.getElementById('scaffoldTitle'),
+    scaffoldText: document.getElementById('scaffoldText'),
+    scaffoldBadge: document.getElementById('scaffoldBadge'),
+    nextMissionBtn: document.getElementById('nextMissionBtn'),
+    missionResetBtn: document.getElementById('missionResetBtn'),
+    formulaBox: document.getElementById('formulaBox'),
+    formulaNote: document.getElementById('formulaNote'),
+    totalCheckBox: document.getElementById('totalCheckBox'),
+    totalCheckTitle: document.getElementById('totalCheckTitle'),
+    totalCheckNote: document.getElementById('totalCheckNote'),
+    formulaSupportBox: document.getElementById('formulaSupportBox'),
+    checkTotalsBtn: document.getElementById('checkTotalsBtn'),
+    studentPBefore: document.getElementById('studentPBefore'),
+    studentPAfter: document.getElementById('studentPAfter'),
+    studentKEBefore: document.getElementById('studentKEBefore'),
+    studentKEAfter: document.getElementById('studentKEAfter'),
+    studentPBeforeLabel: document.getElementById('studentPBeforeLabel'),
+    studentPAfterLabel: document.getElementById('studentPAfterLabel'),
+    studentKEBeforeLabel: document.getElementById('studentKEBeforeLabel'),
+    studentKEAfterLabel: document.getElementById('studentKEAfterLabel'),
+    studentPBeforeStatus: document.getElementById('studentPBeforeStatus'),
+    studentPAfterStatus: document.getElementById('studentPAfterStatus'),
+    studentKEBeforeStatus: document.getElementById('studentKEBeforeStatus'),
+    studentKEAfterStatus: document.getElementById('studentKEAfterStatus'),
+    langToggle: document.getElementById('langToggle'),
+    playBtn: document.getElementById('playBtn'),
+    replayBtn: document.getElementById('replayBtn'),
+    resetBtn: document.getElementById('resetBtn'),
+    slowBtn: document.getElementById('slowBtn'),
+    calcBtn: document.getElementById('calcBtn'),
+    submitBtn: document.getElementById('submitBtn'),
+    track: document.getElementById('track'),
+    graph: document.getElementById('graph'),
+    graphReadout: document.getElementById('graphReadout'),
+    massA: document.getElementById('massA'),
+    massB: document.getElementById('massB'),
+    uA: document.getElementById('uA'),
+    uB: document.getElementById('uB'),
+    vA: document.getElementById('vA'),
+    vB: document.getElementById('vB'),
+    pBefore: document.getElementById('pBefore'),
+    pAfter: document.getElementById('pAfter'),
+    keBefore: document.getElementById('keBefore'),
+    keAfter: document.getElementById('keAfter'),
+    feedback: document.getElementById('feedback'),
+  };
+
+  const trackCtx = els.track.getContext('2d');
+  const graphCtx = els.graph.getContext('2d');
+
+  let teacherMode = false;
+  let slowMotion = false;
+  let playing = false;
+  let animationFrame = null;
+  let currentCase = null;
+  let samples = [];
+  let currentT = 0;
+  let revealedCount = 1;
+  let hoverIndex = 0;
+  let runSpeed = 1;
+  let calculated = null;
+  let detailedTotalsPassed = false;
+  const studentChoices = { momentum: null, energy: null, type: null };
+  let lang = 'zh';
+  const missionTypes = ['elastic', 'inelastic', 'completely_inelastic'];
+  let missionIndex = 0;
+  let completedMissions = [];
+  let missionCompletedWaitingNext = false;
+
+  const I18N = {
+    zh: {
+      pageTitle: '碰撞分類器 — 引導式 v–t 圖分析',
+      title: '碰撞分類器',
+      subtitle: '利用 <strong>v–t 圖</strong> 讀取速度，並把數值直接輸入右側，然後判斷：<strong>總動量是否守恆？</strong> <strong>總動能是否守恆？</strong> 最後分類碰撞。',
+      caseLabel: '個案：', caseWord: '個案', teacherMode: '教師模式',
+      play: '▶ 播放', pause: '⏸ 暫停', replay: '↺ 重播', reset: '重設答案', slowOn: '慢動作：開', slowOff: '慢動作：關',
+      animTitle: '一維碰撞動畫', cartA: '小車 A', cartB: '小車 B', signConvention: '<strong>符號約定：</strong>向右為正，向左為負', systemFoot: '這些個案是一維孤立系統碰撞，所以系統的總動量應守恆。',
+      graphTitle: '速度–時間圖', graphHint: '請直接把速度數值輸入右側', graphFoot: '讀取碰撞前後的平坦區域，然後把速度值輸入右側。陰影帶表示碰撞時間。',
+      analysisTitle: '學生分析區', analysisFlow: '記錄 → 計算 → 推理 → 分類', formulaTitle: '公式', formulaNote: '請先從圖中讀取四個速度，然後把數值直接輸入，不要只靠動畫猜測。',
+      uA: '碰撞前 u<sub>A</sub>', uB: '碰撞前 u<sub>B</sub>', vA: '碰撞後 v<sub>A</sub>', vB: '碰撞後 v<sub>B</sub>',
+      calcBtn: '計算總量', calcNote: '請把四個速度直接輸入，再按「計算總量」。',
+      pBefore: '碰撞前總動量', pAfter: '碰撞後總動量', keBefore: '碰撞前總動能', keAfter: '碰撞後總動能',
+      momentumQ: '總動量是否守恆？', energyQ: '總動能是否守恆？', typeQ: '這是甚麼類型的碰撞？',
+      yes: '是', no: '否', elastic: '彈性碰撞', inelastic: '非彈性碰撞', completelyInelastic: '完全非彈性碰撞', submit: '提交推理與分類',
+      missionTitle: '三關碰撞任務', missionRuleTitle: '任務規則', pairRoleTitle: '二人合作', scaffoldTitle: '支援程度',
+      missionRuleTexts: [
+        '任務一：從 1–6 任選一個個案。碰撞類型暫時不會顯示，請先用數據判斷。',
+        '任務二：系統只保留 4 個未完成碰撞類型的個案。請選一個新的隱藏類型。',
+        '任務三：系統只保留最後 2 個未完成碰撞類型的個案。完成後應涵蓋三種碰撞。'
+      ],
+      scaffoldTexts: [
+        '完整支援：只需輸入速度，自動顯示總動量和總動能。',
+        '部分支援：先在公式空格填入質量和速度，再自行計算四個總量。',
+        '最低支援：只提供總量公式，學生需自行計算四個總量後才提交分類。'
+      ],
+      scaffoldBadges: ['完整支援', '部分支援', '最低支援'],
+      pairRoleTexts: [
+        '任務一：A 操作模擬器和讀圖；B 計算總動量、總動能和檢查符號。',
+        '任務二：B 操作模擬器和讀圖；A 計算總動量、總動能和檢查符號。',
+        '任務三：A 操作模擬器和讀圖；B 計算總動量、總動能和檢查符號。'
+      ],
+      nextMission: '下一個任務（已記錄後按）', resetMission: '重新開始任務', missionChipCurrent: '進行中', missionChipDone: '完成', missionChipPending: '未完成',
+      missionCompleteTitle: '任務完成。', missionCompleteMsg: '請先把速度、總動量、總動能和分類記錄在工作紙上；確認完成後才按「下一個任務」。',
+      allMissionsCompleteTitle: '三個任務全部完成。', allMissionsCompleteMsg: '你已完成彈性、非彈性和完全非彈性三類碰撞。',
+      totalCheckTitle: '總量計算檢查', totalCheckNote: '任務二和三需要先自行計算四個總量，再提交分類。', checkTotals: '檢查總量計算', totalsCorrectTitle: '總量計算正確。', totalsCorrectMsg: '現在可以根據總動量、總動能和是否黏在一起作分類。', totalsWrongTitle: '總量計算未完全正確。', totalsWrongMsg: '請檢查質量、速度正負號，以及動能中的平方。', totalsRequiredTitle: '請先完成總量計算。', totalsRequiredMsg: '任務二和三要求先通過總動量和總動能計算檢查，才提交分類。', hiddenTotals: '任務二和三不會先顯示答案；請在下方自行計算並檢查。', signHintMsg: '動量大小接近，但方向符號可能錯誤。請檢查圖中向左運動的速度是否輸入為負數。', partialCalcNote: '任務二：先在公式空格填入質量和速度，再計算四個總量。', minimalCalcNote: '任務三：只根據總量公式自行計算，再判斷守恆與分類。',
+      formulaSupportTitle2: '公式代入支架', formulaSupportNote2: '先把每一格填上對應的質量和速度，再把四個總量填入下方檢查欄。',
+      formulaSupportTitle3: '可用總量公式', formulaSupportNote3: '任務三不再提供代入空格；請自行決定把哪些速度代入公式。',
+      pTotFormula: 'p_tot = m_A v_A + m_B v_B', keTotFormula: 'KE_tot = 1/2 m_A v_A^2 + 1/2 m_B v_B^2',
+      readyTitle: '準備好。', readyMsg: '播放個案、讀取圖像、輸入四個速度、計算總量，然後先回答兩個推理問題，再選擇碰撞類型。',
+      teacherSummary: '教師檢視', correctType: '正確類型：', restitution: '恢復係數 e：', exactUA: '準確 u<sub>A</sub>：', exactUB: '準確 u<sub>B</sub>：', exactVA: '準確 v<sub>A</sub>：', exactVB: '準確 v<sub>B</sub>：', totalPBefore: '碰撞前總 p：', totalPAfter: '碰撞後總 p：', totalKEBefore: '碰撞前總 KE：', totalKEAfter: '碰撞後總 KE：',
+      negative: '負', positive: '正', collision: '碰撞', timeAxis: '時間 / s', velocityAxis: '速度 / m s⁻¹',
+      missingVelTitle: '請輸入所有四個速度。', missingVelMsg: '請利用圖像讀數，並把四個速度直接輸入。',
+      incompleteTitle: '請完成三個選擇。', incompleteMsg: '請先回答動量問題、動能問題，以及碰撞類型。',
+      recheckTitle: '請重新檢查你的圖像讀數。', recheckMsg: '這些個案是孤立系統，所以你記錄的數值應顯示總動量在小範圍讀數誤差內守恆。',
+      correct: '正確。', elasticFeedback: '你的數值顯示總動量守恆，而且總動能近似守恆，所以這是彈性碰撞。', inelasticFeedback: '你的數值顯示總動量守恆，但總動能減少，所以這是非彈性碰撞。', completeFeedback: '你的數值顯示總動量守恆、總動能減少，而且兩小車碰撞後具有相同的末速度，所以這是完全非彈性碰撞。',
+      notCorrect: '未正確。', momentumHint: '總動量應該守恆。', energyConservedHint: '總動能應該守恆。', energyLostHint: '總動能應該減少。', stickyHint: '碰撞後兩小車有相同的末速度。', elasticHint: '兩小車碰撞後分開，而且總動能守恆。', inelasticHint: '兩小車碰撞後分開，但總動能不守恆。'
+    },
+    en: {
+      pageTitle: 'Collision Sorter — Guided v–t Graph Analysis',
+      title: 'Collision Sorter',
+      subtitle: 'Use the <strong>v–t graph</strong> to read the velocities. Enter the values on the right, then decide: <strong>Is total momentum conserved?</strong> <strong>Is total kinetic energy conserved?</strong> Finally, classify the collision.',
+      caseLabel: 'Case:', caseWord: 'Case', teacherMode: 'Teacher mode',
+      play: '▶ Play', pause: '⏸ Pause', replay: '↺ Replay', reset: 'Reset answers', slowOn: 'Slow motion: On', slowOff: 'Slow motion: Off',
+      animTitle: '1D collision animation', cartA: 'Cart A', cartB: 'Cart B', signConvention: '<strong>Sign convention:</strong> right = positive, left = negative', systemFoot: 'All cases are 1D isolated-system collisions, so the total momentum of the system should be conserved.',
+      graphTitle: 'Velocity–time graph', graphHint: 'Enter the velocity values on the right', graphFoot: 'Read the flat regions before and after the collision, then enter the velocity values on the right. The shaded band shows the collision interval.',
+      analysisTitle: 'Student analyser', analysisFlow: 'Record → Calculate → Reason → Classify', formulaTitle: 'Formulae', formulaNote: 'Read the four velocities from the graph, then enter them directly. Do not classify by animation alone.',
+      uA: 'Before collision u<sub>A</sub>', uB: 'Before collision u<sub>B</sub>', vA: 'After collision v<sub>A</sub>', vB: 'After collision v<sub>B</sub>',
+      calcBtn: 'Calculate totals', calcNote: 'Enter the four velocities, then press “Calculate totals”.',
+      pBefore: 'Total momentum before', pAfter: 'Total momentum after', keBefore: 'Total kinetic energy before', keAfter: 'Total kinetic energy after',
+      momentumQ: 'Is total momentum conserved?', energyQ: 'Is total kinetic energy conserved?', typeQ: 'What type of collision is this?',
+      yes: 'Yes', no: 'No', elastic: 'Elastic collision', inelastic: 'Inelastic collision', completelyInelastic: 'Completely inelastic collision', submit: 'Submit reasoning and classification',
+      missionTitle: 'Three-mission collision challenge', missionRuleTitle: 'Mission rule', pairRoleTitle: 'Pair work', scaffoldTitle: 'Scaffold level',
+      missionRuleTexts: [
+        'Mission 1: choose any case from 1–6. The collision type is hidden; classify using evidence first.',
+        'Mission 2: only 4 cases from the remaining hidden collision families are available. Choose one new type.',
+        'Mission 3: only the final 2 cases from the remaining hidden family are available. After this, all three types are covered.'
+      ],
+      scaffoldTexts: [
+        'Full scaffold: enter velocities and the simulator shows total momentum and total kinetic energy automatically.',
+        'Partial scaffold: fill the formula blanks with masses and velocities, then calculate the four totals.',
+        'Minimal scaffold: only the total formulae are shown; students calculate the four totals before submitting.'
+      ],
+      scaffoldBadges: ['Full scaffold', 'Partial scaffold', 'Minimal scaffold'],
+      pairRoleTexts: [
+        'Mission 1: A operates the simulator and reads the graph. B calculates total momentum, total kinetic energy, and checks signs.',
+        'Mission 2: B operates the simulator and reads the graph. A calculates total momentum, total kinetic energy, and checks signs.',
+        'Mission 3: A operates the simulator and reads the graph. B calculates total momentum, total kinetic energy, and checks signs.'
+      ],
+      nextMission: 'Next mission (after recording)', resetMission: 'Reset missions', missionChipCurrent: 'current', missionChipDone: 'done', missionChipPending: 'pending',
+      missionCompleteTitle: 'Mission complete.', missionCompleteMsg: 'Record the velocities, total momentum, total kinetic energy and classification on your worksheet first; press “Next mission” only after recording.',
+      allMissionsCompleteTitle: 'All three missions complete.', allMissionsCompleteMsg: 'You have completed elastic, inelastic and completely inelastic collisions.',
+      totalCheckTitle: 'Total calculation check', totalCheckNote: 'Missions 2 and 3 require students to calculate the four totals before submitting.', checkTotals: 'Check total calculations', totalsCorrectTitle: 'Total calculations correct.', totalsCorrectMsg: 'You can now classify using total momentum, total kinetic energy and whether the carts stick together.', totalsWrongTitle: 'Total calculations not fully correct.', totalsWrongMsg: 'Check masses, velocity signs and the squared term in kinetic energy.', totalsRequiredTitle: 'Complete the total calculations first.', totalsRequiredMsg: 'Missions 2 and 3 require a passed momentum and kinetic-energy total check before submission.', hiddenTotals: 'Missions 2 and 3 do not reveal the totals first; calculate and check them below.', signHintMsg: 'The momentum magnitudes are close, but a direction sign may be wrong. Check whether leftward velocities from the graph should be entered as negative.', partialCalcNote: 'Mission 2: fill the formula blanks with masses and velocities, then calculate the four totals.', minimalCalcNote: 'Mission 3: use the total formulae to calculate first, then judge conservation and type.',
+      formulaSupportTitle2: 'Fill-in formula scaffold', formulaSupportNote2: 'Fill each box with the correct mass or velocity first, then enter the four totals in the checking fields below.',
+      formulaSupportTitle3: 'Total formulae to use', formulaSupportNote3: 'Mission 3 no longer provides substitution boxes. Decide which velocities to substitute into the formulae yourself.',
+      pTotFormula: 'p_tot = m_A v_A + m_B v_B', keTotFormula: 'KE_tot = 1/2 m_A v_A^2 + 1/2 m_B v_B^2',
+      readyTitle: 'Ready.', readyMsg: 'Play the case, read the graph, enter the four velocities, calculate the totals, then answer the two reasoning questions and classify the collision.',
+      teacherSummary: 'Teacher view', correctType: 'Correct type:', restitution: 'Coefficient of restitution e:', exactUA: 'Exact u<sub>A</sub>:', exactUB: 'Exact u<sub>B</sub>:', exactVA: 'Exact v<sub>A</sub>:', exactVB: 'Exact v<sub>B</sub>:', totalPBefore: 'Total p before:', totalPAfter: 'Total p after:', totalKEBefore: 'Total KE before:', totalKEAfter: 'Total KE after:',
+      negative: 'negative', positive: 'positive', collision: 'collision', timeAxis: 'Time / s', velocityAxis: 'Velocity / m s⁻¹',
+      missingVelTitle: 'Enter all four velocities.', missingVelMsg: 'Read the values from the graph and enter the four velocities directly.',
+      incompleteTitle: 'Complete all three choices.', incompleteMsg: 'Answer the momentum question, the energy question, and the collision type.',
+      recheckTitle: 'Recheck your graph readings.', recheckMsg: 'These cases are isolated systems, so your recorded values should show total momentum conserved within a small reading tolerance.',
+      correct: 'Correct.', elasticFeedback: 'Your values show that total momentum is conserved and total kinetic energy is approximately conserved, so this is an elastic collision.', inelasticFeedback: 'Your values show that total momentum is conserved, but total kinetic energy decreases, so this is an inelastic collision.', completeFeedback: 'Your values show that total momentum is conserved, total kinetic energy decreases, and the two carts have the same final velocity, so this is a completely inelastic collision.',
+      notCorrect: 'Not correct yet.', momentumHint: 'Total momentum should be conserved.', energyConservedHint: 'Total kinetic energy should be conserved.', energyLostHint: 'Total kinetic energy should decrease.', stickyHint: 'After collision, the two carts have the same final velocity.', elasticHint: 'The carts separate after collision, and total kinetic energy is conserved.', inelasticHint: 'The carts separate after collision, but total kinetic energy is not conserved.'
+    }
+  };
+
+  function tr(key) { return I18N[lang][key] || key; }
+  function typeLabels() { return { elastic: tr('elastic'), inelastic: tr('inelastic'), completely_inelastic: tr('completelyInelastic') }; }
+  function caseLabel(index) { return `${tr('caseWord')} ${index + 1}`; }
+
+  function setFeedbackState(kind, titleKey, msgKey) {
+    els.feedback.className = kind || '';
+    els.feedback.innerHTML = `<strong>${tr(titleKey)}</strong><div class="small">${tr(msgKey)}</div>`;
+  }
+
+  function availableCasesForMission() {
+    const usedTypes = new Set(completedMissions.map(m => m.type));
+    const remainingTypes = missionTypes.filter(type => !usedTypes.has(type));
+    if (remainingTypes.length === 0) return cases;
+    return cases.filter(c => remainingTypes.includes(c.type));
+  }
+
+  function updateCaseOptions(preferredId = null) {
+    const available = missionCompletedWaitingNext && currentCase ? [currentCase] : availableCasesForMission();
+    const nextId = preferredId && available.some(c => c.id === preferredId)
+      ? preferredId
+      : (available[0] ? available[0].id : cases[0].id);
+    els.caseSelect.innerHTML = '';
+    available.forEach((c) => {
+      const opt = document.createElement('option');
+      opt.value = c.id;
+      opt.textContent = caseLabel(cases.indexOf(c));
+      els.caseSelect.appendChild(opt);
+    });
+    els.caseSelect.value = nextId;
+    els.caseSelect.disabled = missionCompletedWaitingNext || completedMissions.length >= 3;
+  }
+
+  function typeLabel(type) {
+    return typeLabels()[type] || type;
+  }
+
+  function updateMissionUI() {
+    const displayIndex = Math.min(missionIndex, 2);
+    els.missionTitle.textContent = `${tr('missionTitle')} ${displayIndex + 1}/3`;
+    els.missionRuleTitle.textContent = tr('missionRuleTitle');
+    els.pairRoleTitle.textContent = tr('pairRoleTitle');
+    els.scaffoldTitle.textContent = tr('scaffoldTitle');
+    els.missionRuleText.textContent = tr('missionRuleTexts')[displayIndex];
+    els.pairRoleText.textContent = tr('pairRoleTexts')[displayIndex];
+    els.scaffoldText.textContent = tr('scaffoldTexts')[displayIndex];
+    els.scaffoldBadge.textContent = tr('scaffoldBadges')[displayIndex];
+    els.nextMissionBtn.textContent = tr('nextMission');
+    els.missionResetBtn.textContent = tr('resetMission');
+    els.nextMissionBtn.hidden = !(missionCompletedWaitingNext && completedMissions.length < 3);
+
+    els.missionProgress.innerHTML = '';
+    for (let i = 0; i < 3; i++) {
+      const chip = document.createElement('span');
+      chip.className = 'mission-chip';
+      const completed = completedMissions[i];
+      if (completed) {
+        chip.classList.add('done');
+        chip.textContent = `${i + 1}. ${tr('missionChipDone')} — ${typeLabel(completed.type)}`;
+      } else if (i === missionIndex && completedMissions.length < 3) {
+        chip.classList.add('current');
+        chip.textContent = `${i + 1}. ${tr('missionChipCurrent')}`;
+      } else {
+        chip.textContent = `${i + 1}. ${tr('missionChipPending')}`;
+      }
+      els.missionProgress.appendChild(chip);
+    }
+    updateCaseOptions(currentCase ? currentCase.id : els.caseSelect.value);
+    applyScaffoldLevel();
+  }
+
+
+  function showAutoTotals(result, reveal = true) {
+    if (!result) {
+      els.pBefore.textContent = '— kg·m/s';
+      els.pAfter.textContent = '— kg·m/s';
+      els.keBefore.textContent = '— J';
+      els.keAfter.textContent = '— J';
+      return;
+    }
+    if (!reveal) {
+      els.pBefore.textContent = '— kg·m/s';
+      els.pAfter.textContent = '— kg·m/s';
+      els.keBefore.textContent = '— J';
+      els.keAfter.textContent = '— J';
+      return;
+    }
+    els.pBefore.textContent = `${fmt(result.pBefore, 3)} kg·m/s`;
+    els.pAfter.textContent = `${fmt(result.pAfter, 3)} kg·m/s`;
+    els.keBefore.textContent = `${fmt(result.keBefore, 3)} J`;
+    els.keAfter.textContent = `${fmt(result.keAfter, 3)} J`;
+  }
+
+  function resetTotalCheck() {
+    detailedTotalsPassed = false;
+    ['studentPBefore','studentPAfter','studentKEBefore','studentKEAfter'].forEach(id => { if (els[id]) els[id].value = ''; });
+    document.querySelectorAll('.formula-blank').forEach(el => { el.value = ''; });
+    ['studentPBeforeStatus','studentPAfterStatus','studentKEBeforeStatus','studentKEAfterStatus'].forEach(id => {
+      if (els[id]) { els[id].textContent = ''; els[id].className = 'status'; }
+    });
+  }
+
+  function invalidateTotalCheck() {
+    if (!detailedTotalsPassed) return;
+    detailedTotalsPassed = false;
+    ['studentPBeforeStatus','studentPAfterStatus','studentKEBeforeStatus','studentKEAfterStatus'].forEach(id => {
+      if (els[id]) { els[id].textContent = ''; els[id].className = 'status'; }
+    });
+    if (missionIndex > 0 && calculated) showAutoTotals(calculated, false);
+  }
+
+  function getCalculatedFromInputs(showErrors = true) {
+    const uA = parseFloat(els.uA.value);
+    const uB = parseFloat(els.uB.value);
+    const vA = parseFloat(els.vA.value);
+    const vB = parseFloat(els.vB.value);
+    if ([uA, uB, vA, vB].some(v => Number.isNaN(v))) {
+      if (showErrors) {
+        els.feedback.className = 'error';
+        setFeedbackState('error', 'missingVelTitle', 'missingVelMsg');
+      }
+      return null;
+    }
+    const pBefore = currentCase.mA * uA + currentCase.mB * uB;
+    const pAfter = currentCase.mA * vA + currentCase.mB * vB;
+    const keBefore = 0.5 * currentCase.mA * uA ** 2 + 0.5 * currentCase.mB * uB ** 2;
+    const keAfter = 0.5 * currentCase.mA * vA ** 2 + 0.5 * currentCase.mB * vB ** 2;
+    calculated = {
+      uA, uB, vA, vB,
+      pBefore, pAfter,
+      keBefore, keAfter,
+      pOK: approxEqual(pBefore, pAfter, 0.02, 0.04),
+      keOK: approxEqual(keBefore, keAfter, 0.02, 0.04),
+      sticky: approxEqual(vA, vB, 0.02, 0.02)
+    };
+    return calculated;
+  }
+
+  function checkDetailedTotals() {
+    const result = getCalculatedFromInputs(true);
+    if (!result) return;
+    const checks = [
+      ['studentPBefore', 'studentPBeforeStatus', result.pBefore],
+      ['studentPAfter', 'studentPAfterStatus', result.pAfter],
+      ['studentKEBefore', 'studentKEBeforeStatus', result.keBefore],
+      ['studentKEAfter', 'studentKEAfterStatus', result.keAfter]
+    ];
+    let all = true;
+    checks.forEach(([inputId, statusId, target]) => {
+      const entered = parseFloat(els[inputId].value);
+      const ok = !Number.isNaN(entered) && approxEqual(entered, target, 0.02, 0.04);
+      els[statusId].textContent = ok ? '✓' : '✗';
+      els[statusId].className = `status ${ok ? 'ok' : 'bad'}`;
+      if (!ok) all = false;
+    });
+    detailedTotalsPassed = all;
+    showAutoTotals(result, all || missionIndex === 0);
+    if (all) {
+      els.feedback.className = 'success';
+      setFeedbackState('success', 'totalsCorrectTitle', 'totalsCorrectMsg');
+    } else {
+      els.feedback.className = 'error';
+      setFeedbackState('error', 'totalsWrongTitle', 'totalsWrongMsg');
+    }
+  }
+
+
+  function renderMission2FormulaSupport() {
+    const isZH = lang === 'zh';
+    const lhsMapZH = {
+      p_before: 'p<sub>碰撞前</sub>',
+      p_after: 'p<sub>碰撞後</sub>',
+      KE_before: 'KE<sub>碰撞前</sub>',
+      KE_after: 'KE<sub>碰撞後</sub>'
+    };
+    const lhsMapEN = {
+      p_before: 'p<sub>before</sub>',
+      p_after: 'p<sub>after</sub>',
+      KE_before: 'KE<sub>before</sub>',
+      KE_after: 'KE<sub>after</sub>'
+    };
+    const lhs = (name) => isZH ? lhsMapZH[name] : lhsMapEN[name];
+    const blank = (token, type) => `<input class="formula-blank ${type}" aria-label="${token}" placeholder="${token}">`;
+    const pTerm = (m, v) => `<span class="formula-term">${blank(m, 'mass')} <span>×</span> ${blank(v, 'velocity')}</span>`;
+    const keTerm = (m, v) => `<span class="formula-term"><span class="formula-coef">1/2</span> <span>×</span> ${blank(m, 'mass')} <span>×</span> <span class="velocity-power">${blank(v, 'velocity')}<sup>2</sup></span></span>`;
+    const row = (name, termA, termB) => `
+      <div class="formula-row2">
+        <div class="formula-lhs">${lhs(name)}</div>
+        <div class="formula-equation"><span class="formula-equals">=</span>${termA}<span class="formula-plus">+</span>${termB}</div>
+      </div>`;
+    els.formulaSupportBox.innerHTML = `
+      <div class="formula-support-title">${tr('formulaSupportTitle2')}</div>
+      <div class="formula-support-note">${tr('formulaSupportNote2')}</div>
+      <div class="formula-grid">
+        ${row('p_before', pTerm('m_A', 'u_A'), pTerm('m_B', 'u_B'))}
+        ${row('p_after', pTerm('m_A', 'v_A'), pTerm('m_B', 'v_B'))}
+        ${row('KE_before', keTerm('m_A', 'u_A'), keTerm('m_B', 'u_B'))}
+        ${row('KE_after', keTerm('m_A', 'v_A'), keTerm('m_B', 'v_B'))}
+      </div>`;
+  }
+
+  function renderMission3FormulaSupport() {
+    const pFormula = `<div class="formula-row2"><div class="formula-lhs">p<sub>tot</sub></div><div class="formula-equation"><span class="formula-equals">=</span><span class="formula-term">m_A × v_A</span><span class="formula-plus">+</span><span class="formula-term">m_B × v_B</span></div></div>`;
+    const keFormula = `<div class="formula-row2"><div class="formula-lhs">KE<sub>tot</sub></div><div class="formula-equation"><span class="formula-equals">=</span><span class="formula-term"><span class="formula-coef">1/2</span> × m_A × v_A<sup>2</sup></span><span class="formula-plus">+</span><span class="formula-term"><span class="formula-coef">1/2</span> × m_B × v_B<sup>2</sup></span></div></div>`;
+    els.formulaSupportBox.innerHTML = `
+      <div class="formula-support-title">${tr('formulaSupportTitle3')}</div>
+      <div class="formula-support-note">${tr('formulaSupportNote3')}</div>
+      <div class="formula-grid">${pFormula}${keFormula}</div>`;
+  }
+
+  function applyScaffoldLevel() {
+    const level = Math.min(missionIndex, 2);
+    if (els.formulaBox) {
+      els.formulaBox.hidden = level === 2;
+      els.formulaBox.classList.toggle('faded', level === 1);
+    }
+    if (els.formulaNote) els.formulaNote.textContent = tr('formulaNote');
+    const actionNote = document.querySelector('.action-row .small');
+    if (actionNote) {
+      if (level === 0) actionNote.textContent = tr('calcNote');
+      if (level === 1) actionNote.textContent = tr('partialCalcNote');
+      if (level === 2) actionNote.textContent = tr('minimalCalcNote');
+    }
+    if (els.totalCheckBox) {
+      els.totalCheckBox.hidden = level === 0;
+      els.totalCheckTitle.textContent = tr('totalCheckTitle');
+      els.totalCheckNote.textContent = level === 1 ? tr('formulaSupportNote2') : tr('formulaSupportNote3');
+      els.checkTotalsBtn.textContent = tr('checkTotals');
+      els.studentPBeforeLabel.textContent = tr('pBefore');
+      els.studentPAfterLabel.textContent = tr('pAfter');
+      els.studentKEBeforeLabel.textContent = tr('keBefore');
+      els.studentKEAfterLabel.textContent = tr('keAfter');
+      if (els.formulaSupportBox) {
+        els.formulaSupportBox.hidden = level === 0;
+        if (level === 1) renderMission2FormulaSupport();
+        if (level === 2) renderMission3FormulaSupport();
+      }
+    }
+    if (calculated) showAutoTotals(calculated, level === 0 || detailedTotalsPassed);
+  }
+
+  function markMissionComplete() {
+    if (completedMissions.length >= 3 || missionCompletedWaitingNext) return;
+    const completedType = currentCase.type;
+    completedMissions[missionIndex] = { caseId: currentCase.id, type: completedType };
+
+    if (completedMissions.length >= 3) {
+      missionCompletedWaitingNext = false;
+      updateMissionUI();
+      els.caseSelect.disabled = true;
+      els.feedback.innerHTML += `<div class="small" style="margin-top:8px;"><strong>${tr('allMissionsCompleteTitle')}</strong> ${tr('allMissionsCompleteMsg')}</div>`;
+      return;
+    }
+
+    missionCompletedWaitingNext = true;
+    updateMissionUI();
+    els.feedback.innerHTML += `<div class="small" style="margin-top:8px;"><strong>${tr('missionCompleteTitle')}</strong> ${tr('missionCompleteMsg')}</div><div class="small" style="margin-top:6px;">${typeLabel(completedType)}</div>`;
+  }
+
+  function goNextMission() {
+    if (!missionCompletedWaitingNext || completedMissions.length >= 3) return;
+    missionIndex = Math.min(completedMissions.length, 2);
+    missionCompletedWaitingNext = false;
+    currentCase = null;
+    updateCaseOptions();
+    loadCase(els.caseSelect.value);
+    updateMissionUI();
+  }
+
+  function resetMissions() {
+    completedMissions = [];
+    missionIndex = 0;
+    missionCompletedWaitingNext = false;
+    updateCaseOptions(cases[0].id);
+    loadCase(els.caseSelect.value || cases[0].id);
+    updateMissionUI();
+  }
+
+  function applyLanguage() {
+    document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
+    document.title = tr('pageTitle');
+    document.querySelector('.topbar h1').textContent = tr('title');
+    document.querySelector('.topbar .subtle').innerHTML = tr('subtitle');
+    document.querySelector('label[for="caseSelect"] strong').textContent = tr('caseLabel');
+    els.replayBtn.textContent = tr('replay');
+    els.resetBtn.textContent = tr('reset');
+    els.slowBtn.textContent = slowMotion ? tr('slowOn') : tr('slowOff');
+    els.playBtn.textContent = playing ? tr('pause') : tr('play');
+
+    if (els.animPanelTitle) els.animPanelTitle.textContent = tr('animTitle');
+    if (els.graphPanelTitle) els.graphPanelTitle.textContent = tr('graphTitle');
+    if (els.analysisPanelTitle) els.analysisPanelTitle.textContent = tr('analysisTitle');
+
+    const legends = document.querySelectorAll('.panel-header .legend');
+    if (legends[0]) legends[0].innerHTML = `<span><span class="dot blue"></span> ${tr('cartA')}</span><span><span class="dot orange"></span> ${tr('cartB')}</span>`;
+    if (legends[1]) legends[1].innerHTML = `<span><span class="dot blue"></span> v<sub>A</sub>(t)</span><span><span class="dot orange"></span> v<sub>B</sub>(t)</span><span class="small">${tr('graphHint')}</span>`;
+
+    const massSmall = document.querySelector('.mass-strip .small');
+    if (massSmall) massSmall.innerHTML = tr('signConvention');
+    const foots = document.querySelectorAll('.foot');
+    if (foots[0]) foots[0].textContent = tr('systemFoot');
+    if (foots[1]) foots[1].textContent = tr('graphFoot');
+
+    if (els.analysisFlowLabel) els.analysisFlowLabel.textContent = tr('analysisFlow');
+    if (els.formulaTitleLabel) els.formulaTitleLabel.textContent = tr('formulaTitle');
+    const infoSmall = document.querySelector('.info-box .small');
+    if (infoSmall) infoSmall.textContent = tr('formulaNote');
+
+    document.querySelector('label[for="uA"]').innerHTML = tr('uA');
+    document.querySelector('label[for="uB"]').innerHTML = tr('uB');
+    document.querySelector('label[for="vA"]').innerHTML = tr('vA');
+    document.querySelector('label[for="vB"]').innerHTML = tr('vB');
+    els.calcBtn.textContent = tr('calcBtn');
+    if (els.calcNoteLabel) els.calcNoteLabel.textContent = tr('calcNote');
+
+    const calcLabels = document.querySelectorAll('.calc-row span:first-child');
+    if (calcLabels[0]) calcLabels[0].textContent = tr('pBefore');
+    if (calcLabels[1]) calcLabels[1].textContent = tr('pAfter');
+    if (calcLabels[2]) calcLabels[2].textContent = tr('keBefore');
+    if (calcLabels[3]) calcLabels[3].textContent = tr('keAfter');
+
+    const questions = document.querySelectorAll('.reason-row > span strong');
+    if (questions[0]) questions[0].textContent = tr('momentumQ');
+    if (questions[1]) questions[1].textContent = tr('energyQ');
+    if (questions[2]) questions[2].textContent = tr('typeQ');
+    document.querySelectorAll('button.choice[data-value="yes"]').forEach(btn => btn.textContent = tr('yes'));
+    document.querySelectorAll('button.choice[data-value="no"]').forEach(btn => btn.textContent = tr('no'));
+    document.querySelector('button.choice[data-value="elastic"]').textContent = tr('elastic');
+    document.querySelector('button.choice[data-value="inelastic"]').textContent = tr('inelastic');
+    document.querySelector('button.choice[data-value="completely_inelastic"]').textContent = tr('completelyInelastic');
+    els.submitBtn.textContent = tr('submit');
+    if (els.totalCheckTitle) {
+      els.totalCheckTitle.textContent = tr('totalCheckTitle');
+      els.totalCheckNote.textContent = tr('totalCheckNote');
+      els.checkTotalsBtn.textContent = tr('checkTotals');
+      els.studentPBeforeLabel.textContent = tr('pBefore');
+      els.studentPAfterLabel.textContent = tr('pAfter');
+      els.studentKEBeforeLabel.textContent = tr('keBefore');
+      els.studentKEAfterLabel.textContent = tr('keAfter');
+    }
+
+    updateMissionUI();
+    if (els.pBefore.textContent.startsWith('—')) setFeedbackState('', 'readyTitle', 'readyMsg');
+    drawTrack(Math.min(currentT, totalDuration));
+    drawGraph();
+  }
+
+  function fmt(n, digits = 2) {
+    return (Math.round(n * Math.pow(10, digits)) / Math.pow(10, digits)).toFixed(digits);
+  }
+
+  function approxEqual(a, b, tolAbs = 0.02, tolRel = 0.03) {
+    const diff = Math.abs(a - b);
+    const scale = Math.max(1, Math.abs(a), Math.abs(b));
+    return diff <= tolAbs || diff / scale <= tolRel;
+  }
+
+  function computeFinals(c) {
+    if (c.type === 'completely_inelastic') {
+      const v = (c.mA * c.uA + c.mB * c.uB) / (c.mA + c.mB);
+      return { vA: v, vB: v };
+    }
+    const e = c.e;
+    const vA = (c.mA * c.uA + c.mB * c.uB - c.mB * e * (c.uA - c.uB)) / (c.mA + c.mB);
+    const vB = (c.mA * c.uA + c.mB * c.uB + c.mA * e * (c.uA - c.uB)) / (c.mA + c.mB);
+    return { vA, vB };
+  }
+
+  function velocityAt(t, c) {
+    if (t < collisionStart) return { A: c.uA, B: c.uB };
+    if (t > collisionStart + collisionDuration) return { A: c.vA, B: c.vB };
+    const s = (t - collisionStart) / collisionDuration;
+    const smooth = s * s * (3 - 2 * s);
+    return {
+      A: c.uA + (c.vA - c.uA) * smooth,
+      B: c.uB + (c.vB - c.uB) * smooth
+    };
+  }
+
+  function generateSamples(c) {
+    const arr = [];
+    for (let t = 0; t <= totalDuration + 1e-9; t += dt) {
+      const vel = velocityAt(t, c);
+      arr.push({ t, vA: vel.A, vB: vel.B });
+    }
+    return arr;
+  }
+
+  function setupCases() {
+    cases.forEach((c) => {
+      const finals = computeFinals(c);
+      c.vA = finals.vA;
+      c.vB = finals.vB;
+      c.pBefore = c.mA * c.uA + c.mB * c.uB;
+      c.pAfter = c.mA * c.vA + c.mB * c.vB;
+      c.keBefore = 0.5 * c.mA * c.uA ** 2 + 0.5 * c.mB * c.uB ** 2;
+      c.keAfter = 0.5 * c.mA * c.vA ** 2 + 0.5 * c.mB * c.vB ** 2;
+    });
+  }
+
+  function loadCase(caseId) {
+    cancelAnimationFrame(animationFrame);
+    playing = false;
+    currentT = 0;
+    revealedCount = 1;
+    hoverIndex = 0;
+    calculated = null;
+    ['momentum', 'energy', 'type'].forEach(key => studentChoices[key] = null);
+    document.querySelectorAll('.choice').forEach(btn => btn.classList.remove('active'));
+    resetTotalCheck();
+    currentCase = cases.find(c => c.id === caseId) || cases[0];
+    samples = generateSamples(currentCase);
+    els.massA.textContent = `A: ${fmt(currentCase.mA)} kg`;
+    els.massB.textContent = `B: ${fmt(currentCase.mB)} kg`;
+    resetAnswersOnly();
+    updateMissionUI();
+    drawTrack(0);
+    drawGraph();
+    els.playBtn.textContent = tr('play');
+    els.playBtn.classList.add('primary');
+  }
+
+  function resetAnswersOnly() {
+    [els.uA, els.uB, els.vA, els.vB].forEach(el => el.value = '');
+    resetTotalCheck();
+    els.pBefore.textContent = '— kg·m/s';
+    els.pAfter.textContent = '— kg·m/s';
+    els.keBefore.textContent = '— J';
+    els.keAfter.textContent = '— J';
+    calculated = null;
+    ['momentum', 'energy', 'type'].forEach(key => studentChoices[key] = null);
+    document.querySelectorAll('.choice').forEach(btn => btn.classList.remove('active'));
+    els.feedback.className = '';
+    setFeedbackState('', 'readyTitle', 'readyMsg');
+  }
+
+  function updateTeacherPanel() { return; }
+
+  function drawTrack(t) {
+    const ctx = trackCtx;
+    const w = els.track.width;
+    const h = els.track.height;
+    ctx.clearRect(0, 0, w, h);
+
+    const bg = ctx.createLinearGradient(0, 0, 0, h);
+    bg.addColorStop(0, '#fbfdff');
+    bg.addColorStop(1, '#f3f7fb');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, w, h);
+
+    const yTrack = h / 2 + 18;
+    const meterToPx = (w - 80) / 10;
+    const cartW = 1.0 * meterToPx;
+    const cartH = 42;
+    const wheelR = 8;
+
+    // Track
+    ctx.beginPath();
+    ctx.moveTo(24, yTrack);
+    ctx.lineTo(w - 24, yTrack);
+    ctx.strokeStyle = '#8ea3b7';
+    ctx.lineWidth = 3;
+    ctx.stroke();
+
+    // Negative / positive labels and sign convention cue
+    ctx.fillStyle = '#6d7a86';
+    ctx.font = '13px system-ui, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(tr('negative'), 16, yTrack + 26);
+    ctx.textAlign = 'right';
+    ctx.fillText(tr('positive'), w - 16, yTrack + 26);
+
+    const kin = trackKinematics(Math.min(t, totalDuration));
+    const pxA = kin.xA * meterToPx;
+    const pxB = kin.xB * meterToPx;
+
+    // Collision marker at exact contact location
+    const xCol = 5 * meterToPx;
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.setLineDash([6, 6]);
+    ctx.beginPath();
+    ctx.moveTo(xCol, 20);
+    ctx.lineTo(xCol, yTrack + 18);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = '#5f7385';
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText(tr('collision'), xCol, 16);
+
+    if (currentCase.type === 'completely_inelastic' && t > collisionStart + collisionDuration) {
+      // After a completely inelastic collision, the carts stick and move together.
+      // They are drawn as two attached green carts, not as one merged object.
+      drawTrackCoupler(ctx, pxA + cartW / 2, pxB - cartW / 2, yTrack - cartH - wheelR, cartH);
+      drawTrackCart(ctx, pxA - cartW / 2, yTrack - cartH - wheelR, cartW, cartH, wheelR, '#1ea672', 'A', currentCase.mA);
+      drawTrackCart(ctx, pxB - cartW / 2, yTrack - cartH - wheelR, cartW, cartH, wheelR, '#16825d', 'B', currentCase.mB);
+      drawTrackArrow(ctx, (pxA + pxB) / 2, yTrack - cartH - wheelR - 14, currentCase.vA, '#1a6f4a', 'v');
+    } else {
+      drawTrackCart(ctx, pxA - cartW / 2, yTrack - cartH - wheelR, cartW, cartH, wheelR, '#2563eb', 'A', currentCase.mA);
+      drawTrackCart(ctx, pxB - cartW / 2, yTrack - cartH - wheelR, cartW, cartH, wheelR, '#ea580c', 'B', currentCase.mB);
+      drawTrackArrow(ctx, pxA, yTrack - cartH - wheelR - 14, kin.vA, '#2563eb', 'vA');
+      drawTrackArrow(ctx, pxB, yTrack - cartH - wheelR - 14, kin.vB, '#ea580c', 'vB');
+    }
+  }
+
+  function trackKinematics(t) {
+    const uA = currentCase.uA, uB = currentCase.uB;
+    const vA = currentCase.vA, vB = currentCase.vB;
+
+    // Cart centers are 1 m apart initially; collision occurs when centers are at 4.5 m and 5.5 m.
+    const xA_contact = 4.5;
+    const xB_contact = 5.5;
+
+    let curVA, curVB, curXA, curXB;
+
+    if (t <= collisionStart) {
+      curVA = uA;
+      curVB = uB;
+      curXA = xA_contact - uA * (collisionStart - t);
+      curXB = xB_contact - uB * (collisionStart - t);
+    } else if (t >= collisionStart + collisionDuration) {
+      curVA = vA;
+      curVB = vB;
+      const xA_end = xA_contact + uA * collisionDuration + 0.5 * (vA - uA) * collisionDuration;
+      const xB_end = xB_contact + uB * collisionDuration + 0.5 * (vB - uB) * collisionDuration;
+      curXA = xA_end + vA * (t - collisionStart - collisionDuration);
+      curXB = xB_end + vB * (t - collisionStart - collisionDuration);
+    } else {
+      const pt = t - collisionStart;
+      const s = pt / collisionDuration;
+      const ease = s * s * (3 - 2 * s);
+      curVA = uA + ease * (vA - uA);
+      curVB = uB + ease * (vB - uB);
+      curXA = xA_contact + uA * pt + 0.5 * (vA - uA) / collisionDuration * pt * pt;
+      curXB = xB_contact + uB * pt + 0.5 * (vB - uB) / collisionDuration * pt * pt;
+    }
+
+    return { xA: curXA, xB: curXB, vA: curVA, vB: curVB };
+  }
+
+  function drawTrackCoupler(ctx, x1, x2, y, h) {
+    const left = Math.min(x1, x2);
+    const right = Math.max(x1, x2);
+    const width = Math.max(4, right - left);
+    ctx.save();
+    ctx.fillStyle = 'rgba(30, 166, 114, 0.18)';
+    ctx.strokeStyle = 'rgba(23, 131, 93, 0.55)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([4, 3]);
+    ctx.strokeRect(left, y + 8, width, h - 16);
+    ctx.restore();
+  }
+
+  function drawTrackCart(ctx, x, y, w, h, r, color, label, mass) {
+    ctx.fillStyle = color;
+    roundRect(ctx, x, y, w, h, 8, true, false);
+    ctx.strokeStyle = 'rgba(0,0,0,0.12)';
+    ctx.lineWidth = 1;
+    roundRect(ctx, x, y, w, h, 8, false, true);
+
+    ctx.fillStyle = '#334155';
+    ctx.beginPath(); ctx.arc(x + w * 0.22, y + h, r, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + w * 0.78, y + h, r, 0, Math.PI * 2); ctx.fill();
+
+    ctx.fillStyle = 'rgba(255,255,255,0.96)';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'bold 16px system-ui, sans-serif';
+    ctx.fillText(label, x + w / 2, y + h / 2 - 7);
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.fillText(`${fmt(mass, 2)} kg`, x + w / 2, y + h / 2 + 10);
+  }
+
+  function drawTrackArrow(ctx, x, y, v, color, label) {
+    if (Math.abs(v) < 0.001) {
+      ctx.fillStyle = color;
+      ctx.font = '12px system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${label} = 0`, x, y - 8);
+      return;
+    }
+    const len = Math.max(22, Math.abs(v) * 54);
+    const sign = Math.sign(v);
+    const x2 = x + sign * len;
+    ctx.strokeStyle = color;
+    ctx.fillStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineTo(x2, y);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y);
+    ctx.lineTo(x2 - sign * 10, y - 6);
+    ctx.lineTo(x2 - sign * 10, y + 6);
+    ctx.closePath();
+    ctx.fill();
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.textAlign = sign > 0 ? 'left' : 'right';
+    ctx.fillText(`${label} = ${fmt(v)} m/s`, x2 + sign * 6, y - 7);
+  }
+
+  function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
+    if (typeof radius === 'number') radius = { tl: radius, tr: radius, br: radius, bl: radius };
+    ctx.beginPath();
+    ctx.moveTo(x + radius.tl, y);
+    ctx.lineTo(x + width - radius.tr, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius.tr);
+    ctx.lineTo(x + width, y + height - radius.br);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius.br, y + height);
+    ctx.lineTo(x + radius.bl, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius.bl);
+    ctx.lineTo(x, y + radius.tl);
+    ctx.quadraticCurveTo(x, y, x + radius.tl, y);
+    ctx.closePath();
+    if (fill) ctx.fill();
+    if (stroke) ctx.stroke();
+  }
+
+  function graphBounds() {
+    const vals = samples.flatMap(s => [s.vA, s.vB]);
+    let vMin = Math.min(...vals);
+    let vMax = Math.max(...vals);
+    const pad = Math.max(0.12, 0.18 * (vMax - vMin || 1));
+    vMin -= pad;
+    vMax += pad;
+    if (vMin > 0) vMin = 0;
+    if (vMax < 0) vMax = 0;
+    return { vMin, vMax };
+  }
+
+  function drawGraph() {
+    const ctx = graphCtx;
+    const w = els.graph.width;
+    const h = els.graph.height;
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = '#fcfdff';
+    ctx.fillRect(0, 0, w, h);
+
+    const margin = { left: 64, right: 24, top: 18, bottom: 42 };
+    const innerW = w - margin.left - margin.right;
+    const innerH = h - margin.top - margin.bottom;
+    const { vMin, vMax } = graphBounds();
+    const x = t => margin.left + (t / totalDuration) * innerW;
+    const y = v => margin.top + ((vMax - v) / (vMax - vMin)) * innerH;
+
+    ctx.strokeStyle = '#e6edf4';
+    ctx.lineWidth = 1;
+    ctx.font = '12px system-ui, sans-serif';
+    ctx.fillStyle = '#647587';
+
+    for (let i = 0; i <= 8; i++) {
+      const tx = margin.left + innerW * i / 8;
+      ctx.beginPath();
+      ctx.moveTo(tx, margin.top);
+      ctx.lineTo(tx, margin.top + innerH);
+      ctx.stroke();
+      ctx.textAlign = 'center';
+      ctx.fillText(fmt(totalDuration * i / 8, 1), tx, h - 18);
+    }
+
+    const ticks = 6;
+    for (let i = 0; i <= ticks; i++) {
+      const v = vMin + (vMax - vMin) * i / ticks;
+      const ty = y(v);
+      ctx.beginPath();
+      ctx.moveTo(margin.left, ty);
+      ctx.lineTo(margin.left + innerW, ty);
+      ctx.stroke();
+      ctx.textAlign = 'right';
+      ctx.fillText(fmt(v, 2), margin.left - 8, ty + 4);
+    }
+
+    const x0 = x(collisionStart);
+    const x1 = x(collisionStart + collisionDuration);
+    ctx.fillStyle = 'rgba(180, 200, 220, 0.28)';
+    ctx.fillRect(x0, margin.top, x1 - x0, innerH);
+    ctx.fillStyle = '#6c7b88';
+    ctx.textAlign = 'center';
+    ctx.fillText(tr('collision'), (x0 + x1) / 2, margin.top + 14);
+
+    ctx.strokeStyle = '#607284';
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(margin.left, margin.top);
+    ctx.lineTo(margin.left, margin.top + innerH);
+    ctx.lineTo(margin.left + innerW, margin.top + innerH);
+    ctx.stroke();
+
+    ctx.fillStyle = '#324252';
+    ctx.textAlign = 'center';
+    ctx.fillText(tr('timeAxis'), margin.left + innerW / 2, h - 8);
+    ctx.save();
+    ctx.translate(18, margin.top + innerH / 2);
+    ctx.rotate(-Math.PI / 2);
+    ctx.fillText(tr('velocityAxis'), 0, 0);
+    ctx.restore();
+
+    const toPlot = samples.slice(0, Math.max(1, revealedCount));
+    plotCurve(toPlot, '#2d7ff9', s => s.vA, x, y);
+    plotCurve(toPlot, '#ff7a00', s => s.vB, x, y);
+
+    if (0 >= vMin && 0 <= vMax) {
+      ctx.strokeStyle = '#b0bfcc';
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath();
+      ctx.moveTo(margin.left, y(0));
+      ctx.lineTo(margin.left + innerW, y(0));
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+
+    const safeIndex = Math.max(0, Math.min(revealedCount - 1, hoverIndex));
+    const s = samples[safeIndex];
+    if (s) {
+      const xh = x(s.t);
+      ctx.strokeStyle = 'rgba(0,0,0,.22)';
+      ctx.setLineDash([4,4]);
+      ctx.beginPath();
+      ctx.moveTo(xh, margin.top);
+      ctx.lineTo(xh, margin.top + innerH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = '#2d7ff9';
+      ctx.beginPath(); ctx.arc(xh, y(s.vA), 4, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = '#ff7a00';
+      ctx.beginPath(); ctx.arc(xh, y(s.vB), 4, 0, Math.PI * 2); ctx.fill();
+
+      els.graphReadout.innerHTML = `
+        <div><strong>t</strong> = ${fmt(s.t, 2)} s</div>
+        <div style="color:var(--blue)"><strong>v<sub>A</sub></strong> = ${fmt(s.vA, 2)} m/s</div>
+        <div style="color:var(--orange)"><strong>v<sub>B</sub></strong> = ${fmt(s.vB, 2)} m/s</div>`;
+    }
+  }
+
+  function plotCurve(points, color, getter, x, y) {
+    if (points.length < 2) return;
+    const ctx = graphCtx;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(x(points[0].t), y(getter(points[0])));
+    for (let i = 1; i < points.length; i++) ctx.lineTo(x(points[i].t), y(getter(points[i])));
+    ctx.stroke();
+  }
+
+  function animate(timestamp) {
+    if (!playing) return;
+    if (!animate.last) animate.last = timestamp;
+    const elapsed = (timestamp - animate.last) / 1000 * runSpeed;
+    animate.last = timestamp;
+    currentT += elapsed;
+
+    const index = Math.min(samples.length - 1, Math.floor(currentT / dt));
+    revealedCount = Math.max(revealedCount, index + 1);
+    hoverIndex = Math.min(hoverIndex, revealedCount - 1);
+
+    drawTrack(Math.min(currentT, totalDuration));
+    drawGraph();
+
+    if (currentT >= totalDuration) {
+      playing = false;
+      animate.last = null;
+      els.playBtn.textContent = tr('play');
+      els.playBtn.classList.add('primary');
+      return;
+    }
+    animationFrame = requestAnimationFrame(animate);
+  }
+
+  function togglePlay() {
+    if (!playing) {
+      if (currentT >= totalDuration) replayRun();
+      runSpeed = slowMotion ? 0.5 : 1.0;
+      playing = true;
+      els.playBtn.textContent = tr('pause');
+      els.playBtn.classList.remove('primary');
+      animate.last = null;
+      animationFrame = requestAnimationFrame(animate);
+    } else {
+      playing = false;
+      cancelAnimationFrame(animationFrame);
+      animate.last = null;
+      els.playBtn.textContent = tr('play');
+      els.playBtn.classList.add('primary');
+    }
+  }
+
+  function replayRun() {
+    cancelAnimationFrame(animationFrame);
+    playing = false;
+    animate.last = null;
+    currentT = 0;
+    revealedCount = 1;
+    hoverIndex = 0;
+    els.playBtn.textContent = tr('play');
+    els.playBtn.classList.add('primary');
+    drawTrack(0);
+    drawGraph();
+  }
+
+
+
+  function calculate() {
+    const result = getCalculatedFromInputs(true);
+    if (!result) return null;
+    const revealTotals = missionIndex === 0 || detailedTotalsPassed;
+    showAutoTotals(result, revealTotals);
+    if (missionIndex > 0 && !detailedTotalsPassed) {
+      els.feedback.className = '';
+      setFeedbackState('', 'totalCheckTitle', 'hiddenTotals');
+    }
+    return result;
+  }
+
+  function submit() {
+    const result = calculate();
+    if (!result) return;
+    if (missionIndex > 0 && !detailedTotalsPassed) {
+      els.feedback.className = 'error';
+      setFeedbackState('error', 'totalsRequiredTitle', 'totalsRequiredMsg');
+      return;
+    }
+    if (!studentChoices.momentum || !studentChoices.energy || !studentChoices.type) {
+      els.feedback.className = 'error';
+      setFeedbackState('error', 'incompleteTitle', 'incompleteMsg');
+      return;
+    }
+
+    if (!result.pOK) {
+      els.feedback.className = 'error';
+      const magBefore = currentCase.mA * Math.abs(result.uA) + currentCase.mB * Math.abs(result.uB);
+      const magAfter = currentCase.mA * Math.abs(result.vA) + currentCase.mB * Math.abs(result.vB);
+      if (approxEqual(magBefore, magAfter, 0.05, 0.08)) {
+        setFeedbackState('error', 'recheckTitle', 'signHintMsg');
+      } else {
+        setFeedbackState('error', 'recheckTitle', 'recheckMsg');
+      }
+      return;
+    }
+
+    const trueAnswers = {
+      momentum: 'yes',
+      energy: currentCase.type === 'elastic' ? 'yes' : 'no',
+      type: currentCase.type
+    };
+
+    const reasoningCorrect = studentChoices.momentum === trueAnswers.momentum && studentChoices.energy === trueAnswers.energy;
+    const typeCorrect = studentChoices.type === trueAnswers.type;
+
+    if (reasoningCorrect && typeCorrect) {
+      els.feedback.className = 'success';
+      let msg = `<strong>${tr('correct')}</strong><div class="small">`;
+      if (currentCase.type === 'elastic') {
+        msg += tr('elasticFeedback');
+      } else if (currentCase.type === 'inelastic') {
+        msg += tr('inelasticFeedback');
+      } else {
+        msg += tr('completeFeedback');
+      }
+      msg += `</div>`;
+      els.feedback.innerHTML = msg;
+      markMissionComplete();
+    } else {
+      els.feedback.className = 'error';
+      const momentumHint = tr('momentumHint');
+      const energyHint = trueAnswers.energy === 'yes' ? tr('energyConservedHint') : tr('energyLostHint');
+      let typeHint = '';
+      if (result.sticky) typeHint = tr('stickyHint');
+      else if (trueAnswers.type === 'elastic') typeHint = tr('elasticHint');
+      else typeHint = tr('inelasticHint');
+
+      els.feedback.innerHTML = `<strong>${tr('notCorrect')}</strong><div class="small">${studentChoices.momentum !== trueAnswers.momentum ? momentumHint + ' ' : ''}${studentChoices.energy !== trueAnswers.energy ? energyHint + ' ' : ''}${studentChoices.type !== trueAnswers.type ? typeHint : ''}</div>`;
+      ['momentum', 'energy', 'type'].forEach(key => {
+        studentChoices[key] = null;
+        document.querySelectorAll(`.choice[data-group="${key}"]`).forEach(b => b.classList.remove('active'));
+      });
+    }
+  }
+
+  function setChoice(group, value) {
+    studentChoices[group] = value;
+    document.querySelectorAll(`.choice[data-group="${group}"]`).forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === value);
+    });
+  }
+
+  function pointerToGraphIndex(evt) {
+    const rect = els.graph.getBoundingClientRect();
+    const clientX = evt.touches ? evt.touches[0].clientX : evt.clientX;
+    const xPx = clientX - rect.left;
+    const marginLeft = 64;
+    const marginRight = 24;
+    const innerW = els.graph.width - marginLeft - marginRight;
+    const scaleX = els.graph.width / rect.width;
+    const canvasX = xPx * scaleX;
+    const t = Math.max(0, Math.min(totalDuration, (canvasX - marginLeft) / innerW * totalDuration));
+    const maxVisibleIndex = Math.max(0, revealedCount - 1);
+    return Math.min(maxVisibleIndex, Math.max(0, Math.round(t / dt)));
+  }
+
+  function graphMove(evt) {
+    hoverIndex = pointerToGraphIndex(evt);
+    drawGraph();
+  }
+
+  function graphLeave() {
+    hoverIndex = Math.max(0, revealedCount - 1);
+    drawGraph();
+  }
+
+  els.langToggle.addEventListener('click', () => {
+    lang = lang === 'zh' ? 'en' : 'zh';
+    applyLanguage();
+  });
+  els.caseSelect.addEventListener('change', () => loadCase(els.caseSelect.value));
+  els.nextMissionBtn.addEventListener('click', goNextMission);
+  els.missionResetBtn.addEventListener('click', resetMissions);
+  els.playBtn.addEventListener('click', togglePlay);
+  els.replayBtn.addEventListener('click', replayRun);
+  els.resetBtn.addEventListener('click', resetAnswersOnly);
+  els.slowBtn.addEventListener('click', () => {
+    slowMotion = !slowMotion;
+    els.slowBtn.textContent = slowMotion ? tr('slowOn') : tr('slowOff');
+    els.slowBtn.classList.toggle('active', slowMotion);
+  });
+  els.calcBtn.addEventListener('click', calculate);
+  els.checkTotalsBtn.addEventListener('click', checkDetailedTotals);
+  [els.uA, els.uB, els.vA, els.vB].forEach(el => el.addEventListener('input', invalidateTotalCheck));
+  [els.studentPBefore, els.studentPAfter, els.studentKEBefore, els.studentKEAfter].forEach(el => el.addEventListener('input', invalidateTotalCheck));
+  els.submitBtn.addEventListener('click', submit);
+  document.querySelectorAll('.choice').forEach(btn => {
+    btn.addEventListener('click', () => setChoice(btn.dataset.group, btn.dataset.value));
+  });
+
+  els.graph.addEventListener('mousemove', graphMove);
+  els.graph.addEventListener('mouseleave', graphLeave);
+  els.graph.addEventListener('touchstart', (e) => { graphMove(e); e.preventDefault(); }, { passive: false });
+  els.graph.addEventListener('touchmove', (e) => { graphMove(e); e.preventDefault(); }, { passive: false });
+  els.graph.addEventListener('touchend', graphLeave);
+
+  setupCases();
+  updateCaseOptions(cases[0].id);
+  loadCase(els.caseSelect.value || cases[0].id);
+  applyLanguage();
+})();
+</script>
+</body>
+</html>
