@@ -1,0 +1,1272 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>移動小車上的拋體運動</title>
+  <style>
+    :root {
+      --primary-color: #5D5CDE;
+      --button-hover: #7170e3;
+      --dark-text: #333;
+      --light-text: #fff;
+      --light-bg: #fff;
+      --dark-bg: #181818;
+      --light-panel: #f5f5f7;
+      --dark-panel: #252525;
+      --light-border: #e0e0e0;
+      --dark-border: #444;
+      --light-highlight: rgba(93, 92, 222, 0.10);
+      --dark-highlight: rgba(93, 92, 222, 0.22);
+      --success-color: #4CAF50;
+      --warning-color: #FF9800;
+
+      /* Fallback values if prefers-color-scheme is unavailable */
+      --bg-color: var(--light-bg);
+      --text-color: var(--dark-text);
+      --panel-bg: var(--light-panel);
+      --border-color: var(--light-border);
+      --highlight-bg: var(--light-highlight);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: var(--dark-bg);
+        --text-color: var(--light-text);
+        --panel-bg: var(--dark-panel);
+        --border-color: var(--dark-border);
+        --highlight-bg: var(--dark-highlight);
+      }
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", "Segoe UI", Arial, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1rem;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    h1 {
+      flex: 1 1 auto;
+      margin: 0;
+      text-align: center;
+      color: var(--primary-color);
+      letter-spacing: 0.02em;
+      line-height: 1.15;
+      font-size: clamp(2.2rem, 4.8vw, 4rem);
+      overflow-wrap: anywhere;
+    }
+
+    .language-toggle {
+      position: static;
+      transform: none;
+      flex: 0 0 auto;
+      min-width: 150px;
+      margin-top: 0.2rem;
+      padding: 0.55rem 0.85rem;
+      border-radius: 999px;
+      border: 1px solid var(--primary-color);
+      background-color: var(--highlight-bg);
+      color: var(--primary-color);
+      font-size: 0.92rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .language-toggle:hover {
+      background-color: var(--primary-color);
+      color: white;
+    }
+
+    .simulation-container {
+      position: relative;
+      width: 100%;
+      margin-bottom: 1rem;
+      background-color: var(--panel-bg);
+      border-radius: 10px;
+      overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+      border: 1px solid var(--border-color);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      background-color: var(--panel-bg);
+    }
+
+    .controls,
+    .info-panel {
+      background-color: var(--panel-bg);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.10);
+      border: 1px solid var(--border-color);
+    }
+
+    .control-group {
+      margin-bottom: 1rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.45rem;
+      font-weight: 600;
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      height: 8px;
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      border-radius: 4px;
+      background: var(--border-color);
+      outline: none;
+    }
+
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
+    }
+
+    input[type="range"]::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: var(--primary-color);
+      cursor: pointer;
+      border: none;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.24);
+    }
+
+    .value-display {
+      min-width: 86px;
+      text-align: center;
+      font-weight: 700;
+      color: var(--primary-color);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: background-color 0.2s, transform 0.1s;
+      flex: 1;
+      min-width: 130px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    button:hover {
+      background-color: var(--button-hover);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button:disabled {
+      background-color: var(--border-color);
+      cursor: not-allowed;
+    }
+
+    button.secondary {
+      background-color: transparent;
+      border: 1px solid var(--primary-color);
+      color: var(--primary-color);
+    }
+
+    button.secondary:hover {
+      background-color: var(--highlight-bg);
+    }
+
+    .toggle-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+    }
+
+    .settings-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 0.7rem 0.85rem;
+      border-radius: 8px;
+      background-color: var(--highlight-bg);
+    }
+
+    .settings-toggle span {
+      font-weight: 600;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 26px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border-color);
+      transition: .25s;
+      border-radius: 26px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 20px;
+      width: 20px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+    }
+
+    input:checked + .toggle-slider {
+      background-color: var(--primary-color);
+    }
+
+    input:checked + .toggle-slider:before {
+      transform: translateX(24px);
+    }
+
+    .info-panel h3 {
+      margin-bottom: 0.5rem;
+      color: var(--primary-color);
+    }
+
+    .info-panel p {
+      margin-bottom: 0.75rem;
+    }
+
+    .equation {
+      font-family: "Consolas", "Courier New", monospace;
+      background-color: var(--highlight-bg);
+      padding: 0.55rem 0.65rem;
+      border-radius: 6px;
+      margin: 0.5rem 0;
+      overflow-x: auto;
+      border-left: 4px solid var(--primary-color);
+    }
+
+    .data-display {
+      display: grid;
+      grid-template-columns: repeat(6, minmax(120px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .data-item {
+      background-color: var(--highlight-bg);
+      padding: 0.65rem 0.85rem;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .data-label {
+      font-size: 0.9rem;
+      font-weight: 700;
+      margin-bottom: 0.25rem;
+    }
+
+    .data-value {
+      font-size: 1.05rem;
+      font-family: "Consolas", "Courier New", monospace;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .teacher-note {
+      margin-top: 0.75rem;
+      padding: 0.75rem 0.9rem;
+      border-radius: 8px;
+      background-color: var(--highlight-bg);
+      border-left: 4px solid var(--primary-color);
+      font-size: 0.98rem;
+    }
+
+    .status-message {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 0.55rem 1rem;
+      border-radius: 6px;
+      background-color: var(--success-color);
+      color: white;
+      font-weight: 700;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s;
+      z-index: 5;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .status-message.visible {
+      opacity: 1;
+    }
+
+    .status-message.warning {
+      background-color: var(--warning-color);
+    }
+
+    @media (max-width: 900px) {
+      .data-display {
+        grid-template-columns: repeat(3, minmax(120px, 1fr));
+      }
+      .toggle-row {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .container {
+        padding: 0.5rem;
+      }
+
+      .top-bar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.75rem;
+      }
+
+      h1 {
+        font-size: 1.9rem;
+        text-align: center;
+      }
+
+      .language-toggle {
+        align-self: flex-end;
+        min-width: auto;
+        width: auto;
+        margin-top: 0;
+      }
+
+      .button-group {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+
+      .slider-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.35rem;
+      }
+
+      .value-display {
+        align-self: flex-end;
+      }
+
+      .data-display {
+        grid-template-columns: repeat(2, minmax(120px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <h1 id="main-title">移動小車上的拋體運動</h1>
+      <button id="language-toggle" class="language-toggle" type="button" aria-label="Switch language">中文（繁體） / English</button>
+    </div>
+
+    <div class="simulation-container">
+      <canvas id="simulation-canvas" aria-label="移動小車拋體小球模擬"></canvas>
+      <div class="status-message" id="status-message">小球成功返回小車！</div>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label for="v-cart" id="v-cart-label">小車速度 / m s⁻¹</label>
+        <div class="slider-container">
+          <input type="range" id="v-cart" min="0" max="3" step="0.1" value="1" />
+          <div class="value-display" id="v-cart-value">1.0 m s⁻¹</div>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="v0y" id="v0y-label">小球向上初速度 / m s⁻¹</label>
+        <div class="slider-container">
+          <input type="range" id="v0y" min="2" max="10" step="0.1" value="5" />
+          <div class="value-display" id="v0y-value">5.0 m s⁻¹</div>
+        </div>
+      </div>
+
+      <div class="toggle-row">
+        <label class="settings-toggle" for="show-predictions">
+          <span id="show-predictions-label">顯示預測軌跡</span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="show-predictions" checked />
+            <span class="toggle-slider"></span>
+          </span>
+        </label>
+
+        <label class="settings-toggle" for="slow-motion">
+          <span id="slow-motion-label">慢動作</span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="slow-motion" />
+            <span class="toggle-slider"></span>
+          </span>
+        </label>
+
+        <label class="settings-toggle" for="show-traces">
+          <span id="show-traces-label">顯示位置殘影</span>
+          <span class="toggle-switch">
+            <input type="checkbox" id="show-traces" checked />
+            <span class="toggle-slider"></span>
+          </span>
+        </label>
+      </div>
+
+      <div class="button-group">
+        <button id="launch-btn" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          <span id="launch-btn-text">發射小球</span>
+        </button>
+        <button id="reset-btn" class="secondary" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 2v6h6"></path>
+            <path d="M21 12A9 9 0 0 0 6 5.3L3 8"></path>
+            <path d="M21 22v-6h-6"></path>
+            <path d="M3 12a9 9 0 0 0 15 6.7l3-2.7"></path>
+          </svg>
+          <span id="reset-btn-text">重設</span>
+        </button>
+        <button id="default-params-btn" class="secondary" type="button">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+            <path d="M2 17l10 5 10-5"></path>
+            <path d="M2 12l10 5 10-5"></path>
+          </svg>
+          <span id="default-params-btn-text">預設示範值</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <h3 id="realtime-title">即時數據</h3>
+      <div class="data-display">
+        <div class="data-item">
+          <div class="data-label" id="time-label">時間</div>
+          <div class="data-value" id="time-value">0.00 s</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label" id="ball-x-label">小球水平位置 x</div>
+          <div class="data-value" id="ball-x-value">0.00 m</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label" id="ball-y-label">小球高度 y</div>
+          <div class="data-value" id="ball-y-value">0.00 m</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label" id="max-height-label">最高高度</div>
+          <div class="data-value" id="max-height-value">0.00 m</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label" id="flight-time-label">預測飛行時間</div>
+          <div class="data-value" id="flight-time-value">0.00 s</div>
+        </div>
+        <div class="data-item">
+          <div class="data-label" id="range-label">預測水平位移</div>
+          <div class="data-value" id="range-value">0.00 m</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <h3 id="physics-title">物理概念</h3>
+      <p id="physics-intro">這個模擬展示：小球從等速移動的小車上垂直向上拋出後，仍然保留與小車相同的水平速度。在忽略空氣阻力的情況下，水平和垂直運動可以分開分析。</p>
+
+      <h3 id="equations-title">關鍵方程</h3>
+      <div class="equation">x(t) = x₀ + v<sub>cart</sub>t</div>
+      <p id="eq-x-text">小球的水平速度與小車相同，所以相對於小車的水平位置不變。</p>
+
+      <div class="equation">y(t) = y₀ + v<sub>0y</sub>t − ½gt²</div>
+      <p id="eq-y-text">小球的垂直運動受重力影響，是一個勻加速運動。</p>
+
+      <div class="equation">T = 2v<sub>0y</sub> / g</div>
+      <p id="eq-t-text">若小球回到發射高度，飛行時間只取決於向上的初速度和重力加速度。</p>
+
+      <div class="equation" id="eq-range">水平位移 = v<sub>cart</sub>T</div>
+      <p id="eq-range-text">在相同時間內，小車也移動相同的水平距離。因此小球會回到小車上。</p>
+
+      <div class="teacher-note" id="teacher-note">
+        <strong>教學提示：</strong>這個例子可用來強調「水平運動」與「垂直運動」互相獨立。小車速度改變時，軌跡在地面參考系中會不同；但只要小球發射時保留小車的水平速度，它相對小車仍會垂直上落。
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // -----------------------------
+    // Constants
+    // -----------------------------
+    const GRAVITY = 9.81; // m s^-2
+    const CART_WIDTH = 2; // m
+    const CART_HEIGHT = 1; // m
+    const BALL_RADIUS = 0.2; // m
+    const LAUNCH_HEIGHT = CART_HEIGHT + BALL_RADIUS; // m above ground
+    const GROUND_MARGIN = 0.8; // m below the ground line in the canvas
+    const MIN_VISIBLE_WIDTH = 20; // m
+
+    // -----------------------------
+    // DOM elements
+    // -----------------------------
+    const canvas = document.getElementById("simulation-canvas");
+    const ctx = canvas.getContext("2d");
+    const launchBtn = document.getElementById("launch-btn");
+    const resetBtn = document.getElementById("reset-btn");
+    const defaultParamsBtn = document.getElementById("default-params-btn");
+    const vCartSlider = document.getElementById("v-cart");
+    const vCartValue = document.getElementById("v-cart-value");
+    const v0ySlider = document.getElementById("v0y");
+    const v0yValue = document.getElementById("v0y-value");
+    const showPredictions = document.getElementById("show-predictions");
+    const slowMotion = document.getElementById("slow-motion");
+    const showTraces = document.getElementById("show-traces");
+    const timeValue = document.getElementById("time-value");
+    const ballXValue = document.getElementById("ball-x-value");
+    const ballYValue = document.getElementById("ball-y-value");
+    const maxHeightValue = document.getElementById("max-height-value");
+    const flightTimeValue = document.getElementById("flight-time-value");
+    const rangeValue = document.getElementById("range-value");
+    const statusMessage = document.getElementById("status-message");
+    const languageToggle = document.getElementById("language-toggle");
+
+    // -----------------------------
+    // Language support
+    // -----------------------------
+    const translations = {
+      "zh-Hant": {
+        htmlLang: "zh-Hant",
+        pageTitle: "移動小車上的拋體運動",
+        mainTitle: "移動小車上的拋體運動",
+        toggleLabel: "中文（繁體） / English",
+        canvasAria: "移動小車拋體小球模擬",
+        vCartLabel: "小車速度 / m s⁻¹",
+        v0yLabel: "小球向上初速度 / m s⁻¹",
+        showPredictionsLabel: "顯示預測軌跡",
+        slowMotionLabel: "慢動作",
+        showTracesLabel: "顯示位置殘影",
+        launchButton: "發射小球",
+        resetButton: "重設",
+        defaultButton: "預設示範值",
+        realtimeTitle: "即時數據",
+        timeLabel: "時間",
+        ballXLabel: "小球水平位置 x",
+        ballYLabel: "小球高度 y",
+        maxHeightLabel: "最高高度",
+        flightTimeLabel: "預測飛行時間",
+        rangeLabel: "預測水平位移",
+        physicsTitle: "物理概念",
+        physicsIntro: "這個模擬展示：小球從等速移動的小車上垂直向上拋出後，仍然保留與小車相同的水平速度。在忽略空氣阻力的情況下，水平和垂直運動可以分開分析。",
+        equationsTitle: "關鍵方程",
+        eqXText: "小球的水平速度與小車相同，所以相對於小車的水平位置不變。",
+        eqYText: "小球的垂直運動受重力影響，是一個勻加速運動。",
+        eqTText: "若小球回到發射高度，飛行時間只取決於向上的初速度和重力加速度。",
+        eqRange: "水平位移 = v<sub>cart</sub>T",
+        eqRangeText: "在相同時間內，小車也移動相同的水平距離。因此小球會回到小車上。",
+        teacherNote: "<strong>教學提示：</strong>這個例子可用來強調「水平運動」與「垂直運動」互相獨立。小車速度改變時，軌跡在地面參考系中會不同；但只要小球發射時保留小車的水平速度，它相對小車仍會垂直上落。",
+        statusCaught: "小球成功返回小車！",
+        statusMissed: "小球沒有返回小車",
+        statusDefault: "已設定預設示範值",
+        canvasGround: "地面",
+        canvasCart: "小車",
+        canvasCartVelocity: "v車",
+        canvasPrediction: "預測軌跡",
+        canvasNote1: "忽略空氣阻力；重力加速度 g = 9.81 m s⁻²",
+        canvasNote2: "小球水平速度 = 小車速度"
+      },
+      en: {
+        htmlLang: "en",
+        pageTitle: "Projectile Motion from a Moving Cart",
+        mainTitle: "Projectile Motion from a Moving Cart",
+        toggleLabel: "中文（繁體） / English",
+        canvasAria: "Projectile motion from a moving cart simulation",
+        vCartLabel: "Cart velocity / m s⁻¹",
+        v0yLabel: "Initial upward velocity / m s⁻¹",
+        showPredictionsLabel: "Show prediction path",
+        slowMotionLabel: "Slow motion",
+        showTracesLabel: "Show position traces",
+        launchButton: "Launch ball",
+        resetButton: "Reset",
+        defaultButton: "Default demo values",
+        realtimeTitle: "Real-time data",
+        timeLabel: "Time",
+        ballXLabel: "Ball horizontal position x",
+        ballYLabel: "Ball height y",
+        maxHeightLabel: "Maximum height",
+        flightTimeLabel: "Predicted flight time",
+        rangeLabel: "Predicted horizontal displacement",
+        physicsTitle: "Physics concepts",
+        physicsIntro: "This simulation shows that a ball launched vertically from a cart moving at constant velocity keeps the same horizontal velocity as the cart. If air resistance is ignored, the horizontal and vertical motions can be analysed separately.",
+        equationsTitle: "Key equations",
+        eqXText: "The ball has the same horizontal velocity as the cart, so its horizontal position relative to the cart does not change.",
+        eqYText: "The vertical motion of the ball is affected by gravity, so it is motion with constant acceleration.",
+        eqTText: "If the ball returns to the launch height, the flight time depends only on the initial upward velocity and gravitational acceleration.",
+        eqRange: "Horizontal displacement = v<sub>cart</sub>T",
+        eqRangeText: "During the same time interval, the cart moves the same horizontal distance. Therefore, the ball returns to the cart.",
+        teacherNote: "<strong>Teaching note:</strong> This example is useful for emphasising the independence of horizontal and vertical motion. Changing the cart speed changes the path in the ground frame, but as long as the ball keeps the cart’s horizontal velocity at launch, it still moves vertically relative to the cart.",
+        statusCaught: "Ball returned to the cart!",
+        statusMissed: "Ball did not return to the cart",
+        statusDefault: "Default demo values set",
+        canvasGround: "Ground",
+        canvasCart: "Cart",
+        canvasCartVelocity: "v cart",
+        canvasPrediction: "Prediction path",
+        canvasNote1: "Air resistance ignored; gravitational acceleration g = 9.81 m s⁻²",
+        canvasNote2: "Ball horizontal velocity = cart velocity"
+      }
+    };
+
+    const elementTextMap = {
+      "main-title": "mainTitle",
+      "v-cart-label": "vCartLabel",
+      "v0y-label": "v0yLabel",
+      "show-predictions-label": "showPredictionsLabel",
+      "slow-motion-label": "slowMotionLabel",
+      "show-traces-label": "showTracesLabel",
+      "launch-btn-text": "launchButton",
+      "reset-btn-text": "resetButton",
+      "default-params-btn-text": "defaultButton",
+      "realtime-title": "realtimeTitle",
+      "time-label": "timeLabel",
+      "ball-x-label": "ballXLabel",
+      "ball-y-label": "ballYLabel",
+      "max-height-label": "maxHeightLabel",
+      "flight-time-label": "flightTimeLabel",
+      "range-label": "rangeLabel",
+      "physics-title": "physicsTitle",
+      "physics-intro": "physicsIntro",
+      "equations-title": "equationsTitle",
+      "eq-x-text": "eqXText",
+      "eq-y-text": "eqYText",
+      "eq-t-text": "eqTText",
+      "eq-range": "eqRange",
+      "eq-range-text": "eqRangeText",
+      "teacher-note": "teacherNote"
+    };
+
+    let currentLanguage = "zh-Hant";
+
+    function t(key) {
+      return translations[currentLanguage][key] || translations["zh-Hant"][key] || key;
+    }
+
+    function applyLanguage(lang) {
+      currentLanguage = lang;
+      const pack = translations[currentLanguage];
+      document.documentElement.lang = pack.htmlLang;
+      document.title = pack.pageTitle;
+      canvas.setAttribute("aria-label", pack.canvasAria);
+      languageToggle.textContent = pack.toggleLabel;
+      Object.entries(elementTextMap).forEach(([id, key]) => {
+        const element = document.getElementById(id);
+        if (!element) return;
+        if (["eqRange", "teacherNote"].includes(key)) {
+          element.innerHTML = pack[key];
+        } else {
+          element.textContent = pack[key];
+        }
+      });
+      if (!statusMessage.classList.contains("visible")) {
+        statusMessage.textContent = pack.statusCaught;
+      }
+      drawScene();
+    }
+
+
+    // -----------------------------
+    // Audio, optional only
+    // -----------------------------
+    let audioContext;
+    let launchSound = null;
+    let catchSound = null;
+
+    function initAudio() {
+      try {
+        audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        launchSound = () => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(220, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.18);
+          gainNode.gain.setValueAtTime(0.35, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + 0.25);
+        };
+
+        catchSound = () => {
+          const oscillator = audioContext.createOscillator();
+          const gainNode = audioContext.createGain();
+          oscillator.type = "sine";
+          oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+          oscillator.frequency.exponentialRampToValueAtTime(440, audioContext.currentTime + 0.1);
+          gainNode.gain.setValueAtTime(0.28, audioContext.currentTime);
+          gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.18);
+          oscillator.connect(gainNode);
+          gainNode.connect(audioContext.destination);
+          oscillator.start();
+          oscillator.stop(audioContext.currentTime + 0.18);
+        };
+      } catch (error) {
+        console.warn("Web Audio API is not available.", error);
+      }
+    }
+
+    function playSound(soundFn) {
+      if (!audioContext || !soundFn) return;
+      if (audioContext.state === "suspended") {
+        audioContext.resume().then(soundFn).catch(() => {});
+      } else {
+        soundFn();
+      }
+    }
+
+    // -----------------------------
+    // Simulation state
+    // -----------------------------
+    const simState = {
+      cartX: 0,
+      cartVelocity: parseFloat(vCartSlider.value),
+      ballX: 0,
+      ballY: LAUNCH_HEIGHT,
+      ballVx: 0,
+      ballVy: 0,
+      initialBallVy: parseFloat(v0ySlider.value),
+      time: 0,
+      maxHeight: LAUNCH_HEIGHT,
+      predictionPoints: [],
+      state: "ready", // ready, flying, caught, missed
+      lastTimestamp: 0,
+      catchTime: 0,
+      canvasWidth: 0,
+      canvasHeight: 0,
+      scale: 50,
+      groundY: 0,
+      launchX: 0,
+      flightTime: 0,
+      predictedRange: 0,
+      positionHistory: [],
+      lastTraceTime: 0,
+      traceInterval: 0.2
+    };
+
+    // -----------------------------
+    // Utility functions
+    // -----------------------------
+    function cssVar(name) {
+      return getComputedStyle(document.body).getPropertyValue(name).trim();
+    }
+
+    function formatUnit(value, unit, decimals = 2) {
+      return `${value.toFixed(decimals)} ${unit}`;
+    }
+
+    function showStatusMessage(message, isWarning = false) {
+      statusMessage.textContent = message;
+      statusMessage.classList.add("visible");
+      statusMessage.classList.toggle("warning", isWarning);
+      window.clearTimeout(showStatusMessage.timer);
+      showStatusMessage.timer = window.setTimeout(hideStatusMessage, 2500);
+    }
+
+    function hideStatusMessage() {
+      statusMessage.classList.remove("visible");
+    }
+
+    // -----------------------------
+    // Canvas setup and physics
+    // -----------------------------
+    function initCanvas() {
+      const container = canvas.parentElement;
+      canvas.width = container.clientWidth;
+      canvas.height = Math.max(360, Math.min(520, window.innerHeight * 0.52));
+
+      const maxV0y = parseFloat(v0ySlider.max);
+      const maxProjectileHeight = LAUNCH_HEIGHT + (maxV0y * maxV0y) / (2 * GRAVITY);
+      const horizontalScale = canvas.width / MIN_VISIBLE_WIDTH;
+      const verticalScale = (canvas.height - 70) / (maxProjectileHeight + GROUND_MARGIN);
+      simState.scale = Math.max(25, Math.min(50, horizontalScale, verticalScale));
+      simState.canvasWidth = canvas.width;
+      simState.canvasHeight = canvas.height;
+      simState.groundY = canvas.height - GROUND_MARGIN * simState.scale;
+    }
+
+    function resetSimulation() {
+      const startX = CART_WIDTH;
+      simState.cartX = startX;
+      simState.cartVelocity = parseFloat(vCartSlider.value);
+      simState.initialBallVy = parseFloat(v0ySlider.value);
+      simState.ballX = startX + CART_WIDTH / 2;
+      simState.ballY = LAUNCH_HEIGHT;
+      simState.ballVx = 0;
+      simState.ballVy = 0;
+      simState.time = 0;
+      simState.maxHeight = LAUNCH_HEIGHT + (simState.initialBallVy * simState.initialBallVy) / (2 * GRAVITY);
+      simState.state = "ready";
+      simState.catchTime = 0;
+      simState.launchX = simState.ballX;
+      simState.positionHistory = [];
+      simState.lastTraceTime = 0;
+      simState.lastTimestamp = 0;
+      launchBtn.disabled = false;
+      vCartSlider.disabled = false;
+      v0ySlider.disabled = false;
+      defaultParamsBtn.disabled = false;
+      calculateTrajectory();
+      updateDataDisplay();
+      hideStatusMessage();
+      drawScene();
+    }
+
+    function calculateTrajectory() {
+      const v0y = simState.initialBallVy;
+      const vx = simState.cartVelocity;
+      const flightTime = (2 * v0y) / GRAVITY;
+      const x0 = simState.cartX + CART_WIDTH / 2;
+      const y0 = LAUNCH_HEIGHT;
+      const points = [];
+      const steps = 80;
+
+      for (let i = 0; i <= steps; i++) {
+        const t = (flightTime * i) / steps;
+        points.push({
+          x: x0 + vx * t,
+          y: y0 + v0y * t - 0.5 * GRAVITY * t * t
+        });
+      }
+
+      simState.predictionPoints = points;
+      simState.flightTime = flightTime;
+      simState.predictedRange = vx * flightTime;
+      simState.maxHeight = y0 + (v0y * v0y) / (2 * GRAVITY);
+    }
+
+    function launchBall() {
+      if (simState.state !== "ready") return;
+      simState.ballVx = simState.cartVelocity; // Key physics: horizontal velocity is inherited from the cart.
+      simState.ballVy = simState.initialBallVy;
+      simState.launchX = simState.cartX + CART_WIDTH / 2;
+      simState.time = 0;
+      simState.maxHeight = LAUNCH_HEIGHT;
+      simState.positionHistory = [];
+      simState.lastTraceTime = 0;
+      simState.state = "flying";
+      launchBtn.disabled = true;
+      vCartSlider.disabled = true;
+      v0ySlider.disabled = true;
+      defaultParamsBtn.disabled = true;
+      hideStatusMessage();
+      playSound(launchSound);
+    }
+
+    function setDefaultParameters() {
+      const vCart = 1.0;
+      const v0y = 5.0;
+      vCartSlider.value = vCart.toFixed(1);
+      v0ySlider.value = v0y.toFixed(1);
+      vCartValue.textContent = `${vCart.toFixed(1)} m s⁻¹`;
+      v0yValue.textContent = `${v0y.toFixed(1)} m s⁻¹`;
+      resetSimulation();
+      showStatusMessage(t("statusDefault"));
+    }
+
+    function updateSimulation(timestamp) {
+      if (!simState.lastTimestamp) {
+        simState.lastTimestamp = timestamp;
+        requestAnimationFrame(updateSimulation);
+        return;
+      }
+
+      let dt = (timestamp - simState.lastTimestamp) / 1000;
+      simState.lastTimestamp = timestamp;
+      dt *= slowMotion.checked ? 0.25 : 1;
+
+      simState.cartX += simState.cartVelocity * dt;
+
+      if (simState.state === "ready") {
+        simState.ballX = simState.cartX + CART_WIDTH / 2;
+        simState.ballY = LAUNCH_HEIGHT;
+        calculateTrajectory();
+      } else if (simState.state === "flying") {
+        simState.time += dt;
+        simState.ballX = simState.launchX + simState.ballVx * simState.time;
+        simState.ballY = LAUNCH_HEIGHT + simState.ballVy * simState.time - 0.5 * GRAVITY * simState.time * simState.time;
+        simState.maxHeight = Math.max(simState.maxHeight, simState.ballY);
+
+        simState.lastTraceTime += dt;
+        if (simState.lastTraceTime >= simState.traceInterval) {
+          simState.positionHistory.push({
+            time: simState.time,
+            cartX: simState.cartX,
+            ballX: simState.ballX,
+            ballY: simState.ballY
+          });
+          simState.lastTraceTime = 0;
+        }
+
+        // The ball returns to the launch height at T = 2v0y/g.
+        if (simState.time >= simState.flightTime) {
+          simState.ballY = LAUNCH_HEIGHT;
+          const ballRelativePos = simState.ballX - simState.cartX;
+          const tolerance = BALL_RADIUS * 1.5;
+
+          if (ballRelativePos >= -tolerance && ballRelativePos <= CART_WIDTH + tolerance) {
+            simState.state = "caught";
+            simState.catchTime = 0;
+            simState.ballX = simState.cartX + CART_WIDTH / 2;
+            playSound(catchSound);
+            showStatusMessage(t("statusCaught"));
+          } else {
+            simState.state = "missed";
+            simState.catchTime = 0;
+            showStatusMessage(t("statusMissed"), true);
+          }
+        }
+      } else if (simState.state === "caught") {
+        simState.catchTime += dt;
+        simState.ballX = simState.cartX + CART_WIDTH / 2;
+        simState.ballY = LAUNCH_HEIGHT;
+        if (simState.catchTime > 1.5) resetSimulation();
+      } else if (simState.state === "missed") {
+        simState.catchTime += dt;
+        if (simState.catchTime > 1.5) resetSimulation();
+      }
+
+      const visibleRight = simState.canvasWidth / simState.scale;
+      if (simState.cartX > visibleRight + CART_WIDTH * 2) {
+        resetSimulation();
+      }
+
+      updateDataDisplay();
+      drawScene();
+      requestAnimationFrame(updateSimulation);
+    }
+
+    function updateDataDisplay() {
+      timeValue.textContent = formatUnit(simState.time, "s", 2);
+      ballXValue.textContent = formatUnit(simState.ballX, "m", 2);
+      ballYValue.textContent = formatUnit(Math.max(simState.ballY, 0), "m", 2);
+      maxHeightValue.textContent = formatUnit(simState.maxHeight, "m", 2);
+      flightTimeValue.textContent = formatUnit(simState.flightTime, "s", 2);
+      rangeValue.textContent = formatUnit(simState.predictedRange, "m", 2);
+    }
+
+    // -----------------------------
+    // Drawing
+    // -----------------------------
+    function drawArrow(x1, y1, x2, y2, color, label) {
+      const headLength = 10;
+      const angle = Math.atan2(y2 - y1, x2 - x1);
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - headLength * Math.cos(angle - Math.PI / 6), y2 - headLength * Math.sin(angle - Math.PI / 6));
+      ctx.lineTo(x2 - headLength * Math.cos(angle + Math.PI / 6), y2 - headLength * Math.sin(angle + Math.PI / 6));
+      ctx.closePath();
+      ctx.fill();
+      if (label) {
+        ctx.font = "bold 13px 'Microsoft JhengHei', Arial";
+        ctx.textAlign = "center";
+        ctx.fillText(label, (x1 + x2) / 2, y1 - 10);
+      }
+    }
+
+    function drawScene() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const scale = simState.scale;
+      const originX = 0;
+      const originY = simState.groundY;
+
+      // Sky / background
+      ctx.fillStyle = cssVar("--panel-bg");
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Grid lines, light and unobtrusive
+      ctx.strokeStyle = cssVar("--border-color");
+      ctx.lineWidth = 1;
+      ctx.globalAlpha = 0.35;
+      for (let m = 0; m <= Math.ceil(canvas.width / scale); m += 2) {
+        const x = originX + m * scale;
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, originY);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // Ground
+      ctx.fillStyle = cssVar("--border-color");
+      ctx.fillRect(0, originY, canvas.width, canvas.height - originY);
+      ctx.fillStyle = cssVar("--text-color");
+      ctx.font = "13px 'Microsoft JhengHei', Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(t("canvasGround"), 12, originY + 22);
+
+      // Traces
+      if (showTraces.checked && simState.positionHistory.length > 0) {
+        simState.positionHistory.forEach(position => {
+          const x = originX + position.ballX * scale;
+          const y = originY - position.ballY * scale;
+          ctx.fillStyle = "rgba(255, 100, 100, 0.55)";
+          ctx.beginPath();
+          ctx.arc(x, y, BALL_RADIUS * 0.65 * scale, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = cssVar("--text-color");
+          ctx.globalAlpha = 0.75;
+          ctx.font = "10px Arial";
+          ctx.textAlign = "center";
+          ctx.fillText(`${position.time.toFixed(1)} s`, x, y - BALL_RADIUS * scale - 4);
+          ctx.globalAlpha = 1;
+        });
+      }
+
+      // Prediction path
+      if (showPredictions.checked && simState.state === "ready" && simState.predictionPoints.length > 1) {
+        ctx.beginPath();
+        ctx.strokeStyle = cssVar("--primary-color") + "CC";
+        ctx.setLineDash([6, 6]);
+        ctx.lineWidth = 2;
+        simState.predictionPoints.forEach((point, index) => {
+          const x = originX + point.x * scale;
+          const y = originY - point.y * scale;
+          if (index === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+        });
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = cssVar("--primary-color");
+        ctx.font = "bold 13px 'Microsoft JhengHei', Arial";
+        const labelPoint = simState.predictionPoints[Math.floor(simState.predictionPoints.length * 0.45)];
+        ctx.fillText(t("canvasPrediction"), originX + labelPoint.x * scale + 8, originY - labelPoint.y * scale - 8);
+      }
+
+      // Cart
+      const cartX = originX + simState.cartX * scale;
+      const cartY = originY - CART_HEIGHT * scale;
+      const cartWidth = CART_WIDTH * scale;
+      const cartHeight = CART_HEIGHT * scale;
+
+      ctx.fillStyle = cssVar("--primary-color");
+      ctx.fillRect(cartX, cartY, cartWidth, cartHeight);
+      ctx.fillStyle = "rgba(255,255,255,0.92)";
+      ctx.font = "bold 13px 'Microsoft JhengHei', Arial";
+      ctx.textAlign = "center";
+      ctx.fillText(t("canvasCart"), cartX + cartWidth / 2, cartY + cartHeight / 2 + 5);
+
+      // Wheels
+      const wheelRadius = 0.2 * scale;
+      ctx.fillStyle = "#333";
+      ctx.beginPath();
+      ctx.arc(cartX + cartWidth / 3, originY, wheelRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cartX + (cartWidth * 2) / 3, originY, wheelRadius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Launcher
+      const launcherWidth = 0.1 * scale;
+      const launcherHeight = 0.35 * scale;
+      const launcherX = cartX + cartWidth / 2 - launcherWidth / 2;
+      ctx.fillStyle = "#555";
+      ctx.fillRect(launcherX, cartY - launcherHeight, launcherWidth, launcherHeight);
+
+      // Velocity arrow for cart
+      if (simState.cartVelocity > 0) {
+        drawArrow(cartX + cartWidth + 8, cartY + cartHeight * 0.25, cartX + cartWidth + 8 + 38, cartY + cartHeight * 0.25, cssVar("--primary-color"), t("canvasCartVelocity"));
+      }
+
+      // Ball
+      const ballRadius = BALL_RADIUS * scale;
+      const ballX = originX + simState.ballX * scale;
+      const ballY = originY - simState.ballY * scale;
+      const gradient = ctx.createRadialGradient(
+        ballX - ballRadius / 3,
+        ballY - ballRadius / 3,
+        Math.max(1, ballRadius / 10),
+        ballX,
+        ballY,
+        ballRadius
+      );
+      gradient.addColorStop(0, "#ffffff");
+      gradient.addColorStop(1, "#f0f0f0");
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(ballX, ballY, ballRadius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = "rgba(0, 0, 0, 0.35)";
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // Ball shadow
+      if (simState.state === "flying") {
+        const heightRatio = Math.min(1, Math.max(0, simState.ballY / Math.max(simState.maxHeight, 1)));
+        const shadowSize = ballRadius * (1 - 0.55 * heightRatio);
+        const shadowAlpha = 0.32 * (1 - 0.65 * heightRatio);
+        ctx.fillStyle = `rgba(0, 0, 0, ${shadowAlpha})`;
+        ctx.beginPath();
+        ctx.ellipse(ballX, originY, shadowSize, shadowSize / 3, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Launch/catch effect
+      if (simState.state === "flying" && simState.time < 0.18) {
+        const intensity = 1 - simState.time / 0.18;
+        ctx.strokeStyle = `rgba(255, 210, 0, ${intensity})`;
+        ctx.lineWidth = 2 * intensity;
+        for (let i = 0; i < 8; i++) {
+          const angle = (Math.PI * i) / 4;
+          ctx.beginPath();
+          ctx.moveTo(ballX, ballY);
+          ctx.lineTo(ballX + Math.cos(angle) * ballRadius * 1.5 * intensity, ballY + Math.sin(angle) * ballRadius * 1.5 * intensity);
+          ctx.stroke();
+        }
+      } else if (simState.state === "caught" && simState.catchTime < 0.35) {
+        const intensity = 1 - simState.catchTime / 0.35;
+        ctx.strokeStyle = `rgba(0, 210, 80, ${intensity})`;
+        ctx.lineWidth = 3 * intensity;
+        ctx.beginPath();
+        ctx.arc(ballX, ballY, ballRadius * (1 + simState.catchTime * 5), 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // On-canvas note
+      ctx.fillStyle = cssVar("--text-color");
+      ctx.globalAlpha = 0.82;
+      ctx.font = "13px 'Microsoft JhengHei', Arial";
+      ctx.textAlign = "left";
+      ctx.fillText(t("canvasNote1"), 12, 24);
+      ctx.fillText(t("canvasNote2"), 12, 44);
+      ctx.globalAlpha = 1;
+    }
+
+    // -----------------------------
+    // Event listeners
+    // -----------------------------
+    languageToggle.addEventListener("click", () => {
+      applyLanguage(currentLanguage === "zh-Hant" ? "en" : "zh-Hant");
+    });
+
+    vCartSlider.addEventListener("input", () => {
+      const value = parseFloat(vCartSlider.value);
+      vCartValue.textContent = `${value.toFixed(1)} m s⁻¹`;
+      simState.cartVelocity = value;
+      if (simState.state === "ready") calculateTrajectory();
+      updateDataDisplay();
+    });
+
+    v0ySlider.addEventListener("input", () => {
+      const value = parseFloat(v0ySlider.value);
+      v0yValue.textContent = `${value.toFixed(1)} m s⁻¹`;
+      simState.initialBallVy = value;
+      if (simState.state === "ready") calculateTrajectory();
+      updateDataDisplay();
+    });
+
+    showPredictions.addEventListener("change", drawScene);
+    slowMotion.addEventListener("change", drawScene);
+    showTraces.addEventListener("change", drawScene);
+    launchBtn.addEventListener("click", launchBall);
+    resetBtn.addEventListener("click", resetSimulation);
+    defaultParamsBtn.addEventListener("click", setDefaultParameters);
+
+    window.addEventListener("resize", () => {
+      initCanvas();
+      resetSimulation();
+    });
+
+    // -----------------------------
+    // Start
+    // -----------------------------
+    initCanvas();
+    applyLanguage("zh-Hant");
+    resetSimulation();
+    initAudio();
+    requestAnimationFrame(updateSimulation);
+  </script>
+</body>
+</html>

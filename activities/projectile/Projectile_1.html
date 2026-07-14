@@ -1,0 +1,1347 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>拋物線運動入門模擬器</title>
+  <style>
+    :root {
+      --page: #f5f7fb;
+      --panel: #ffffff;
+      --panel-soft: #f8fafc;
+      --ink: #172033;
+      --muted: #65758b;
+      --line: #dbe4ef;
+      --brand: #4f46e5;
+      --brand-deep: #3730a3;
+      --brand-soft: #eef2ff;
+      --x: #2563eb;
+      --x-soft: #dbeafe;
+      --y: #ea580c;
+      --y-soft: #ffedd5;
+      --g: #dc2626;
+      --path: #64748b;
+      --success: #047857;
+      --success-soft: #ecfdf5;
+      --warn: #b45309;
+      --warn-soft: #fffbeb;
+      --shadow: 0 18px 45px rgba(15, 23, 42, 0.10);
+      --shadow-sm: 0 8px 22px rgba(15, 23, 42, 0.08);
+      --radius-lg: 22px;
+      --radius-md: 14px;
+      --radius-sm: 10px;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #0f172a;
+        --panel: #172033;
+        --panel-soft: #111827;
+        --ink: #f8fafc;
+        --muted: #a6b3c6;
+        --line: #334155;
+        --brand: #818cf8;
+        --brand-deep: #a5b4fc;
+        --brand-soft: #1e1b4b;
+        --x-soft: #172554;
+        --y-soft: #431407;
+        --success-soft: #052e24;
+        --warn-soft: #3b2505;
+        --shadow: 0 18px 45px rgba(0,0,0,.38);
+        --shadow-sm: 0 8px 22px rgba(0,0,0,.25);
+      }
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Inter, "Noto Sans TC", "Microsoft JhengHei", "PingFang TC", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, rgba(99, 102, 241, .20), transparent 34rem),
+        radial-gradient(circle at bottom right, rgba(14, 165, 233, .14), transparent 28rem),
+        var(--page);
+      padding: 24px;
+    }
+
+    .app {
+      max-width: 1280px;
+      margin: 0 auto;
+      display: grid;
+      gap: 18px;
+    }
+
+    .topbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 7px 10px;
+      border-radius: 999px;
+      background: var(--brand-soft);
+      color: var(--brand-deep);
+      font-size: 13px;
+      font-weight: 750;
+      letter-spacing: .02em;
+      margin-bottom: 10px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      max-width: 780px;
+    }
+
+    .top-actions {
+      display: grid;
+      gap: 10px;
+      justify-items: end;
+    }
+
+    .lang-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 9px 13px;
+      border-radius: 999px;
+      border: 1px solid color-mix(in srgb, var(--brand) 35%, var(--line));
+      background: var(--panel);
+      color: var(--brand-deep);
+      box-shadow: var(--shadow-sm);
+      white-space: nowrap;
+      font-size: 13px;
+    }
+
+    .principle-strip {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 9px 11px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.55);
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 372px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .sim-card, .side-card, .concept-card {
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .sim-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(255,255,255,.5), transparent);
+    }
+
+    .sim-title { display: grid; gap: 2px; }
+    .sim-title strong { font-size: 17px; }
+    .sim-title span { color: var(--muted); font-size: 13px; }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      background: var(--panel-soft);
+      padding: 4px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+    }
+
+    .tab {
+      appearance: none;
+      border: 0;
+      background: transparent;
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 9px 12px;
+      font-size: 13px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: .18s ease;
+    }
+    .tab[aria-selected="true"] {
+      color: white;
+      background: var(--brand);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .canvas-wrap {
+      position: relative;
+      background: linear-gradient(180deg, #eff6ff 0%, #f8fafc 72%);
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: transparent;
+    }
+
+    .legend {
+      position: absolute;
+      left: 14px;
+      bottom: 14px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      pointer-events: none;
+    }
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(148,163,184,.42);
+      color: #334155;
+      font-size: 12px;
+      font-weight: 700;
+      backdrop-filter: blur(8px);
+    }
+    .swatch { width: 18px; height: 4px; border-radius: 99px; display: inline-block; }
+    .swatch.x { background: var(--x); }
+    .swatch.y { background: var(--y); }
+    .swatch.g { background: var(--g); }
+    .swatch.p { background: var(--path); border-style: dashed; }
+    .swatch.snap {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #2563eb;
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px rgba(37,99,235,.45);
+    }
+
+    .readout-strip {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      padding: 12px 16px 16px;
+      border-top: 1px solid var(--line);
+      background: var(--panel);
+    }
+    .readout {
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      padding: 10px 12px;
+    }
+    .readout small {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+    .readout strong {
+      display: block;
+      margin-top: 2px;
+      font-size: 17px;
+      font-variant-numeric: tabular-nums;
+    }
+    .readout.x strong { color: var(--x); }
+    .readout.y strong { color: var(--y); }
+
+    .side-card {
+      padding: 16px;
+      display: grid;
+      gap: 14px;
+      position: sticky;
+      top: 16px;
+    }
+
+    .section {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      background: var(--panel-soft);
+      border-radius: var(--radius-md);
+    }
+    .section h3 {
+      margin: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .07em;
+    }
+    .step-number {
+      display: inline-grid;
+      place-items: center;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: var(--brand);
+      color: white;
+      font-size: 12px;
+      letter-spacing: 0;
+    }
+
+    .question { margin: 0; font-weight: 760; line-height: 1.35; }
+    .choice-grid { display: grid; gap: 8px; }
+    .choice {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 9px;
+      align-items: start;
+      padding: 10px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--panel);
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .choice input { margin-top: 3px; accent-color: var(--brand); }
+    .choice:has(input:checked) {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--brand) 16%, transparent);
+    }
+
+    .btn-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    button {
+      font: inherit;
+      font-weight: 760;
+      border: 0;
+      border-radius: 12px;
+      padding: 11px 12px;
+      cursor: pointer;
+      transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+    }
+    button:focus-visible { outline: 3px solid color-mix(in srgb, var(--brand) 45%, transparent); outline-offset: 2px; }
+    button:hover { transform: translateY(-1px); }
+    button:disabled { opacity: .48; cursor: not-allowed; transform: none; }
+    .primary { background: var(--brand); color: white; box-shadow: var(--shadow-sm); }
+    .primary:hover { background: var(--brand-deep); }
+    .secondary { background: var(--panel); color: var(--ink); border: 1px solid var(--line); }
+    .ghost { background: transparent; color: var(--brand-deep); border: 1px solid var(--line); }
+    .full { grid-column: 1 / -1; }
+
+    .speed-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+    .speed-btn { background: var(--panel); border: 1px solid var(--line); color: var(--ink); padding: 10px 8px; }
+    .speed-btn.active { background: var(--brand-soft); border-color: var(--brand); color: var(--brand-deep); }
+
+    .slider-line { display: grid; gap: 6px; }
+    .slider-line label { display: flex; justify-content: space-between; color: var(--muted); font-size: 13px; font-weight: 700; }
+    input[type="range"] { width: 100%; accent-color: var(--brand); }
+
+    .toggles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-sm);
+      background: var(--panel);
+    }
+    .toggle input { accent-color: var(--brand); }
+
+    .feedback {
+      min-height: 32px;
+      padding: 9px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--brand-soft);
+      color: var(--brand-deep);
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .feedback.success { background: var(--success-soft); color: var(--success); }
+    .feedback.warn { background: var(--warn-soft); color: var(--warn); }
+
+    .concepts {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .concept-card { padding: 16px; box-shadow: var(--shadow-sm); }
+    .concept-card h3 { margin: 0 0 7px; font-size: 16px; }
+    .concept-card p { margin: 0; color: var(--muted); font-size: 14px; }
+    .concept-card.x { border-top: 5px solid var(--x); }
+    .concept-card.y { border-top: 5px solid var(--y); }
+    .concept-card.r { border-top: 5px solid var(--brand); }
+
+    .equation-box {
+      display: none;
+      padding: 12px 14px;
+      background: var(--panel-soft);
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      font-family: "Times New Roman", serif;
+      font-size: 17px;
+      line-height: 1.55;
+    }
+    .equation-box.visible { display: block; }
+
+    @media (max-width: 1050px) {
+      .layout { grid-template-columns: 1fr; }
+      .side-card { position: static; }
+      .topbar { grid-template-columns: 1fr; }
+      .top-actions { justify-items: start; }
+      .principle-strip { justify-content: flex-start; }
+    }
+    @media (max-width: 720px) {
+      body { padding: 14px; }
+      .sim-header { flex-direction: column; align-items: stretch; }
+      .tabs { width: 100%; overflow-x: auto; }
+      .tab { white-space: nowrap; flex: 1; }
+      .readout-strip { grid-template-columns: 1fr 1fr; }
+      .concepts { grid-template-columns: 1fr; }
+      .toggles { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header class="topbar">
+      <div>
+        <div class="eyebrow" data-i18n="eyebrow">拋物線運動入門模擬器</div>
+        <h1 data-i18n="mainTitle">由自由落體到拋物線運動</h1>
+        <p class="subtitle" data-i18n="subtitle">先作預測，再觀察小球在下跌時如何保持水平運動；重力只改變它的垂直運動。</p>
+      </div>
+      <div class="top-actions">
+        <button class="lang-toggle" id="lang-toggle" type="button" onclick="toggleLanguage()" aria-label="Switch language">English</button>
+        <div class="principle-strip" aria-label="設計原則" id="principle-strip">
+          <span class="chip" data-i18n="chipPredict">預測 → 觀察 → 解釋</span>
+          <span class="chip" data-i18n="chipComponents">清楚標示分量</span>
+          <span class="chip" data-i18n="chipSnapshots">等時間位置點</span>
+        </div>
+      </div>
+    </header>
+
+    <section class="layout">
+      <article class="sim-card">
+        <div class="sim-header">
+          <div class="sim-title">
+            <strong id="mode-title">靜止放手</strong>
+            <span id="mode-subtitle">這是對照情況：沒有水平速度。</span>
+          </div>
+          <div class="tabs" role="tablist" aria-label="模擬模式" id="mode-tabs">
+            <button class="tab" id="tab-stationary" role="tab" aria-selected="true" onclick="setMode('stationary')" data-i18n="tabStationary">靜止</button>
+            <button class="tab" id="tab-moving" role="tab" aria-selected="false" onclick="setMode('moving')" data-i18n="tabMoving">移動小車</button>
+            <button class="tab" id="tab-compare" role="tab" aria-selected="false" onclick="setMode('compare')" data-i18n="tabCompare">比較</button>
+          </div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="sim" aria-label="拋物線運動模擬" tabindex="0"></canvas>
+          <div class="legend" aria-hidden="true">
+            <span class="legend-item"><span class="swatch x"></span><span data-i18n="legendX">水平速度</span></span>
+            <span class="legend-item"><span class="swatch y"></span><span data-i18n="legendY">垂直速度</span></span>
+            <span class="legend-item"><span class="swatch g"></span><span data-i18n="legendG">只有重力</span></span>
+            <span class="legend-item"><span class="swatch p"></span><span data-i18n="legendPath">運動軌跡</span></span>
+            <span class="legend-item"><span class="swatch snap"></span><span data-i18n="legendSnap">等時間位置點</span></span>
+          </div>
+        </div>
+        <div class="readout-strip">
+          <div class="readout"><small data-i18n="readTime">時間</small><strong id="r-time">0.00 s</strong></div>
+          <div class="readout x"><small data-i18n="readVx">水平速度</small><strong id="r-vx">+0.0 m/s</strong></div>
+          <div class="readout y"><small data-i18n="readVy">垂直速度</small><strong id="r-vy">0.0 m/s</strong></div>
+          <div class="readout"><small data-i18n="readResult">結果</small><strong id="r-result">準備好</strong></div>
+        </div>
+      </article>
+
+      <aside class="side-card">
+        <section class="section">
+          <h3><span data-i18n="sectionPredict">先作預測</span><span class="step-number">1</span></h3>
+          <p class="question" id="prediction-question">人是靜止的。小球會落在哪裏？</p>
+          <div class="choice-grid" id="prediction-choices">
+            <label class="choice"><input type="radio" name="prediction" value="behind"><span data-i18n="choiceBehind">在人後方</span></label>
+            <label class="choice"><input type="radio" name="prediction" value="below"><span data-i18n="choiceBelow">在人正下方／附近</span></label>
+            <label class="choice"><input type="radio" name="prediction" value="front"><span data-i18n="choiceFront">在人前方</span></label>
+          </div>
+          <div class="btn-row">
+            <button class="ghost" onclick="lockPrediction()" data-i18n="btnLock">鎖定預測</button>
+            <button class="secondary" onclick="clearPrediction()" data-i18n="btnClear">清除</button>
+          </div>
+          <div class="feedback" id="prediction-feedback">播放前請先選擇答案。</div>
+        </section>
+
+        <section class="section">
+          <h3><span data-i18n="sectionExperiment">進行實驗</span><span class="step-number">2</span></h3>
+          <button class="primary full" id="btn-run" onclick="runOrRestart()">放開小球</button>
+          <div class="btn-row">
+            <button class="secondary" id="btn-pause" onclick="pauseResume()" disabled>暫停</button>
+            <button class="secondary" onclick="resetSim()" data-i18n="btnReset">重設</button>
+          </div>
+          <div class="speed-grid" aria-label="小車速度預設" id="speed-grid">
+            <button class="speed-btn" id="speed-slow" onclick="setSpeed(2)" data-i18n="speedSlow">慢</button>
+            <button class="speed-btn active" id="speed-med" onclick="setSpeed(3)" data-i18n="speedMedium">中</button>
+            <button class="speed-btn" id="speed-fast" onclick="setSpeed(5)" data-i18n="speedFast">快</button>
+          </div>
+          <div class="slider-line">
+            <label for="gravity"><span data-i18n="gravityLabel">重力加速度</span><span id="g-label">9.8 m/s²</span></label>
+            <input id="gravity" type="range" min="1.6" max="14" step="0.1" value="9.8" oninput="updateGravity()">
+          </div>
+        </section>
+
+        <section class="section">
+          <h3><span data-i18n="sectionAids">視覺輔助</span><span class="step-number">3</span></h3>
+          <div class="toggles">
+            <label class="toggle"><input type="checkbox" id="toggle-path" checked onchange="draw()"><span data-i18n="togglePath">軌跡</span></label>
+            <label class="toggle"><input type="checkbox" id="toggle-snap" checked onchange="draw()"><span data-i18n="toggleSnap">位置點</span></label>
+            <label class="toggle"><input type="checkbox" id="toggle-vectors" checked onchange="draw()"><span data-i18n="toggleVectors">速度箭咀</span></label>
+            <label class="toggle"><input type="checkbox" id="toggle-gravity" checked onchange="draw()"><span data-i18n="toggleGravity">重力箭咀</span></label>
+            <label class="toggle"><input type="checkbox" id="toggle-release" checked onchange="draw()"><span data-i18n="toggleRelease">放手位置</span></label>
+            <label class="toggle"><input type="checkbox" id="toggle-equations" onchange="toggleEquations()"><span data-i18n="toggleEquations">方程式</span></label>
+          </div>
+          <div class="equation-box" id="equation-box" data-i18n-html="equationBox">
+            <div><span style="color:var(--x)">水平方向：</span> x = x₀ + vₓt，所以 vₓ 保持不變。</div>
+            <div><span style="color:var(--y)">垂直方向：</span> y = y₀ − ½gt²，而 vᵧ = −gt。</div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3><span data-i18n="sectionExplain">解釋</span><span class="step-number">4</span></h3>
+          <p class="question" data-i18n="checkpointQuestion">為甚麼移動中的小球路徑是彎曲的？</p>
+          <div class="choice-grid">
+            <label class="choice"><input type="radio" name="checkpoint" value="forward-force"><span data-i18n="checkForward">重力把小球向前拉。</span></label>
+            <label class="choice"><input type="radio" name="checkpoint" value="components"><span data-i18n="checkComponents">小球有水平速度，同時受重力向下加速。</span></label>
+            <label class="choice"><input type="radio" name="checkpoint" value="mass"><span data-i18n="checkMass">小球下跌時變得更重。</span></label>
+          </div>
+          <button class="ghost" onclick="checkAnswer()" data-i18n="btnCheck">檢查答案</button>
+          <div class="feedback" id="checkpoint-feedback">用箭咀和位置點解釋你的答案。</div>
+        </section>
+      </aside>
+    </section>
+
+    <section class="concepts">
+      <article class="concept-card x">
+        <h3 data-i18n="conceptXTitle">水平運動</h3>
+        <p data-i18n="conceptXText">放手後沒有顯示水平力；小球會以原本的水平速度繼續前進。</p>
+      </article>
+      <article class="concept-card y">
+        <h3 data-i18n="conceptYTitle">垂直運動</h3>
+        <p data-i18n="conceptYText">重力向下作用，所以垂直速度會隨時間向下增加。</p>
+      </article>
+      <article class="concept-card r">
+        <h3 data-i18n="conceptRTitle">合成路徑</h3>
+        <p data-i18n="conceptRText">彎曲的運動軌跡，是由等速水平運動和加速垂直運動合成而成。</p>
+      </article>
+    </section>
+  </main>
+
+  <script>
+    const TEXT = {
+      zh: {
+        htmlLang: 'zh-Hant',
+        documentTitle: '拋物線運動入門模擬器',
+        switchButton: 'English',
+        switchAria: 'Switch to English',
+        eyebrow: '拋物線運動入門模擬器',
+        mainTitle: '由自由落體到拋物線運動',
+        subtitle: '先作預測，再觀察小球在下跌時如何保持水平運動；重力只改變它的垂直運動。',
+        chipPredict: '預測 → 觀察 → 解釋',
+        chipComponents: '清楚標示分量',
+        chipSnapshots: '等時間位置點',
+        tabStationary: '靜止',
+        tabMoving: '移動小車',
+        tabCompare: '比較',
+        legendX: '水平速度',
+        legendY: '垂直速度',
+        legendG: '只有重力',
+        legendPath: '運動軌跡',
+        legendSnap: '等時間位置點',
+        readTime: '時間',
+        readVx: '水平速度',
+        readVy: '垂直速度',
+        readResult: '結果',
+        sectionPredict: '先作預測',
+        sectionExperiment: '進行實驗',
+        sectionAids: '視覺輔助',
+        sectionExplain: '解釋',
+        choiceBehind: '在人後方',
+        choiceBelow: '在人正下方／附近',
+        choiceFront: '在人前方',
+        btnLock: '鎖定預測',
+        btnClear: '清除',
+        btnReset: '重設',
+        speedSlow: '慢',
+        speedMedium: '中',
+        speedFast: '快',
+        gravityLabel: '重力加速度',
+        togglePath: '軌跡',
+        toggleSnap: '位置點',
+        toggleVectors: '速度箭咀',
+        toggleGravity: '重力箭咀',
+        toggleRelease: '放手位置',
+        toggleEquations: '方程式',
+        equationBox: '<div><span style="color:var(--x)">水平方向：</span> x = x₀ + vₓt，所以 vₓ 保持不變。</div><div><span style="color:var(--y)">垂直方向：</span> y = y₀ − ½gt²，而 vᵧ = −gt。</div>',
+        checkpointQuestion: '為甚麼移動中的小球路徑是彎曲的？',
+        checkForward: '重力把小球向前拉。',
+        checkComponents: '小球有水平速度，同時受重力向下加速。',
+        checkMass: '小球下跌時變得更重。',
+        btnCheck: '檢查答案',
+        conceptXTitle: '水平運動',
+        conceptXText: '放手後沒有顯示水平力；小球會以原本的水平速度繼續前進。',
+        conceptYTitle: '垂直運動',
+        conceptYText: '重力向下作用，所以垂直速度會隨時間向下增加。',
+        conceptRTitle: '合成路徑',
+        conceptRText: '彎曲的運動軌跡，是由等速水平運動和加速垂直運動合成而成。',
+        modeStationaryTitle: '靜止放手',
+        modeStationarySubtitle: '這是對照情況：沒有水平速度。',
+        modeMovingTitle: '移動車上放手',
+        modeMovingSubtitle: '小球放手後仍保持小車的水平速度。',
+        modeCompareTitle: '並排比較',
+        modeCompareSubtitle: '同時比較自由落體和拋物線運動。',
+        questionStationary: '人是靜止的。小球會落在哪裏？',
+        questionMoving: '小車向右移動。相對於車上的人，小球會落在哪裏？',
+        questionCompare: '在移動情況下，相對於車上的人，小球會落在哪裏？',
+        predChoose: '播放前請先選擇答案。',
+        predSelectFirst: '請先選擇一個預測。',
+        predLocked: '已鎖定預測。現在觀察運動。',
+        predSuggest: '建議先鎖定預測，再開始觀察。',
+        predCorrectStationary: '正確：沒有水平速度時，小球會垂直下跌。',
+        predCorrectMoving: '正確：小球落在人正下方／附近，因為小球和人有相同水平速度。',
+        predObservedStationary: '觀察結果：因為 vx = 0，小球垂直下跌。',
+        predObservedMoving: '觀察結果：小球保持在人正下方／附近，但同時也由放手位置向前移動。',
+        runDrop: '放開小球',
+        runAgain: '再試一次',
+        pause: '暫停',
+        resume: '繼續',
+        statusReady: '準備好',
+        statusLanded: '已落地',
+        statusPaused: '已暫停',
+        statusFalling: '下跌中',
+        checkpointDefault: '用箭咀和位置點解釋你的答案。',
+        checkpointSelect: '請先選擇一個解釋。',
+        checkpointCorrect: '正確：vx 會繼續保持，而重力令 vy 向下改變。',
+        checkpointForwardWarn: '未完全正確：放手後沒有向前的力。向前運動是因為小球原本已有 vx。',
+        checkpointMassWarn: '未完全正確：在這個模型中，質量不是路徑彎曲的原因。',
+        panelStationary: '靜止放手',
+        panelMoving: '移動車上放手',
+        releasePosition: '放手位置',
+        vxConstant: 'vₓ 不變',
+        vy: 'vᵧ',
+        gravityOnly: '只有重力',
+        designPrinciplesAria: '設計原則',
+        modeTabsAria: '模擬模式',
+        canvasAria: '拋物線運動模擬',
+        speedGridAria: '小車速度預設'
+      },
+      en: {
+        htmlLang: 'en',
+        documentTitle: 'Introductory Projectile Motion Simulator',
+        switchButton: '中文（繁體）',
+        switchAria: '切換至中文（繁體）',
+        eyebrow: 'Introductory Projectile Motion Simulator',
+        mainTitle: 'From Free Fall to Projectile Motion',
+        subtitle: 'Predict first, then observe how the ball keeps its horizontal motion while falling. Gravity changes only its vertical motion.',
+        chipPredict: 'Predict → Observe → Explain',
+        chipComponents: 'Clearly labelled components',
+        chipSnapshots: 'Equal-time position dots',
+        tabStationary: 'Stationary',
+        tabMoving: 'Moving cart',
+        tabCompare: 'Compare',
+        legendX: 'Horizontal velocity',
+        legendY: 'Vertical velocity',
+        legendG: 'Gravity only',
+        legendPath: 'Trajectory',
+        legendSnap: 'Equal-time dots',
+        readTime: 'Time',
+        readVx: 'Horizontal velocity',
+        readVy: 'Vertical velocity',
+        readResult: 'Result',
+        sectionPredict: 'Predict first',
+        sectionExperiment: 'Run experiment',
+        sectionAids: 'Visual aids',
+        sectionExplain: 'Explain',
+        choiceBehind: 'Behind the person',
+        choiceBelow: 'Directly below / near the person',
+        choiceFront: 'In front of the person',
+        btnLock: 'Lock prediction',
+        btnClear: 'Clear',
+        btnReset: 'Reset',
+        speedSlow: 'Slow',
+        speedMedium: 'Medium',
+        speedFast: 'Fast',
+        gravityLabel: 'Gravitational acceleration',
+        togglePath: 'Path',
+        toggleSnap: 'Position dots',
+        toggleVectors: 'Velocity arrows',
+        toggleGravity: 'Gravity arrow',
+        toggleRelease: 'Release position',
+        toggleEquations: 'Equations',
+        equationBox: '<div><span style="color:var(--x)">Horizontal:</span> x = x₀ + vₓt, so vₓ stays constant.</div><div><span style="color:var(--y)">Vertical:</span> y = y₀ − ½gt², and vᵧ = −gt.</div>',
+        checkpointQuestion: 'Why is the path of the moving ball curved?',
+        checkForward: 'Gravity pulls the ball forward.',
+        checkComponents: 'The ball has horizontal velocity and is accelerated downward by gravity.',
+        checkMass: 'The ball becomes heavier as it falls.',
+        btnCheck: 'Check answer',
+        conceptXTitle: 'Horizontal motion',
+        conceptXText: 'After release, no horizontal force is shown; the ball continues forward with its original horizontal velocity.',
+        conceptYTitle: 'Vertical motion',
+        conceptYText: 'Gravity acts downward, so the vertical velocity increases downward with time.',
+        conceptRTitle: 'Resultant path',
+        conceptRText: 'The curved trajectory is formed by constant horizontal motion and accelerated vertical motion together.',
+        modeStationaryTitle: 'Stationary drop',
+        modeStationarySubtitle: 'Control case: no horizontal velocity.',
+        modeMovingTitle: 'Drop from a moving cart',
+        modeMovingSubtitle: 'After release, the ball keeps the cart\'s horizontal velocity.',
+        modeCompareTitle: 'Side-by-side comparison',
+        modeCompareSubtitle: 'Compare free fall and projectile motion at the same time.',
+        questionStationary: 'The person is stationary. Where will the ball land?',
+        questionMoving: 'The cart moves to the right. Relative to the person on the cart, where will the ball land?',
+        questionCompare: 'In the moving case, relative to the person on the cart, where will the ball land?',
+        predChoose: 'Choose an answer before playing.',
+        predSelectFirst: 'Choose a prediction first.',
+        predLocked: 'Prediction locked. Now observe the motion.',
+        predSuggest: 'It is better to lock a prediction before observing.',
+        predCorrectStationary: 'Correct: with no horizontal velocity, the ball falls vertically.',
+        predCorrectMoving: 'Correct: the ball lands directly below / near the person because they share the same horizontal velocity.',
+        predObservedStationary: 'Observation: because vx = 0, the ball falls vertically.',
+        predObservedMoving: 'Observation: the ball stays directly below / near the person, but also moves forward from the release position.',
+        runDrop: 'Drop ball',
+        runAgain: 'Try again',
+        pause: 'Pause',
+        resume: 'Resume',
+        statusReady: 'Ready',
+        statusLanded: 'Landed',
+        statusPaused: 'Paused',
+        statusFalling: 'Falling',
+        checkpointDefault: 'Use the arrows and position dots to explain your answer.',
+        checkpointSelect: 'Choose an explanation first.',
+        checkpointCorrect: 'Correct: vx continues, while gravity changes vy downward.',
+        checkpointForwardWarn: 'Not quite: after release, there is no forward force. The forward motion comes from the ball\'s original vx.',
+        checkpointMassWarn: 'Not quite: in this model, mass is not the reason the path curves.',
+        panelStationary: 'Stationary drop',
+        panelMoving: 'Drop from moving cart',
+        releasePosition: 'Release position',
+        vxConstant: 'vₓ constant',
+        vy: 'vᵧ',
+        gravityOnly: 'Gravity only',
+        designPrinciplesAria: 'Design principles',
+        modeTabsAria: 'Simulation modes',
+        canvasAria: 'Projectile motion simulation',
+        speedGridAria: 'Cart speed presets'
+      }
+    };
+
+    const canvas = document.getElementById('sim');
+    const ctx = canvas.getContext('2d');
+
+    const WORLD_W = 9.2;
+    const WORLD_H = 3.8;
+    const START_X = 1.35;
+    const STATIC_X = 4.35;
+    const DROP_H = 2.65;
+    const BALL_R = 0.11;
+    const SNAP_INTERVAL = 0.14;
+
+    let lang = 'zh';
+    let mode = 'stationary';
+    let state = 'idle';
+    let t = 0;
+    let g = 9.8;
+    let vx = 3;
+    let lastFrame = 0;
+    let animationId = null;
+    let predictionLocked = null;
+    let snapshots = [];
+    let checkpointState = 'default';
+
+    const tabs = {
+      stationary: document.getElementById('tab-stationary'),
+      moving: document.getElementById('tab-moving'),
+      compare: document.getElementById('tab-compare')
+    };
+
+    const btnRun = document.getElementById('btn-run');
+    const btnPause = document.getElementById('btn-pause');
+    const predFeedback = document.getElementById('prediction-feedback');
+    const checkpointFeedback = document.getElementById('checkpoint-feedback');
+
+    function T(key) {
+      return TEXT[lang][key] ?? TEXT.en[key] ?? key;
+    }
+
+    function applyLanguage(options = {}) {
+      document.documentElement.lang = T('htmlLang');
+      document.title = T('documentTitle');
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = T(el.getAttribute('data-i18n'));
+      });
+      document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        el.innerHTML = T(el.getAttribute('data-i18n-html'));
+      });
+      const langToggle = document.getElementById('lang-toggle');
+      langToggle.textContent = T('switchButton');
+      langToggle.setAttribute('aria-label', T('switchAria'));
+      document.getElementById('principle-strip').setAttribute('aria-label', T('designPrinciplesAria'));
+      document.getElementById('mode-tabs').setAttribute('aria-label', T('modeTabsAria'));
+      document.getElementById('sim').setAttribute('aria-label', T('canvasAria'));
+      document.getElementById('speed-grid').setAttribute('aria-label', T('speedGridAria'));
+      updateModeText();
+      updateButtonsText();
+      updateReadouts();
+      updateFeedbackLanguage(options.keepCheckpoint !== true);
+      draw();
+    }
+
+    function toggleLanguage() {
+      lang = lang === 'zh' ? 'en' : 'zh';
+      applyLanguage();
+    }
+
+    function updateFeedbackLanguage(resetCheckpoint = true) {
+      if (state === 'finished' && predictionLocked) {
+        finishFeedback();
+      } else if (predictionLocked) {
+        predFeedback.className = 'feedback';
+        predFeedback.textContent = T('predLocked');
+      } else {
+        predFeedback.className = 'feedback';
+        predFeedback.textContent = T('predChoose');
+      }
+
+      if (resetCheckpoint) {
+        checkpointState = 'default';
+        checkpointFeedback.className = 'feedback';
+        checkpointFeedback.textContent = T('checkpointDefault');
+      } else {
+        setCheckpointMessage(checkpointState);
+      }
+    }
+
+    function updateButtonsText() {
+      if (state === 'finished') btnRun.textContent = T('runAgain');
+      else btnRun.textContent = T('runDrop');
+      btnPause.textContent = state === 'paused' ? T('resume') : T('pause');
+    }
+
+    function updateModeText() {
+      const title = document.getElementById('mode-title');
+      const subtitle = document.getElementById('mode-subtitle');
+      const question = document.getElementById('prediction-question');
+
+      if (mode === 'stationary') {
+        title.textContent = T('modeStationaryTitle');
+        subtitle.textContent = T('modeStationarySubtitle');
+        question.textContent = T('questionStationary');
+      } else if (mode === 'moving') {
+        title.textContent = T('modeMovingTitle');
+        subtitle.textContent = T('modeMovingSubtitle');
+        question.textContent = T('questionMoving');
+      } else {
+        title.textContent = T('modeCompareTitle');
+        subtitle.textContent = T('modeCompareSubtitle');
+        question.textContent = T('questionCompare');
+      }
+    }
+
+    function resizeCanvas() {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = Math.round(rect.width * dpr);
+      canvas.height = Math.round(rect.width * 9 / 16 * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      draw();
+    }
+
+    function canvasSize() {
+      return { w: canvas.width / (window.devicePixelRatio || 1), h: canvas.height / (window.devicePixelRatio || 1) };
+    }
+
+    function setMode(newMode) {
+      mode = newMode;
+      Object.entries(tabs).forEach(([key, el]) => el.setAttribute('aria-selected', key === mode));
+      updateModeText();
+      clearPrediction();
+      resetSim();
+    }
+
+    function setSpeed(value) {
+      vx = value;
+      document.querySelectorAll('.speed-btn').forEach(btn => btn.classList.remove('active'));
+      if (value === 2) document.getElementById('speed-slow').classList.add('active');
+      if (value === 3) document.getElementById('speed-med').classList.add('active');
+      if (value === 5) document.getElementById('speed-fast').classList.add('active');
+      if (state === 'idle' || state === 'finished') resetSim();
+      else updateReadouts();
+    }
+
+    function updateGravity() {
+      g = parseFloat(document.getElementById('gravity').value);
+      document.getElementById('g-label').textContent = g.toFixed(1) + ' m/s²';
+      if (state === 'idle' || state === 'finished') resetSim();
+      else updateReadouts();
+    }
+
+    function lockPrediction() {
+      const selected = document.querySelector('input[name="prediction"]:checked');
+      if (!selected) {
+        predFeedback.className = 'feedback warn';
+        predFeedback.textContent = T('predSelectFirst');
+        return;
+      }
+      predictionLocked = selected.value;
+      predFeedback.className = 'feedback';
+      predFeedback.textContent = T('predLocked');
+    }
+
+    function clearPrediction() {
+      predictionLocked = null;
+      document.querySelectorAll('input[name="prediction"]').forEach(i => i.checked = false);
+      predFeedback.className = 'feedback';
+      predFeedback.textContent = T('predChoose');
+    }
+
+    function resetSim() {
+      cancelAnimationFrame(animationId);
+      state = 'idle';
+      t = 0;
+      snapshots = [{ t: 0 }];
+      btnRun.disabled = false;
+      btnPause.disabled = true;
+      checkpointState = 'default';
+      checkpointFeedback.className = 'feedback';
+      checkpointFeedback.textContent = T('checkpointDefault');
+      updateButtonsText();
+      updateReadouts();
+      draw();
+    }
+
+    function runOrRestart() {
+      if (state === 'finished') resetSim();
+      if (state === 'idle') {
+        if (!predictionLocked) {
+          predFeedback.className = 'feedback warn';
+          predFeedback.textContent = T('predSuggest');
+        }
+        state = 'running';
+        btnRun.disabled = true;
+        btnPause.disabled = false;
+        updateButtonsText();
+        lastFrame = performance.now();
+        animationId = requestAnimationFrame(loop);
+      }
+    }
+
+    function pauseResume() {
+      if (state === 'running') {
+        state = 'paused';
+        cancelAnimationFrame(animationId);
+      } else if (state === 'paused') {
+        state = 'running';
+        lastFrame = performance.now();
+        animationId = requestAnimationFrame(loop);
+      }
+      updateButtonsText();
+      updateReadouts();
+    }
+
+    function loop(now) {
+      if (state !== 'running') return;
+      let dt = (now - lastFrame) / 1000;
+      lastFrame = now;
+      dt = Math.min(dt, 0.04);
+      t += dt;
+
+      const y = yAt(t);
+      if (snapshots.length === 0 || t - snapshots[snapshots.length - 1].t >= SNAP_INTERVAL) {
+        snapshots.push({ t });
+      }
+
+      if (y <= BALL_R) {
+        t = Math.sqrt(Math.max(0, 2 * (DROP_H - BALL_R) / g));
+        if (snapshots[snapshots.length - 1].t !== t) snapshots.push({ t });
+        state = 'finished';
+        btnPause.disabled = true;
+        btnRun.disabled = false;
+        finishFeedback();
+      }
+
+      updateButtonsText();
+      updateReadouts();
+      draw();
+      if (state === 'running') animationId = requestAnimationFrame(loop);
+    }
+
+    function finishFeedback() {
+      if (!predictionLocked) return;
+      const correct = 'below';
+      if (predictionLocked === correct) {
+        predFeedback.className = 'feedback success';
+        predFeedback.textContent = mode === 'stationary' ? T('predCorrectStationary') : T('predCorrectMoving');
+      } else {
+        predFeedback.className = 'feedback warn';
+        predFeedback.textContent = mode === 'stationary' ? T('predObservedStationary') : T('predObservedMoving');
+      }
+    }
+
+    function xAt(time, kind) {
+      if (kind === 'stationary') return (mode === 'compare') ? 4.1 : STATIC_X;
+      return START_X + vx * time;
+    }
+
+    function yAt(time) {
+      return Math.max(BALL_R, DROP_H - 0.5 * g * time * time);
+    }
+
+    function vyAt(time) {
+      return state === 'idle' ? 0 : -g * time;
+    }
+
+    function updateReadouts() {
+      document.getElementById('r-time').textContent = t.toFixed(2) + ' s';
+      document.getElementById('r-vx').textContent = (mode === 'stationary' ? '+0.0' : '+' + vx.toFixed(1)) + ' m/s';
+      document.getElementById('r-vy').textContent = vyAt(t).toFixed(1) + ' m/s';
+      document.getElementById('r-result').textContent = state === 'idle' ? T('statusReady') : state === 'finished' ? T('statusLanded') : state === 'paused' ? T('statusPaused') : T('statusFalling');
+    }
+
+    function toggleEquations() {
+      document.getElementById('equation-box').classList.toggle('visible', document.getElementById('toggle-equations').checked);
+    }
+
+    function setCheckpointMessage(kind) {
+      checkpointState = kind;
+      if (kind === 'correct') {
+        checkpointFeedback.className = 'feedback success';
+        checkpointFeedback.textContent = T('checkpointCorrect');
+      } else if (kind === 'forward') {
+        checkpointFeedback.className = 'feedback warn';
+        checkpointFeedback.textContent = T('checkpointForwardWarn');
+      } else if (kind === 'mass') {
+        checkpointFeedback.className = 'feedback warn';
+        checkpointFeedback.textContent = T('checkpointMassWarn');
+      } else if (kind === 'select') {
+        checkpointFeedback.className = 'feedback warn';
+        checkpointFeedback.textContent = T('checkpointSelect');
+      } else {
+        checkpointFeedback.className = 'feedback';
+        checkpointFeedback.textContent = T('checkpointDefault');
+      }
+    }
+
+    function checkAnswer() {
+      const selected = document.querySelector('input[name="checkpoint"]:checked');
+      if (!selected) {
+        setCheckpointMessage('select');
+        return;
+      }
+      if (selected.value === 'components') setCheckpointMessage('correct');
+      else if (selected.value === 'forward-force') setCheckpointMessage('forward');
+      else setCheckpointMessage('mass');
+    }
+
+    function draw() {
+      const { w, h } = canvasSize();
+      ctx.clearRect(0, 0, w, h);
+      drawBackdrop(w, h);
+
+      if (mode === 'compare') {
+        const gap = 14;
+        const panelW = (w - gap - 32) / 2;
+        drawScene({ x: 16, y: 16, w: panelW, h: h - 32 }, 'stationary', T('panelStationary'));
+        drawScene({ x: 16 + panelW + gap, y: 16, w: panelW, h: h - 32 }, 'moving', T('panelMoving'));
+      } else {
+        drawScene({ x: 18, y: 18, w: w - 36, h: h - 36 }, mode, mode === 'stationary' ? T('panelStationary') : T('panelMoving'));
+      }
+    }
+
+    function drawBackdrop(w, h) {
+      const sky = ctx.createLinearGradient(0, 0, 0, h);
+      sky.addColorStop(0, '#dbeafe');
+      sky.addColorStop(0.72, '#f8fafc');
+      sky.addColorStop(1, '#e2e8f0');
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    function sceneMap(panel) {
+      const scale = Math.min((panel.w - 54) / WORLD_W, (panel.h - 74) / WORLD_H);
+      const groundY = panel.y + panel.h - 34;
+      const leftX = panel.x + 27;
+      return {
+        scale,
+        sx: x => leftX + x * scale,
+        sy: y => groundY - y * scale,
+        groundY,
+        leftX,
+        rightX: leftX + WORLD_W * scale
+      };
+    }
+
+    function drawScene(panel, kind, label) {
+      const m = sceneMap(panel);
+      ctx.save();
+      roundedRect(panel.x, panel.y, panel.w, panel.h, 18);
+      ctx.clip();
+
+      ctx.fillStyle = 'rgba(255,255,255,.42)';
+      ctx.fillRect(panel.x, panel.y, panel.w, panel.h);
+
+      drawPanelLabel(panel, label);
+      drawGrid(panel, m);
+      drawGround(panel, m);
+
+      const releaseX = kind === 'stationary' ? ((mode === 'compare') ? 4.1 : STATIC_X) : START_X;
+      if (document.getElementById('toggle-release').checked) drawReleaseLine(m, releaseX);
+
+      if (document.getElementById('toggle-path').checked || document.getElementById('toggle-snap').checked) drawTrajectory(m, kind);
+
+      drawPersonAndCart(m, kind);
+      drawBallAndAids(m, kind);
+      ctx.restore();
+
+      ctx.strokeStyle = 'rgba(148,163,184,.42)';
+      ctx.lineWidth = 1;
+      roundedRect(panel.x, panel.y, panel.w, panel.h, 18);
+      ctx.stroke();
+    }
+
+    function drawPanelLabel(panel, text) {
+      ctx.fillStyle = 'rgba(15,23,42,.78)';
+      ctx.font = '700 13px system-ui';
+      ctx.fillText(text, panel.x + 14, panel.y + 24);
+    }
+
+    function drawGrid(panel, m) {
+      ctx.save();
+      ctx.strokeStyle = 'rgba(15,23,42,.07)';
+      ctx.lineWidth = 1;
+      for (let x = 0; x <= WORLD_W; x += 1) {
+        ctx.beginPath(); ctx.moveTo(m.sx(x), panel.y + 36); ctx.lineTo(m.sx(x), m.groundY); ctx.stroke();
+      }
+      for (let y = 0; y <= WORLD_H; y += 1) {
+        ctx.beginPath(); ctx.moveTo(m.leftX, m.sy(y)); ctx.lineTo(m.rightX, m.sy(y)); ctx.stroke();
+      }
+      ctx.restore();
+    }
+
+    function drawGround(panel, m) {
+      ctx.fillStyle = '#cbd5e1';
+      ctx.fillRect(panel.x, m.groundY, panel.w, panel.y + panel.h - m.groundY);
+      ctx.strokeStyle = '#334155';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(panel.x, m.groundY); ctx.lineTo(panel.x + panel.w, m.groundY); ctx.stroke();
+    }
+
+    function drawReleaseLine(m, x) {
+      ctx.save();
+      ctx.setLineDash([5, 6]);
+      ctx.strokeStyle = 'rgba(79,70,229,.55)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(m.sx(x), m.sy(DROP_H) - 4); ctx.lineTo(m.sx(x), m.groundY); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(79,70,229,.9)';
+      ctx.font = '700 11px system-ui';
+      ctx.fillText(T('releasePosition'), m.sx(x) + 6, m.sy(DROP_H) - 8);
+      ctx.restore();
+    }
+
+    function drawTrajectory(m, kind) {
+      const times = snapshots.map(s => s.t);
+      if (times.length < 1) return;
+      ctx.save();
+      const pathOn = document.getElementById('toggle-path').checked;
+      const snapOn = document.getElementById('toggle-snap').checked;
+
+      if (pathOn) {
+        ctx.beginPath();
+        times.forEach((time, i) => {
+          const x = xAt(time, kind);
+          const y = yAt(time);
+          if (i === 0) ctx.moveTo(m.sx(x), m.sy(y)); else ctx.lineTo(m.sx(x), m.sy(y));
+        });
+        ctx.lineTo(m.sx(xAt(t, kind)), m.sy(yAt(t)));
+        ctx.strokeStyle = 'rgba(71,85,105,.72)';
+        ctx.lineWidth = 2.5;
+        ctx.setLineDash([7, 7]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      if (snapOn) {
+        times.forEach((time) => {
+          const x = xAt(time, kind);
+          const y = yAt(time);
+          const dotR = Math.max(4.8, 0.085 * m.scale);
+          ctx.globalAlpha = 0.96;
+          ctx.fillStyle = kind === 'moving' ? '#059669' : '#2563eb';
+          ctx.strokeStyle = '#ffffff';
+          ctx.lineWidth = 2.5;
+          ctx.beginPath();
+          ctx.arc(m.sx(x), m.sy(y), dotR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.stroke();
+          ctx.globalAlpha = 1;
+        });
+      }
+      ctx.restore();
+    }
+
+    function drawPersonAndCart(m, kind) {
+      const skaterX = kind === 'moving' ? xAt(t, 'moving') : (kind === 'stationary' && mode === 'compare' ? 4.1 : STATIC_X);
+      const px = m.sx(skaterX);
+      const gy = m.groundY;
+
+      if (kind === 'moving') drawCartPx(px, gy, m.scale);
+      drawStickPersonPx(px, m.sy(DROP_H), gy, kind === 'moving');
+    }
+
+    function drawCartPx(px, gy, scale) {
+      ctx.save();
+      const bw = 0.95 * scale;
+      const bh = 0.13 * scale;
+      const by = gy - 0.18 * scale;
+      ctx.fillStyle = '#f59e0b';
+      roundRect(px - bw/2, by, bw, bh, 8, true, false);
+      ctx.fillStyle = '#334155';
+      ctx.beginPath(); ctx.arc(px - bw*.32, gy - 0.06*scale, 0.08*scale, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.arc(px + bw*.32, gy - 0.06*scale, 0.08*scale, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawStickPersonPx(px, handY, groundY, moving) {
+      ctx.save();
+      const scale = Math.max(0.72, Math.min(1.05, (groundY - handY) / 120));
+      const footY = groundY - (moving ? 18 : 4);
+      const hipY = footY - 48 * scale;
+      const shoulderY = hipY - 48 * scale;
+      const headY = shoulderY - 18 * scale;
+
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.strokeStyle = '#2563eb'; ctx.lineWidth = 5 * scale;
+      ctx.beginPath(); ctx.moveTo(px - 15*scale, footY); ctx.lineTo(px, hipY); ctx.lineTo(px + 18*scale, footY); ctx.stroke();
+
+      ctx.strokeStyle = moving ? '#ef4444' : '#7c3aed'; ctx.lineWidth = 8 * scale;
+      ctx.beginPath(); ctx.moveTo(px, hipY); ctx.lineTo(px, shoulderY); ctx.stroke();
+
+      ctx.strokeStyle = '#f59e0b'; ctx.lineWidth = 4 * scale;
+      ctx.beginPath(); ctx.moveTo(px, shoulderY + 6*scale); ctx.lineTo(px + (moving ? 14 : 0) * scale, handY); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(px, shoulderY + 6*scale); ctx.lineTo(px - 22*scale, shoulderY + 22*scale); ctx.stroke();
+
+      ctx.fillStyle = '#fcd34d';
+      ctx.beginPath(); ctx.arc(px, headY, 13*scale, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath(); ctx.arc(px + 4*scale, headY - 2*scale, 1.8*scale, 0, Math.PI*2); ctx.fill();
+      ctx.restore();
+    }
+
+    function drawBallAndAids(m, kind) {
+      const x = xAt(t, kind);
+      const y = yAt(t);
+      const px = m.sx(x), py = m.sy(y);
+      const radius = Math.max(7, BALL_R * m.scale);
+
+      ctx.save();
+      ctx.fillStyle = kind === 'moving' ? '#10b981' : '#64748b';
+      ctx.beginPath(); ctx.arc(px, py, radius, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,.55)';
+      ctx.beginPath(); ctx.arc(px - radius*.32, py - radius*.32, radius*.25, 0, Math.PI*2); ctx.fill();
+
+      if (state !== 'idle' && document.getElementById('toggle-vectors').checked) {
+        const currentVx = kind === 'moving' ? vx : 0;
+        const currentVy = vyAt(t);
+        if (Math.abs(currentVx) > 0.05) drawArrow(px, py, currentVx * 20, 0, getVar('--x'), T('vxConstant'));
+        if (Math.abs(currentVy) > 0.15) drawArrow(px, py, 0, -currentVy * 10, getVar('--y'), T('vy'));
+      }
+
+      if (state !== 'idle' && document.getElementById('toggle-gravity').checked) drawArrow(px + radius + 12, py - 8, 0, 48, getVar('--g'), T('gravityOnly'));
+      ctx.restore();
+    }
+
+    function drawArrow(x, y, dx, dy, color, label) {
+      ctx.save();
+      const angle = Math.atan2(dy, dx);
+      const len = Math.hypot(dx, dy);
+      if (len < 6) { ctx.restore(); return; }
+      const head = 9;
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + dx, y + dy); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x + dx, y + dy);
+      ctx.lineTo(x + dx - head * Math.cos(angle - Math.PI/6), y + dy - head * Math.sin(angle - Math.PI/6));
+      ctx.lineTo(x + dx - head * Math.cos(angle + Math.PI/6), y + dy - head * Math.sin(angle + Math.PI/6));
+      ctx.closePath(); ctx.fill();
+      ctx.font = '700 11px system-ui';
+      const lx = x + dx + (dx >= 0 ? 7 : -64);
+      const ly = y + dy + (dy >= 0 ? 14 : -8);
+      ctx.fillText(label, lx, ly);
+      ctx.restore();
+    }
+
+    function roundedRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function roundRect(x, y, w, h, r, fill, stroke) {
+      roundedRect(x, y, w, h, r);
+      if (fill) ctx.fill();
+      if (stroke) ctx.stroke();
+    }
+
+    function getVar(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+
+    window.addEventListener('resize', resizeCanvas);
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space' && !['INPUT', 'TEXTAREA', 'BUTTON'].includes(document.activeElement.tagName)) {
+        e.preventDefault();
+        if (state === 'idle' || state === 'finished') runOrRestart();
+        else pauseResume();
+      }
+    });
+
+    applyLanguage();
+    resizeCanvas();
+    setMode('stationary');
+  </script>
+</body>
+</html>
