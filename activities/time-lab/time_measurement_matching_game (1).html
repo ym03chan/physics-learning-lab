@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hong Kong Time Quest: Measurement Matching Game</title>
+  <style>
+    :root{
+      --bg:#f7f8fb;
+      --panel:#ffffff;
+      --ink:#172033;
+      --muted:#5c667a;
+      --accent:#ff8a00;
+      --accent-2:#2d7ff9;
+      --good:#127c45;
+      --bad:#b42318;
+      --warn:#946200;
+      --line:#d8deea;
+      --shadow:0 12px 30px rgba(23,32,51,.12);
+      --radius:18px;
+      --focus:0 0 0 4px rgba(45,127,249,.22);
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;background:radial-gradient(circle at top left,#fff4dc 0,#f7f8fb 38%,#eef3ff 100%);color:var(--ink);font-family:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+    body{padding:16px;}
+    button,input{font:inherit}
+    button{cursor:pointer}
+    .app{max-width:1220px;margin:0 auto;}
+    .topbar{position:sticky;top:0;z-index:10;display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;padding:12px;margin:-16px -16px 16px;background:rgba(247,248,251,.88);backdrop-filter:blur(12px);border-bottom:1px solid rgba(216,222,234,.7)}
+    .brand{display:flex;gap:12px;align-items:center;min-width:0}
+    .logo{width:48px;height:48px;border-radius:15px;background:linear-gradient(135deg,var(--accent),#ffd36e);display:grid;place-items:center;box-shadow:var(--shadow);font-size:28px;flex:0 0 auto;}
+    h1{font-size:clamp(1.3rem,2.5vw,2.15rem);line-height:1.05;margin:0;}
+    .subtitle{margin:4px 0 0;color:var(--muted);font-size:.98rem}
+    .tabs,.actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+    .tab,.btn{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:999px;padding:9px 13px;font-weight:700;box-shadow:0 2px 8px rgba(23,32,51,.05)}
+    .tab[aria-selected="true"],.btn.primary{background:var(--ink);color:white;border-color:var(--ink)}
+    .btn.orange{background:var(--accent);border-color:var(--accent);color:#141414}
+    .btn.ghost{background:transparent}
+    .btn.small{padding:7px 10px;font-size:.9rem}
+    button:focus-visible,.card:focus-visible,.slot:focus-visible,.choice:focus-visible{outline:none;box-shadow:var(--focus)}
+    .hero{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(280px,.8fr);gap:16px;margin-bottom:16px}
+    .panel{background:rgba(255,255,255,.92);border:1px solid rgba(216,222,234,.95);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;}
+    .panel h2,.panel h3{margin:0 0 10px}
+    .panel p{margin:8px 0;color:var(--muted);line-height:1.5}
+    .pillrow{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+    .pill{border:1px solid var(--line);border-radius:999px;padding:6px 10px;background:#fbfcff;color:#3d4659;font-size:.92rem}
+    .scoreboard{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+    .scorebox{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+    .scorebox b{display:block;font-size:1.35rem}.scorebox span{color:var(--muted);font-size:.85rem}
+    .modebar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;align-items:center;justify-content:space-between}
+    .mode-left,.mode-right{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .game{display:grid;grid-template-columns:340px minmax(0,1fr);gap:16px;align-items:start}
+    .tray{position:sticky;top:92px;max-height:calc(100vh - 110px);overflow:auto}
+    .tray h2,.board h2{font-size:1.05rem;margin:0 0 10px}
+    .hintline{font-size:.92rem;color:var(--muted);line-height:1.4;margin-bottom:12px}
+    .cards{display:grid;gap:10px}
+    .card{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:center;padding:10px;border:2px solid var(--line);border-radius:16px;background:white;box-shadow:0 4px 12px rgba(23,32,51,.07);user-select:none;min-height:70px}
+    .card:hover{transform:translateY(-1px)}
+    .card.dragging{opacity:.55}.card.matched{opacity:.46;background:#f1f5f9}.card.selected{border-color:var(--accent-2);box-shadow:var(--focus)}
+    .icon{width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:#fff3df;border:1px solid #ffd08b;font-size:28px}
+    .card-title{font-weight:800}.card-clue{font-size:.82rem;color:var(--muted);margin-top:2px}
+    .board{min-width:0}.slots{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    .slot{position:relative;min-height:138px;padding:12px;border:2px dashed #b8c2d5;border-radius:18px;background:linear-gradient(180deg,#ffffff,#f8fafc);transition:.15s;}
+    .slot.over{border-color:var(--accent-2);background:#edf5ff}.slot.correct{border-style:solid;border-color:var(--good);background:#effaf4}.slot.wrong{border-style:solid;border-color:var(--bad);background:#fff1ef}.slot.locked{border-style:solid;border-color:#9aa7bb;background:#f8fafc}.duration{display:flex;align-items:baseline;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:8px}.duration b{font-size:1.04rem}.duration small{color:var(--muted);white-space:nowrap}.droptext{color:var(--muted);font-size:.92rem;line-height:1.35}.placed{margin-top:8px;display:grid;grid-template-columns:42px 1fr;gap:9px;align-items:center;background:white;border:1px solid var(--line);border-radius:14px;padding:8px}.placed .icon{width:38px;height:38px;font-size:23px}.status{margin-top:8px;font-weight:800;font-size:.93rem}.status.good{color:var(--good)}.status.bad{color:var(--bad)}
+    .timeline{position:relative;margin-top:16px;padding:18px 10px 46px;border-radius:18px;background:rgba(255,255,255,.9);border:1px solid var(--line);overflow:hidden}.axis-title{display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:.88rem;margin-bottom:12px}.axis{position:relative;height:36px;border-radius:999px;background:linear-gradient(90deg,#ffd16f,#ffac2d,#ff8a00);box-shadow:inset 0 1px 2px rgba(0,0,0,.12)}.tick{position:absolute;top:0;height:36px;width:1px;background:rgba(0,0,0,.28)}.tick span{position:absolute;top:38px;transform:translateX(-50%);font-weight:700;font-size:.8rem;white-space:nowrap}.marker{position:absolute;top:13px;transform:translate(-50%,-50%);width:32px;height:32px;border-radius:50%;border:3px solid white;background:var(--ink);color:white;display:grid;place-items:center;font-size:18px;box-shadow:0 4px 10px rgba(0,0,0,.2)}.marker.dim{opacity:.22}.legend{display:flex;justify-content:space-between;margin-top:24px;font-size:.85rem;color:var(--muted)}
+    .message{margin-top:12px;border-radius:16px;padding:12px 14px;border:1px solid var(--line);background:#fbfcff;color:#334155;line-height:1.45}.message.good{border-color:#a7dfbe;background:#f0fff5}.message.bad{border-color:#ffb4aa;background:#fff5f3}.message.warn{border-color:#f9d47b;background:#fff9e9}
+    .challenge-wrap{display:none}.challenge-card{display:grid;gap:16px}.big-event{display:grid;grid-template-columns:76px 1fr;gap:14px;align-items:center;background:#f8fafc;border:1px solid var(--line);border-radius:20px;padding:16px}.big-event .icon{width:70px;height:70px;font-size:42px;border-radius:22px}.big-event h2{margin:0 0 4px}.big-event p{margin:0;color:var(--muted)}.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.choice{text-align:left;border:2px solid var(--line);border-radius:18px;background:white;padding:16px;min-height:84px;font-weight:800}.choice small{display:block;margin-top:4px;color:var(--muted);font-weight:600}.choice.correct{border-color:var(--good);background:#effaf4}.choice.wrong{border-color:var(--bad);background:#fff1ef}.meter{height:12px;background:#eef2f7;border-radius:999px;overflow:hidden}.meter div{height:100%;background:var(--accent);width:100%;transition:width .2s}.facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:16px}.fact{border:1px solid var(--line);border-radius:16px;background:#fbfcff;padding:12px}.fact b{display:block;margin-bottom:4px}.fact span{color:var(--muted);font-size:.92rem;line-height:1.35}.hidden{display:none!important}details{margin-top:12px}summary{cursor:pointer;font-weight:800;color:#2c3547}.keygrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.keyitem{padding:9px;border:1px solid var(--line);border-radius:12px;background:#fff}.keyitem b{display:block}.keyitem span{color:var(--muted);font-size:.88rem}
+    @media (max-width: 980px){.hero,.game{grid-template-columns:1fr}.tray{position:relative;top:0;max-height:none}.topbar{grid-template-columns:1fr}.tabs,.actions{justify-content:flex-start}.scoreboard{grid-template-columns:repeat(2,1fr)}.slots,.choices,.facts,.keygrid{grid-template-columns:1fr}.modebar{align-items:flex-start}.mode-left,.mode-right{width:100%}}
+    @media (max-width: 560px){body{padding:10px}.topbar{margin:-10px -10px 12px}.panel{padding:14px}.card{grid-template-columns:42px 1fr}.icon{width:40px;height:40px;font-size:24px}.slot{min-height:126px}.duration{display:block}.duration small{display:block;margin-top:2px}.legend{display:block;line-height:1.6}.axis{height:30px}.tick{height:30px}.tick span{font-size:.7rem}.marker{width:28px;height:28px;font-size:16px}.subtitle{font-size:.9rem}}
+    @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}.card:hover{transform:none}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar" aria-label="Top controls">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">⏱️</div>
+        <div>
+          <h1 data-i18n="appTitle">Hong Kong Time Quest: Measurement Match</h1>
+          <p class="subtitle" data-i18n="tagline">Match Hong Kong-flavoured science examples to seconds, powers of ten, and real units.</p>
+        </div>
+      </div>
+      <div class="tabs" role="tablist" aria-label="Language">
+        <button class="tab" data-lang="en" aria-selected="true">English</button>
+        <button class="tab" data-lang="zh" aria-selected="false">中文</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="panel">
+        <h2 data-i18n="introTitle">Mission</h2>
+        <p data-i18n="introBody">Match each event to its approximate duration. The examples are deliberately not copied from the textbook and connect Hong Kong, Chinese culture, science, and technology.</p>
+        <div class="pillrow" aria-label="Learning principles">
+          <span class="pill" data-i18n="principle1">C: close distractors</span>
+          <span class="pill" data-i18n="principle2">U: unit conversion anchors</span>
+          <span class="pill" data-i18n="principle3">R: Hong Kong + Chinese context</span>
+          <span class="pill" data-i18n="principle4">I: science across 30 powers of ten</span>
+        </div>
+        <details>
+          <summary data-i18n="teacherNotesTitle">CURI design idea</summary>
+          <p data-i18n="teacherNotesBody">Approximate values are intentional; the learning target is scale sense, not memorising one exact number.</p>
+        </details>
+      </div>
+      <div class="panel">
+        <div class="scoreboard" aria-live="polite">
+          <div class="scorebox"><b id="score">0</b><span data-i18n="score">Score</span></div>
+          <div class="scorebox"><b id="matched">0/10</b><span data-i18n="matched">Matched</span></div>
+          <div class="scorebox"><b id="streak">0</b><span data-i18n="streak">Streak</span></div>
+          <div class="scorebox"><b id="accuracy">–</b><span data-i18n="accuracy">Accuracy</span></div>
+        </div>
+      </div>
+    </section>
+
+    <div class="modebar">
+      <div class="mode-left" role="tablist" aria-label="Game mode">
+        <button class="tab" id="exploreModeBtn" aria-selected="true" data-i18n="exploreMode">Explore mode</button>
+        <button class="tab" id="challengeModeBtn" aria-selected="false" data-i18n="challengeMode">Challenge mode</button>
+      </div>
+      <div class="mode-right">
+        <button class="btn small" id="hintBtn" data-i18n="hint">Hint</button>
+        <button class="btn small" id="shuffleBtn" data-i18n="shuffle">Shuffle</button>
+        <button class="btn small ghost" id="resetBtn" data-i18n="reset">Reset</button>
+      </div>
+    </div>
+
+    <main class="game" id="exploreWrap">
+      <section class="panel tray" aria-labelledby="cardsTitle">
+        <h2 id="cardsTitle" data-i18n="eventCards">Event cards</h2>
+        <div class="hintline" data-i18n="dragHelp">Drag a card to a duration, or tap a card then tap a duration box.</div>
+        <div class="cards" id="cards"></div>
+      </section>
+      <section class="board" aria-labelledby="boardTitle">
+        <div class="panel">
+          <h2 id="boardTitle" data-i18n="durationSlots">Duration slots</h2>
+          <div class="hintline" data-i18n="boardHelp">Approximate values are intentional. Focus on unit conversion and order of magnitude.</div>
+          <div class="slots" id="slots"></div>
+          <div id="message" class="message warn" data-i18n="startMessage">Start by matching the extremes: the fastest event and the slowest event.</div>
+        </div>
+        <section class="timeline" aria-label="Logarithmic time ruler">
+          <div class="axis-title"><span data-i18n="timelineTitle">Logarithmic time ruler</span><span data-i18n="timelineRight">time / s</span></div>
+          <div class="axis" id="axis"></div>
+          <div class="legend"><span>10⁻¹³ s</span><span>10¹⁷ s</span></div>
+        </section>
+      </section>
+    </main>
+
+    <section class="challenge-wrap" id="challengeWrap">
+      <div class="panel challenge-card">
+        <div class="modebar" style="margin:0">
+          <div class="mode-left">
+            <button class="btn orange" id="startChallengeBtn" data-i18n="startChallenge">Start challenge</button>
+            <button class="btn" id="hardToggle" aria-pressed="false" data-i18n="hardMode">Hard mode: off</button>
+          </div>
+          <div class="mode-right">
+            <span class="pill"><span data-i18n="round">Round</span>: <b id="roundLabel">0/10</b></span>
+            <span class="pill"><span data-i18n="lives">Lives</span>: <b id="livesLabel">3</b></span>
+            <span class="pill"><span data-i18n="timer">Timer</span>: <b id="timeLabel">90</b>s</span>
+          </div>
+        </div>
+        <div class="meter" aria-hidden="true"><div id="timeBar"></div></div>
+        <div class="big-event" id="challengePrompt">
+          <div class="icon">🎯</div>
+          <div>
+            <h2 data-i18n="challengePromptTitle">Ready for the clock run?</h2>
+            <p data-i18n="challengePromptBody">You will get 10 rounds. Choose the matching duration before time runs out. Wrong answers cost a life; close distractors are deliberately included.</p>
+          </div>
+        </div>
+        <div class="choices" id="choices"></div>
+        <div id="challengeMessage" class="message warn" data-i18n="challengeStartMessage">Press Start challenge when you are ready.</div>
+      </div>
+      <section class="facts hidden" id="facts"></section>
+    </section>
+
+    <section class="panel hidden" id="answerPanel" style="margin-top:16px">
+      <details>
+        <summary data-i18n="answerKey">Post-game answer key and conversion notes</summary>
+        <div class="keygrid" id="keygrid"></div>
+      </details>
+    </section>
+  </div>
+
+  <script>
+    const translations = {
+      "en": {
+            "appTitle": "Hong Kong Time Quest: Measurement Match",
+            "tagline": "Match Hong Kong-flavoured science examples to seconds, powers of ten, and real units.",
+            "introTitle": "Mission",
+            "introBody": "Match each event to its approximate duration. The examples are deliberately not copied from the textbook: some are local to Hong Kong, some connect to Chinese culture, and some come from physics, biology, geology, evolution, and frontier technology.",
+            "principle1": "C: close distractors",
+            "principle2": "U: unit conversion anchors",
+            "principle3": "R: Hong Kong + Chinese context",
+            "principle4": "I: science across 30 powers of ten",
+            "teacherNotesTitle": "CURI design idea",
+            "teacherNotesBody": "Challenging: nearby distractors force order-of-magnitude thinking. Useful: every answer links friendly units to seconds. Relevant: Hong Kong, Chinese cultural references, and school-life contexts appear beside scientific examples. Interesting: the deck jumps from femtosecond lasers to evolution and Hong Kong geology. Approximate values are intentional; the learning target is scale sense, not memorising one exact number.",
+            "score": "Score",
+            "matched": "Matched",
+            "streak": "Streak",
+            "accuracy": "Accuracy",
+            "exploreMode": "Explore mode",
+            "challengeMode": "Challenge mode",
+            "hint": "Hint",
+            "shuffle": "Shuffle",
+            "reset": "Reset",
+            "eventCards": "Event cards",
+            "dragHelp": "Drag a card to a duration, or tap a card then tap a duration box.",
+            "durationSlots": "Duration slots",
+            "boardHelp": "Approximate values are intentional. First compare the power of ten, then check the unit conversion.",
+            "startMessage": "Start by matching the extremes: the fastest event and the slowest event.",
+            "timelineTitle": "Logarithmic time ruler",
+            "timelineRight": "time / s",
+            "dropHere": "Drop or tap here",
+            "placed": "Placed",
+            "correct": "Correct",
+            "wrong": "Not this one",
+            "tryAgain": "Try again: compare the power of ten first, then the friendly unit.",
+            "matchedAll": "Timeline complete. Learning notes and answer key unlocked. Now try Challenge mode with close distractors.",
+            "selectCard": "Selected: {name}. Now tap a duration box.",
+            "cardAlready": "That card is already matched.",
+            "hintText": "Hint: sort by powers of ten first. Similar-looking local examples may differ by 10×, 100×, or much more.",
+            "shuffleMsg": "Cards and slots shuffled. The science has not changed.",
+            "resetMsg": "Game reset. Match events with both the friendly unit and the seconds value.",
+            "startChallenge": "Start challenge",
+            "hardModeOff": "Hard mode: off",
+            "hardModeOn": "Hard mode: on",
+            "hardMode": "Hard mode: off",
+            "round": "Round",
+            "lives": "Lives",
+            "timer": "Timer",
+            "challengePromptTitle": "Ready for the clock run?",
+            "challengePromptBody": "You will get one round per event. Choose the matching duration before time runs out. Wrong answers cost a life; close distractors are deliberately included.",
+            "challengeStartMessage": "Press Start challenge when you are ready. Learning notes stay hidden until the run ends.",
+            "answerKey": "Post-game answer key and conversion notes",
+            "chooseFor": "Choose the duration for:",
+            "correctChallenge": "Correct. {note}",
+            "wrongChallenge": "Wrong. Correct answer: {answer}. {note}",
+            "gameOver": "Challenge over. Score: {score}. Review the unlocked notes and try again.",
+            "timeUp": "Time is up. Challenge over. Score: {score}.",
+            "challengeWin": "Clock run cleared. Final score: {score}. Learning notes unlocked.",
+            "hardDesc": "Hard mode: only seconds/scientific notation are shown.",
+            "easyDesc": "Choices show friendly units and seconds.",
+            "fastExtreme": "fastest",
+            "slowExtreme": "slowest",
+            "approximation": "approximation",
+            "exponent": "power of ten",
+            "close": "close distractor",
+            "items": {
+                  "femtoLaser": {
+                        "title": "Femtosecond laser pulse",
+                        "clue": "Frontier physics • ultrafast measurement",
+                        "display": "1.0 × 10⁻¹³ s",
+                        "friendly": "100 fs",
+                        "note": "100 fs = 100 × 10⁻¹⁵ s = 1.0 × 10⁻¹³ s. This is the time scale used to freeze very fast molecular motion."
+                  },
+                  "fivegCycle": {
+                        "title": "One cycle of a 5G radio wave",
+                        "clue": "Technology • 3.5 GHz band example",
+                        "display": "2.9 × 10⁻¹⁰ s",
+                        "friendly": "0.29 ns",
+                        "note": "A 3.5 GHz wave completes 3.5 billion cycles per second, so one cycle is about 1 ÷ 3.5 × 10⁹ s ≈ 2.9 × 10⁻¹⁰ s."
+                  },
+                  "victoriaLight": {
+                        "title": "Light crossing Victoria Harbour",
+                        "clue": "Hong Kong physics • about 2 km",
+                        "display": "6.7 × 10⁻⁶ s",
+                        "friendly": "6.7 μs",
+                        "note": "Using 2 km and c ≈ 3.0 × 10⁸ m/s gives t = d/v ≈ 2000 ÷ 3.0 × 10⁸ s ≈ 6.7 μs."
+                  },
+                  "mainsCycle": {
+                        "title": "One cycle of Hong Kong mains electricity",
+                        "clue": "Useful physics • 50 Hz AC",
+                        "display": "2.0 × 10⁻² s",
+                        "friendly": "0.020 s",
+                        "note": "Hong Kong mains electricity is 50 Hz, so the period is T = 1/f = 1/50 s = 0.020 s."
+                  },
+                  "reaction": {
+                        "title": "Reaction to a pedestrian light",
+                        "clue": "Biology + road safety • human response",
+                        "display": "2.5 × 10⁻¹ s",
+                        "friendly": "0.25 s",
+                        "note": "Human reaction time is commonly a few tenths of a second, so 0.25 s sits near the 10⁻¹ s scale."
+                  },
+                  "dragonBoat": {
+                        "title": "Dragon boat short race finish",
+                        "clue": "Chinese culture + biomechanics • about 2 min",
+                        "display": "1.2 × 10² s",
+                        "friendly": "2 min = 120 s",
+                        "note": "2 minutes × 60 s/min = 120 s. This sits on the 10² s scale, far longer than reaction time."
+                  },
+                  "milkTea": {
+                        "title": "Cha chaan teng milk-tea brewing step",
+                        "clue": "Hong Kong daily life • heat transfer example",
+                        "display": "1.8 × 10² s",
+                        "friendly": "3 min = 180 s",
+                        "note": "3 minutes × 60 s/min = 180 s. It is deliberately close to the dragon boat item, so read the units carefully."
+                  },
+                  "ecoli": {
+                        "title": "E. coli ideal doubling time",
+                        "clue": "Biology • fast bacterial growth",
+                        "display": "1.2 × 10³ s",
+                        "friendly": "20 min = 1200 s",
+                        "note": "20 minutes × 60 s/min = 1200 s = 1.2 × 10³ s under ideal laboratory conditions."
+                  },
+                  "tiangong": {
+                        "title": "Tiangong space station orbit",
+                        "clue": "Chinese technology • one lap around Earth",
+                        "display": "5.5 × 10³ s",
+                        "friendly": "≈ 92 min",
+                        "note": "A low-Earth-orbit spacecraft takes roughly 90 minutes per orbit. 92 min × 60 ≈ 5.5 × 10³ s."
+                  },
+                  "iodine": {
+                        "title": "Iodine-131 half-life",
+                        "clue": "Nuclear physics + medicine • radioactive decay",
+                        "display": "6.9 × 10⁵ s",
+                        "friendly": "≈ 8 days",
+                        "note": "8 days × 24 × 3600 s/day = 691 200 s ≈ 6.9 × 10⁵ s."
+                  },
+                  "lunarMonth": {
+                        "title": "Moon phase cycle for Mid-Autumn",
+                        "clue": "Chinese calendar • new moon to new moon",
+                        "display": "2.55 × 10⁶ s",
+                        "friendly": "29.5 days",
+                        "note": "29.5 days × 24 × 3600 s/day ≈ 2.55 × 10⁶ s. This is why lunar-calendar dates shift in the solar calendar."
+                  },
+                  "homoSapiens": {
+                        "title": "Modern humans appear",
+                        "clue": "Evolution • approximate time scale",
+                        "display": "9.5 × 10¹² s",
+                        "friendly": "≈ 3.0 × 10⁵ yr",
+                        "note": "300 000 years × 3.15 × 10⁷ s/year ≈ 9.5 × 10¹² s."
+                  },
+                  "hkGeopark": {
+                        "title": "Sai Kung hexagonal rock columns form",
+                        "clue": "Hong Kong geology • volcanic rock time scale",
+                        "display": "4.4 × 10¹⁵ s",
+                        "friendly": "≈ 1.4 × 10⁸ yr",
+                        "note": "140 million years × 3.15 × 10⁷ s/year ≈ 4.4 × 10¹⁵ s, a Hong Kong geology scale."
+                  },
+                  "oxygen": {
+                        "title": "Great Oxygenation Event",
+                        "clue": "Earth history + biology • atmosphere changes",
+                        "display": "7.6 × 10¹⁶ s",
+                        "friendly": "≈ 2.4 × 10⁹ yr",
+                        "note": "2.4 billion years × 3.15 × 10⁷ s/year ≈ 7.6 × 10¹⁶ s, linking geology, evolution, and atmospheric chemistry."
+                  }
+            }
+      },
+      "zh": {
+            "appTitle": "香港時間任務：量度配對遊戲",
+            "tagline": "用香港味、中文文化和科學例子，配對秒、十的次方和真實單位。",
+            "introTitle": "任務",
+            "introBody": "把每個事件配對到近似時間。例子刻意不使用課本原圖：有香港本地情境、有中華文化元素，也有物理、生物、地質、演化和前沿科技。",
+            "principle1": "C：相近干擾項",
+            "principle2": "U：實用單位換算",
+            "principle3": "R：香港＋中文文化情境",
+            "principle4": "I：跨越 30 個十的次方",
+            "teacherNotesTitle": "CURI 設計理念",
+            "teacherNotesBody": "Challenging：相近干擾項迫使學生判斷數量級。Useful：每個答案都連結日常單位和秒。Relevant：香港、中華文化和校園生活情境與科學例子並列。Interesting：由飛秒激光跳到演化和香港地質。數值是近似值，學習重點是時間尺度感，而不是背誦單一精確數字。",
+            "score": "分數",
+            "matched": "已配對",
+            "streak": "連續答對",
+            "accuracy": "準確率",
+            "exploreMode": "探索模式",
+            "challengeMode": "挑戰模式",
+            "hint": "提示",
+            "shuffle": "重新洗牌",
+            "reset": "重設",
+            "eventCards": "事件卡",
+            "dragHelp": "把事件卡拖到時間格，或先點事件卡再點時間格。",
+            "durationSlots": "時間格",
+            "boardHelp": "數值是近似值。先比較十的次方，再檢查單位換算。",
+            "startMessage": "先試配對兩個極端：最快和最慢的事件。",
+            "timelineTitle": "對數時間尺",
+            "timelineRight": "時距 / s",
+            "dropHere": "拖放或點按此處",
+            "placed": "已放置",
+            "correct": "正確",
+            "wrong": "不是這個",
+            "tryAgain": "再試一次：先比較十的次方，再比較日常單位。",
+            "matchedAll": "時間軸完成。學習筆記和答案已解鎖。現在可以試挑戰模式。",
+            "selectCard": "已選擇：{name}。請點一個時間格。",
+            "cardAlready": "這張卡已經配對。",
+            "hintText": "提示：先按十的次方排序。相似的本地例子可能相差 10 倍、100 倍，甚至更多。",
+            "shuffleMsg": "事件卡和時間格已重新洗牌。科學內容不變。",
+            "resetMsg": "遊戲已重設。請把事件配對到日常單位和秒數。",
+            "startChallenge": "開始挑戰",
+            "hardModeOff": "困難模式：關",
+            "hardModeOn": "困難模式：開",
+            "hardMode": "困難模式：關",
+            "round": "回合",
+            "lives": "生命",
+            "timer": "計時",
+            "challengePromptTitle": "準備好進行限時挑戰嗎？",
+            "challengePromptBody": "每個事件一回合。請在限時內選出配對時間。答錯會扣生命；干擾選項會故意設得相近。",
+            "challengeStartMessage": "準備好後按「開始挑戰」。學習筆記會在挑戰結束後才顯示。",
+            "answerKey": "遊戲後答案及換算說明",
+            "chooseFor": "請選出配對時間：",
+            "correctChallenge": "正確。{note}",
+            "wrongChallenge": "錯誤。正確答案：{answer}。{note}",
+            "gameOver": "挑戰結束。分數：{score}。請重溫已解鎖的筆記再挑戰。",
+            "timeUp": "時間到。挑戰結束。分數：{score}。",
+            "challengeWin": "限時挑戰完成。最後分數：{score}。學習筆記已解鎖。",
+            "hardDesc": "困難模式：選項只顯示秒和科學記數法。",
+            "easyDesc": "選項會顯示日常單位和秒。",
+            "fastExtreme": "最快",
+            "slowExtreme": "最慢",
+            "approximation": "近似值",
+            "exponent": "十的次方",
+            "close": "相近干擾項",
+            "items": {
+                  "femtoLaser": {
+                        "title": "飛秒激光脈衝",
+                        "clue": "前沿物理 • 超快量度",
+                        "display": "1.0 × 10⁻¹³ s",
+                        "friendly": "100 fs",
+                        "note": "100 fs = 100 × 10⁻¹⁵ s = 1.0 × 10⁻¹³ s。這是用來「凍結」極快分子運動的時間尺度。"
+                  },
+                  "fivegCycle": {
+                        "title": "5G 無線電波一個週期",
+                        "clue": "科技 • 以 3.5 GHz 頻段作例子",
+                        "display": "2.9 × 10⁻¹⁰ s",
+                        "friendly": "0.29 ns",
+                        "note": "3.5 GHz 代表每秒 35 億個週期，所以一個週期約為 1 ÷ 3.5 × 10⁹ s ≈ 2.9 × 10⁻¹⁰ s。"
+                  },
+                  "victoriaLight": {
+                        "title": "光橫過維多利亞港",
+                        "clue": "香港物理 • 約 2 km",
+                        "display": "6.7 × 10⁻⁶ s",
+                        "friendly": "6.7 μs",
+                        "note": "用 2 km 和 c ≈ 3.0 × 10⁸ m/s，可得 t = d/v ≈ 2000 ÷ 3.0 × 10⁸ s ≈ 6.7 μs。"
+                  },
+                  "mainsCycle": {
+                        "title": "香港交流電一個週期",
+                        "clue": "實用物理 • 50 Hz 交流電",
+                        "display": "2.0 × 10⁻² s",
+                        "friendly": "0.020 s",
+                        "note": "香港市電頻率是 50 Hz，所以週期 T = 1/f = 1/50 s = 0.020 s。"
+                  },
+                  "reaction": {
+                        "title": "見到行人燈後反應",
+                        "clue": "生物＋道路安全 • 人的反應",
+                        "display": "2.5 × 10⁻¹ s",
+                        "friendly": "0.25 s",
+                        "note": "人的反應時間通常是零點幾秒，所以 0.25 s 約屬於 10⁻¹ s 的尺度。"
+                  },
+                  "dragonBoat": {
+                        "title": "龍舟短途賽衝線",
+                        "clue": "中華文化＋生物力學 • 約 2 分鐘",
+                        "display": "1.2 × 10² s",
+                        "friendly": "2 分鐘 = 120 s",
+                        "note": "2 分鐘 × 60 s/分鐘 = 120 s。這是 10² s 的尺度，比反應時間長很多。"
+                  },
+                  "milkTea": {
+                        "title": "茶餐廳奶茶一輪沖泡",
+                        "clue": "香港日常 • 熱傳遞例子",
+                        "display": "1.8 × 10² s",
+                        "friendly": "3 分鐘 = 180 s",
+                        "note": "3 分鐘 × 60 s/分鐘 = 180 s。它刻意與龍舟項目相近，所以要仔細看單位。"
+                  },
+                  "ecoli": {
+                        "title": "大腸桿菌理想加倍時間",
+                        "clue": "生物 • 快速細菌生長",
+                        "display": "1.2 × 10³ s",
+                        "friendly": "20 分鐘 = 1200 s",
+                        "note": "20 分鐘 × 60 s/分鐘 = 1200 s = 1.2 × 10³ s，這是理想實驗室條件下的近似值。"
+                  },
+                  "tiangong": {
+                        "title": "天宮太空站繞地球一圈",
+                        "clue": "中國科技 • 低地球軌道",
+                        "display": "5.5 × 10³ s",
+                        "friendly": "約 92 分鐘",
+                        "note": "低地球軌道太空器大約 90 分鐘繞地球一圈。92 分鐘 × 60 ≈ 5.5 × 10³ s。"
+                  },
+                  "iodine": {
+                        "title": "碘-131 半衰期",
+                        "clue": "核物理＋醫學 • 放射性衰變",
+                        "display": "6.9 × 10⁵ s",
+                        "friendly": "約 8 日",
+                        "note": "8 日 × 24 × 3600 s/日 = 691 200 s ≈ 6.9 × 10⁵ s。"
+                  },
+                  "lunarMonth": {
+                        "title": "中秋月相循環",
+                        "clue": "農曆 • 新月至下一個新月",
+                        "display": "2.55 × 10⁶ s",
+                        "friendly": "29.5 日",
+                        "note": "29.5 日 × 24 × 3600 s/日 ≈ 2.55 × 10⁶ s。這解釋了農曆日期在西曆中會移動。"
+                  },
+                  "homoSapiens": {
+                        "title": "現代智人出現至今",
+                        "clue": "演化 • 近似時間尺度",
+                        "display": "9.5 × 10¹² s",
+                        "friendly": "約 3.0 × 10⁵ 年",
+                        "note": "300 000 年 × 3.15 × 10⁷ s/年 ≈ 9.5 × 10¹² s。"
+                  },
+                  "hkGeopark": {
+                        "title": "西貢六角岩柱形成",
+                        "clue": "香港地質 • 火山岩時間尺度",
+                        "display": "4.4 × 10¹⁵ s",
+                        "friendly": "約 1.4 × 10⁸ 年",
+                        "note": "1.4 億年 × 3.15 × 10⁷ s/年 ≈ 4.4 × 10¹⁵ s，是香港地質的時間尺度。"
+                  },
+                  "oxygen": {
+                        "title": "地球大氧化事件",
+                        "clue": "地球史＋生物 • 大氣改變",
+                        "display": "7.6 × 10¹⁶ s",
+                        "friendly": "約 2.4 × 10⁹ 年",
+                        "note": "24 億年 × 3.15 × 10⁷ s/年 ≈ 7.6 × 10¹⁶ s，連結地質、演化和大氣化學。"
+                  }
+            }
+      }
+};
+
+    const events = [
+      {
+            "id": "femtoLaser",
+            "seconds": 1e-13,
+            "icon": "✨",
+            "exponent": -13
+      },
+      {
+            "id": "fivegCycle",
+            "seconds": 2.9e-10,
+            "icon": "📶",
+            "exponent": -10
+      },
+      {
+            "id": "victoriaLight",
+            "seconds": 6.7e-06,
+            "icon": "🌉",
+            "exponent": -5
+      },
+      {
+            "id": "mainsCycle",
+            "seconds": 0.02,
+            "icon": "🔌",
+            "exponent": -2
+      },
+      {
+            "id": "reaction",
+            "seconds": 0.25,
+            "icon": "🚦",
+            "exponent": -1
+      },
+      {
+            "id": "dragonBoat",
+            "seconds": 120.0,
+            "icon": "🐉",
+            "exponent": 2
+      },
+      {
+            "id": "milkTea",
+            "seconds": 180.0,
+            "icon": "🧋",
+            "exponent": 2
+      },
+      {
+            "id": "ecoli",
+            "seconds": 1200.0,
+            "icon": "🦠",
+            "exponent": 3
+      },
+      {
+            "id": "tiangong",
+            "seconds": 5500.0,
+            "icon": "🛰️",
+            "exponent": 4
+      },
+      {
+            "id": "iodine",
+            "seconds": 690000.0,
+            "icon": "☢️",
+            "exponent": 6
+      },
+      {
+            "id": "lunarMonth",
+            "seconds": 2550000.0,
+            "icon": "🥮",
+            "exponent": 6
+      },
+      {
+            "id": "homoSapiens",
+            "seconds": 9500000000000.0,
+            "icon": "🧬",
+            "exponent": 13
+      },
+      {
+            "id": "hkGeopark",
+            "seconds": 4400000000000000.0,
+            "icon": "⬢",
+            "exponent": 15
+      },
+      {
+            "id": "oxygen",
+            "seconds": 7.6e+16,
+            "icon": "🌏",
+            "exponent": 17
+      }
+];
+
+    let lang = 'en';
+    let score = 0, attempts = 0, correctCount = 0, streak = 0, selectedCard = null;
+    let matchedIds = new Set();
+    let cardOrder = [], slotOrder = [];
+    let mode = 'explore';
+    let hardMode = false, challengeActive = false, challengeQueue = [], round = 0, lives = 3, challengeScore = 0, timer = null, remaining = 0, challengeLimit = 0;
+
+    const $ = id => document.getElementById(id);
+    const t = key => translations[lang][key] || translations.en[key] || key;
+    const itemText = id => translations[lang].items[id];
+    const interpolate = (str, data) => str.replace(/\{(\w+)\}/g, (_,k)=>data[k] ?? '');
+    const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
+
+    function setLanguage(newLang){
+      lang = newLang;
+      document.documentElement.lang = lang === 'zh' ? 'zh-Hant' : 'en';
+      document.querySelectorAll('[data-lang]').forEach(btn => btn.setAttribute('aria-selected', btn.dataset.lang === lang));
+      document.querySelectorAll('[data-i18n]').forEach(el => {
+        const key = el.dataset.i18n;
+        if(translations[lang][key]) el.textContent = translations[lang][key];
+      });
+      $('hardToggle').textContent = hardMode ? t('hardModeOn') : t('hardModeOff');
+      renderAll(false);
+      if(mode === 'challenge' && !challengeActive){
+        $('challengePrompt').innerHTML = `<div class="icon">🎯</div><div><h2>${t('challengePromptTitle')}</h2><p>${t('challengePromptBody')}</p></div>`;
+        $('challengeMessage').textContent = t('challengeStartMessage');
+      }
+    }
+
+    function renderAll(reshuffle=true){
+      if(reshuffle || cardOrder.length===0){
+        const ids = events.map(e=>e.id);
+        cardOrder = shuffle(ids);
+        slotOrder = shuffle(ids);
+      }
+      renderCards();
+      renderSlots();
+      renderAxis();
+      renderFacts();
+      renderKey();
+      updateScore();
+    }
+
+    function renderCards(){
+      const root = $('cards');
+      root.innerHTML = '';
+      cardOrder.forEach(id => {
+        const tx = itemText(id);
+        const e = events.find(x=>x.id===id);
+        const card = document.createElement('div');
+        card.className = 'card' + (matchedIds.has(id) ? ' matched' : '') + (selectedCard===id ? ' selected' : '');
+        card.setAttribute('draggable', !matchedIds.has(id));
+        card.setAttribute('tabindex','0');
+        card.dataset.id = id;
+        card.innerHTML = `<div class="icon" aria-hidden="true">${e.icon}</div><div><div class="card-title">${tx.title}</div><div class="card-clue">${tx.clue}</div></div>`;
+        card.addEventListener('dragstart', ev => { ev.dataTransfer.setData('text/plain', id); card.classList.add('dragging'); });
+        card.addEventListener('dragend', () => card.classList.remove('dragging'));
+        card.addEventListener('click', () => selectCard(id));
+        card.addEventListener('keydown', ev => { if(ev.key==='Enter' || ev.key===' '){ev.preventDefault();selectCard(id);} });
+        root.appendChild(card);
+      });
+    }
+
+    function renderSlots(){
+      const root = $('slots');
+      root.innerHTML = '';
+      slotOrder.forEach(id => {
+        const tx = itemText(id);
+        const already = matchedIds.has(id);
+        const slot = document.createElement('div');
+        slot.className = 'slot' + (already ? ' correct locked' : '');
+        slot.dataset.id = id;
+        slot.setAttribute('tabindex','0');
+        slot.innerHTML = `
+          <div class="duration"><b>${tx.friendly}</b><small>${tx.display}</small></div>
+          <div class="droptext">${already ? t('correct') : t('dropHere')}</div>
+          <div class="slotBody">${already ? placedHTML(id) : ''}</div>
+        `;
+        slot.addEventListener('dragover', ev => { ev.preventDefault(); slot.classList.add('over'); });
+        slot.addEventListener('dragleave', () => slot.classList.remove('over'));
+        slot.addEventListener('drop', ev => { ev.preventDefault(); slot.classList.remove('over'); tryMatch(ev.dataTransfer.getData('text/plain'), id, slot); });
+        slot.addEventListener('click', () => { if(selectedCard) tryMatch(selectedCard, id, slot); });
+        slot.addEventListener('keydown', ev => { if((ev.key==='Enter'||ev.key===' ') && selectedCard){ev.preventDefault();tryMatch(selectedCard,id,slot);} });
+        root.appendChild(slot);
+      });
+    }
+
+    function placedHTML(id){
+      const tx = itemText(id); const e = events.find(x=>x.id===id);
+      return `<div class="placed"><div class="icon" aria-hidden="true">${e.icon}</div><div><b>${tx.title}</b><div class="card-clue">${t('placed')}</div></div></div><div class="status good">✓ ${t('correct')}</div>`;
+    }
+
+    function selectCard(id){
+      if(matchedIds.has(id)){ showMessage(t('cardAlready'),'warn'); return; }
+      selectedCard = selectedCard === id ? null : id;
+      renderCards();
+      if(selectedCard) showMessage(interpolate(t('selectCard'), {name:itemText(id).title}), 'warn');
+    }
+
+    function tryMatch(cardId, slotId, slotEl){
+      if(!cardId || matchedIds.has(slotId)) return;
+      if(matchedIds.has(cardId)){ showMessage(t('cardAlready'),'warn'); return; }
+      attempts++;
+      if(cardId === slotId){
+        matchedIds.add(cardId); correctCount++; streak++; score += 100 + Math.min(5, streak-1)*20;
+        selectedCard = null;
+        showMessage(`✓ ${itemText(cardId).title}: ${itemText(cardId).note}`, 'good');
+        renderCards(); renderSlots(); renderAxis(); updateScore();
+        if(matchedIds.size === events.length){ showMessage(t('matchedAll'), 'good'); unlockLearningNotes(); }
+      } else {
+        streak = 0; score = Math.max(0, score - 15);
+        slotEl.classList.add('wrong');
+        setTimeout(()=>slotEl.classList.remove('wrong'), 600);
+        const cardExp = events.find(e=>e.id===cardId).exponent;
+        const slotExp = events.find(e=>e.id===slotId).exponent;
+        const clue = Math.abs(cardExp-slotExp) <= 1 ? t('close') : t('exponent');
+        showMessage(`✗ ${t('tryAgain')} (${clue})`, 'bad');
+        updateScore();
+      }
+    }
+
+    function showMessage(text, kind='warn'){
+      const el = $('message');
+      el.className = `message ${kind}`;
+      el.textContent = text;
+    }
+
+    function updateScore(){
+      $('score').textContent = score;
+      $('matched').textContent = `${matchedIds.size}/${events.length}`;
+      $('streak').textContent = streak;
+      $('accuracy').textContent = attempts ? Math.round(correctCount/attempts*100)+'%' : '–';
+    }
+
+    function renderAxis(){
+      const axis = $('axis');
+      axis.innerHTML = '';
+      const ticks = [-13,-12,-10,-8,-6,-4,-2,-1,0,2,3,4,5,6,7,9,12,15,17];
+      ticks.forEach(exp => {
+        const tick = document.createElement('div');
+        tick.className = 'tick';
+        tick.style.left = pos(exp)+'%';
+        tick.innerHTML = `<span>10${sup(exp)}</span>`;
+        axis.appendChild(tick);
+      });
+      events.forEach(e => {
+        const mark = document.createElement('div');
+        mark.className = 'marker' + (matchedIds.has(e.id) ? '' : ' dim');
+        mark.style.left = pos(Math.log10(e.seconds))+'%';
+        mark.title = `${itemText(e.id).title}: ${itemText(e.id).display}`;
+        mark.textContent = e.icon;
+        axis.appendChild(mark);
+      });
+    }
+    function pos(logValue){ return Math.max(0, Math.min(100, (logValue + 13) / 30 * 100)); }
+    function sup(n){ return String(n).replace('-', '⁻').replace(/0/g,'⁰').replace(/1/g,'¹').replace(/2/g,'²').replace(/3/g,'³').replace(/4/g,'⁴').replace(/5/g,'⁵').replace(/6/g,'⁶').replace(/7/g,'⁷').replace(/8/g,'⁸').replace(/9/g,'⁹'); }
+
+    function renderFacts(){
+      const facts = $('facts');
+      facts.innerHTML = '';
+      events.forEach(e => {
+        const tx = itemText(e.id);
+        const div = document.createElement('div');
+        div.className = 'fact';
+        div.innerHTML = `<b>${e.icon} ${tx.title}</b><span>${tx.friendly} / ${tx.display}<br>${tx.note}</span>`;
+        facts.appendChild(div);
+      });
+    }
+
+    function renderKey(){
+      const key = $('keygrid'); key.innerHTML='';
+      events.forEach(e=>{
+        const tx = itemText(e.id);
+        const div = document.createElement('div');
+        div.className='keyitem';
+        div.innerHTML=`<b>${e.icon} ${tx.title}</b><span>${tx.friendly} → ${tx.display}<br>${tx.note}</span>`;
+        key.appendChild(div);
+      });
+    }
+
+    function unlockLearningNotes(){
+      $('facts').classList.remove('hidden');
+      $('answerPanel').classList.remove('hidden');
+    }
+
+    function lockLearningNotes(){
+      $('facts').classList.add('hidden');
+      $('answerPanel').classList.add('hidden');
+    }
+
+    function resetGame(){
+      score=0; attempts=0; correctCount=0; streak=0; selectedCard=null; matchedIds=new Set(); cardOrder=[]; slotOrder=[];
+      lockLearningNotes();
+      renderAll(true); showMessage(t('resetMsg'),'warn');
+    }
+
+    function shuffleGame(){
+      cardOrder=shuffle(events.map(e=>e.id).filter(id=>!matchedIds.has(id))).concat(events.map(e=>e.id).filter(id=>matchedIds.has(id)));
+      slotOrder=shuffle(events.map(e=>e.id));
+      renderAll(false); showMessage(t('shuffleMsg'),'warn');
+    }
+
+    function switchMode(newMode){
+      mode = newMode;
+      $('exploreWrap').style.display = mode === 'explore' ? 'grid' : 'none';
+      $('challengeWrap').style.display = mode === 'challenge' ? 'block' : 'none';
+      $('exploreModeBtn').setAttribute('aria-selected', mode === 'explore');
+      $('challengeModeBtn').setAttribute('aria-selected', mode === 'challenge');
+    }
+
+    function setupChallenge(){
+      challengeActive = true; challengeQueue = shuffle(events.map(e=>e.id)); round = 0; lives = 3; challengeScore = 0; challengeLimit = events.length * 9; remaining = challengeLimit; lockLearningNotes();
+      $('choices').innerHTML = ''; $('challengeMessage').className = 'message warn';
+      updateChallengeLabels();
+      clearInterval(timer);
+      timer = setInterval(()=>{
+        remaining--; updateChallengeLabels();
+        if(remaining <= 0) endChallenge(t('timeUp'));
+      },1000);
+      nextRound();
+    }
+
+    function updateChallengeLabels(){
+      $('roundLabel').textContent = `${Math.min(round,events.length)}/${events.length}`;
+      $('livesLabel').textContent = lives;
+      $('timeLabel').textContent = remaining;
+      $('timeBar').style.width = Math.max(0, remaining/challengeLimit*100)+'%';
+    }
+
+    function nextRound(){
+      if(!challengeActive) return;
+      if(round >= events.length){ endChallenge(t('challengeWin')); return; }
+      const id = challengeQueue[round];
+      round++;
+      updateChallengeLabels();
+      const tx = itemText(id); const e = events.find(x=>x.id===id);
+      $('challengePrompt').innerHTML = `<div class="icon" aria-hidden="true">${e.icon}</div><div><p style="font-weight:800;color:var(--muted);margin-bottom:4px">${t('chooseFor')}</p><h2>${tx.title}</h2><p>${tx.clue}</p></div>`;
+      const choices = makeOptions(id);
+      const root = $('choices'); root.innerHTML='';
+      choices.forEach(optId => {
+        const opt = itemText(optId);
+        const btn = document.createElement('button');
+        btn.className = 'choice';
+        btn.innerHTML = hardMode ? `${opt.display}<small>${t('exponent')}: 10${sup(events.find(e=>e.id===optId).exponent)}</small>` : `${opt.friendly}<small>${opt.display}</small>`;
+        btn.onclick = () => answerChallenge(id, optId, btn);
+        root.appendChild(btn);
+      });
+      $('challengeMessage').className = 'message warn';
+      $('challengeMessage').textContent = hardMode ? t('hardDesc') : t('easyDesc');
+    }
+
+    function makeOptions(correctId){
+      const correct = events.find(e=>e.id===correctId);
+      const sorted = events.filter(e=>e.id!==correctId).sort((a,b)=>Math.abs(a.exponent-correct.exponent)-Math.abs(b.exponent-correct.exponent));
+      const close = sorted.slice(0,2).map(e=>e.id);
+      const far = shuffle(sorted.slice(2).map(e=>e.id)).slice(0,1);
+      return shuffle([correctId, ...close, ...far]);
+    }
+
+    function answerChallenge(correctId, chosenId, btn){
+      if(!challengeActive) return;
+      const buttons = [...document.querySelectorAll('.choice')];
+      buttons.forEach(b=>b.disabled=true);
+      const correct = chosenId === correctId;
+      if(correct){
+        challengeScore += 100 + Math.max(0, remaining-45);
+        btn.classList.add('correct');
+        $('challengeMessage').className = 'message good';
+        $('challengeMessage').textContent = interpolate(t('correctChallenge'), {note:itemText(correctId).note});
+      } else {
+        lives--;
+        btn.classList.add('wrong');
+        const answer = hardMode ? itemText(correctId).display : `${itemText(correctId).friendly} / ${itemText(correctId).display}`;
+        buttons.forEach(b => { if(b.textContent.includes(itemText(correctId).display)) b.classList.add('correct'); });
+        $('challengeMessage').className = 'message bad';
+        $('challengeMessage').textContent = interpolate(t('wrongChallenge'), {answer, note:itemText(correctId).note});
+      }
+      score = Math.max(score, challengeScore); updateScore(); updateChallengeLabels();
+      if(lives <= 0){ setTimeout(()=>endChallenge(t('gameOver')), 1300); }
+      else setTimeout(nextRound, 1400);
+    }
+
+    function endChallenge(template){
+      challengeActive = false;
+      clearInterval(timer);
+      $('challengeMessage').className = remaining <= 0 || lives <= 0 ? 'message bad' : 'message good';
+      $('challengeMessage').textContent = interpolate(template, {score:challengeScore});
+      $('startChallengeBtn').textContent = t('startChallenge');
+      unlockLearningNotes();
+      updateChallengeLabels();
+    }
+
+    document.querySelectorAll('[data-lang]').forEach(btn => btn.addEventListener('click', () => setLanguage(btn.dataset.lang)));
+    $('exploreModeBtn').addEventListener('click', () => switchMode('explore'));
+    $('challengeModeBtn').addEventListener('click', () => switchMode('challenge'));
+    $('resetBtn').addEventListener('click', resetGame);
+    $('shuffleBtn').addEventListener('click', shuffleGame);
+    $('hintBtn').addEventListener('click', () => showMessage(t('hintText'),'warn'));
+    $('startChallengeBtn').addEventListener('click', setupChallenge);
+    $('hardToggle').addEventListener('click', () => { hardMode=!hardMode; $('hardToggle').setAttribute('aria-pressed', hardMode); $('hardToggle').textContent = hardMode ? t('hardModeOn') : t('hardModeOff'); if(challengeActive) $('challengeMessage').textContent = hardMode ? t('hardDesc') : t('easyDesc'); });
+
+    setLanguage('en');
+    challengeLimit = events.length * 9;
+    remaining = challengeLimit;
+    updateChallengeLabels();
+  </script>
+</body>
+</html>
