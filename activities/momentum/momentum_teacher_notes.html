@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Teacher notes for the Momentum, Collisions and Impulse simulation sequence." />
+  <title>教師筆記｜動量、碰撞與衝量</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --paper: #ffffff;
+      --text: #172033;
+      --muted: #5f6e83;
+      --line: #d7e0eb;
+      --blue: #235fd1;
+      --blue-soft: #eef5ff;
+      --green: #14745a;
+      --green-soft: #edf9f5;
+      --amber: #a86200;
+      --amber-soft: #fff6e8;
+      --red: #a43f3f;
+      --red-soft: #fff1f1;
+      --purple: #6b4bc3;
+      --purple-soft: #f4f0ff;
+      --shadow: 0 15px 38px rgba(28,47,79,.09);
+      --radius: 20px;
+      --max: 1240px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(35,95,209,.08), transparent 30rem),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      line-height: 1.62;
+    }
+
+    a { color: var(--blue); }
+    button { font: inherit; }
+
+    .shell {
+      width: min(var(--max), calc(100% - 28px));
+      margin: 0 auto;
+      padding: 18px 0 46px;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .topbar a,
+    .topbar button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 42px;
+      padding: 9px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.93);
+      color: var(--blue);
+      font-weight: 850;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(28,47,79,.05);
+    }
+
+    .actions { display: flex; flex-wrap: wrap; gap: 9px; }
+
+    header {
+      padding: clamp(26px, 5vw, 52px);
+      border-radius: 28px;
+      background: rgba(255,255,255,.94);
+      border: 1px solid #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .eyebrow {
+      display: inline-block;
+      padding: 6px 11px;
+      border-radius: 999px;
+      background: var(--blue-soft);
+      border: 1px solid #cfdef6;
+      color: var(--blue);
+      font-weight: 850;
+      font-size: .86rem;
+      letter-spacing: .035em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 15px 0 10px;
+      max-width: 900px;
+      font-size: clamp(2rem, 5vw, 3.7rem);
+      line-height: 1.06;
+      letter-spacing: -.04em;
+    }
+
+    header p {
+      margin: 0;
+      max-width: 850px;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 23px;
+    }
+
+    .overview-item {
+      padding: 14px;
+      border-radius: 15px;
+      border: 1px solid var(--line);
+      background: #fbfcfe;
+    }
+
+    .overview-item strong { display: block; margin-bottom: 3px; }
+    .overview-item span { color: var(--muted); font-size: .91rem; }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 245px minmax(0, 1fr);
+      gap: 22px;
+      align-items: start;
+      margin-top: 22px;
+    }
+
+    nav {
+      position: sticky;
+      top: 16px;
+      padding: 14px;
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.95);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 28px rgba(28,47,79,.07);
+    }
+
+    nav strong {
+      display: block;
+      padding: 7px 9px 10px;
+      font-size: .9rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .04em;
+    }
+
+    nav a {
+      display: block;
+      padding: 9px 10px;
+      border-radius: 10px;
+      color: #34445b;
+      text-decoration: none;
+      font-weight: 760;
+      font-size: .93rem;
+    }
+
+    nav a:hover { background: var(--blue-soft); color: var(--blue); }
+
+    main { min-width: 0; }
+
+    section {
+      scroll-margin-top: 18px;
+      margin-bottom: 18px;
+      padding: clamp(20px, 3vw, 31px);
+      border-radius: var(--radius);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: 0 10px 28px rgba(28,47,79,.055);
+    }
+
+    section h2 {
+      margin: 0 0 14px;
+      font-size: clamp(1.35rem, 2.5vw, 1.85rem);
+      letter-spacing: -.025em;
+    }
+
+    section h3 {
+      margin: 24px 0 8px;
+      font-size: 1.08rem;
+    }
+
+    section p { margin: 8px 0; }
+    section ul, section ol { margin: 9px 0 0; padding-left: 1.25rem; }
+    section li + li { margin-top: 6px; }
+
+    .lead {
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .goal-grid,
+    .resource-grid,
+    .misconception-grid,
+    .assessment-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .mini-card {
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: 15px;
+      background: #fbfcfe;
+    }
+
+    .mini-card strong {
+      display: block;
+      margin-bottom: 6px;
+    }
+
+    .mini-card p { color: var(--muted); margin: 0; }
+
+    .route {
+      display: grid;
+      gap: 11px;
+      margin-top: 15px;
+    }
+
+    .route-row {
+      display: grid;
+      grid-template-columns: 84px 1fr;
+      gap: 14px;
+      align-items: start;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fbfcfe;
+    }
+
+    .time {
+      display: inline-flex;
+      justify-content: center;
+      padding: 6px 8px;
+      border-radius: 9px;
+      background: var(--blue-soft);
+      color: var(--blue);
+      font-weight: 900;
+      font-size: .87rem;
+    }
+
+    .route-row strong { display: block; }
+    .route-row p { margin: 3px 0 0; color: var(--muted); }
+
+    .sim-card {
+      margin-top: 15px;
+      border: 1px solid var(--line);
+      border-radius: 17px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .sim-head {
+      display: grid;
+      grid-template-columns: 48px 1fr auto;
+      gap: 13px;
+      align-items: center;
+      padding: 16px;
+      background: #f8fafc;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .sim-num {
+      display: grid;
+      place-items: center;
+      width: 43px;
+      height: 43px;
+      border-radius: 13px;
+      background: var(--sim-color);
+      color: #fff;
+      font-weight: 900;
+    }
+
+    .sim-head h3 { margin: 0; font-size: 1.08rem; }
+    .sim-head span { color: var(--muted); font-size: .9rem; }
+    .sim-head a {
+      border-radius: 11px;
+      padding: 9px 12px;
+      background: var(--sim-color);
+      color: #fff;
+      text-decoration: none;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .sim-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+    }
+
+    .sim-body > div {
+      padding: 16px;
+    }
+
+    .sim-body > div + div {
+      border-left: 1px solid var(--line);
+    }
+
+    .sim-body h4 {
+      margin: 0 0 7px;
+      font-size: .93rem;
+      color: var(--sim-color);
+      text-transform: uppercase;
+      letter-spacing: .035em;
+    }
+
+    .sim-body p, .sim-body ul { color: #45556b; font-size: .95rem; }
+
+    .sim-1 { --sim-color: #235fd1; }
+    .sim-2 { --sim-color: #6b4bc3; }
+    .sim-3 { --sim-color: #14745a; }
+    .sim-4 { --sim-color: #a86200; }
+
+    .misconception {
+      padding: 16px;
+      border-radius: 15px;
+      border: 1px solid #f0caca;
+      background: var(--red-soft);
+    }
+
+    .misconception strong { color: var(--red); }
+    .misconception p { margin: 5px 0 0; color: #684a4a; }
+
+    .callout {
+      margin-top: 14px;
+      padding: 15px 17px;
+      border-radius: 14px;
+      border: 1px solid #cdddf6;
+      background: var(--blue-soft);
+    }
+
+    .callout.green { border-color: #cbe8de; background: var(--green-soft); }
+    .callout.amber { border-color: #efd6ad; background: var(--amber-soft); }
+    .callout.purple { border-color: #ddd3f6; background: var(--purple-soft); }
+
+    .question-list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .question {
+      padding: 13px 15px;
+      border-left: 4px solid var(--blue);
+      border-radius: 0 12px 12px 0;
+      background: #f8fafc;
+      font-weight: 730;
+    }
+
+    .exit-ticket {
+      margin-top: 14px;
+      padding: 18px;
+      border: 2px dashed #b8c9e4;
+      border-radius: 16px;
+      background: #fcfdff;
+    }
+
+    .exit-ticket ol { margin-top: 8px; }
+
+    .technical {
+      color: var(--muted);
+      font-size: .94rem;
+    }
+
+    [data-lang] { display: none; }
+    html[data-current-lang="zh"] [data-lang="zh"],
+    html[data-current-lang="en"] [data-lang="en"] { display: revert; }
+
+    @media (max-width: 980px) {
+      .overview-grid { grid-template-columns: repeat(2, 1fr); }
+      .layout { grid-template-columns: 1fr; }
+      nav { position: static; display: flex; flex-wrap: wrap; gap: 4px; }
+      nav strong { width: 100%; }
+      nav a { flex: 1 1 170px; }
+    }
+
+    @media (max-width: 690px) {
+      .goal-grid, .resource-grid, .misconception-grid, .assessment-grid,
+      .sim-body { grid-template-columns: 1fr; }
+      .sim-body > div + div { border-left: 0; border-top: 1px solid var(--line); }
+      .sim-head { grid-template-columns: 45px 1fr; }
+      .sim-head a { grid-column: 1 / -1; text-align: center; }
+      .route-row { grid-template-columns: 1fr; }
+      .time { justify-self: start; }
+      .topbar { align-items: flex-start; flex-direction: column; }
+    }
+
+    @media print {
+      body { background: #fff; font-size: 10.5pt; }
+      .shell { width: 100%; padding: 0; }
+      .topbar, nav { display: none !important; }
+      header, section { box-shadow: none; break-inside: avoid; }
+      .layout { display: block; }
+      section { margin: 0 0 10mm; }
+      a { color: inherit; text-decoration: none; }
+      .sim-head a { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="topbar">
+      <a href="./momentum_index.html">
+        <span data-lang="zh">← 返回學習首頁</span>
+        <span data-lang="en">← Back to learning home</span>
+      </a>
+      <div class="actions">
+        <button type="button" onclick="window.print()">
+          <span data-lang="zh">列印／另存 PDF</span>
+          <span data-lang="en">Print / Save PDF</span>
+        </button>
+        <button id="langToggle" type="button">English</button>
+      </div>
+    </div>
+
+    <header>
+      <span class="eyebrow">
+        <span data-lang="zh">教師筆記</span>
+        <span data-lang="en">Teacher notes</span>
+      </span>
+      <h1 data-lang="zh">動量、碰撞與衝量：模擬器教學指南</h1>
+      <h1 data-lang="en">Momentum, Collisions &amp; Impulse: Simulation Teaching Guide</h1>
+      <p data-lang="zh">四個模擬器由「動量是有方向的量」逐步發展至碰撞證據、撞擊力及衝量關係。重點不是讓學生自由試玩，而是透過預測、控制變量、記錄數據與以證據解釋，建立可遷移的概念。</p>
+      <p data-lang="en">The four simulations progress from signed momentum to collision evidence, impact force, and impulse relationships. The emphasis is not free play, but prediction, controlled comparison, data recording, and evidence-based explanation.</p>
+
+      <div class="overview-grid">
+        <div class="overview-item">
+          <strong data-lang="zh">建議級別</strong><strong data-lang="en">Suggested level</strong>
+          <span data-lang="zh">高中動量與衝量單元</span><span data-lang="en">Upper-secondary momentum and impulse</span>
+        </div>
+        <div class="overview-item">
+          <strong data-lang="zh">課時</strong><strong data-lang="en">Duration</strong>
+          <span data-lang="zh">45–80 分鐘，可分兩課</span><span data-lang="en">45–80 minutes, or two lessons</span>
+        </div>
+        <div class="overview-item">
+          <strong data-lang="zh">組織</strong><strong data-lang="en">Grouping</strong>
+          <span data-lang="zh">二人一組，每組一部裝置</span><span data-lang="en">Pairs, one device per pair</span>
+        </div>
+        <div class="overview-item">
+          <strong data-lang="zh">核心模式</strong><strong data-lang="en">Core routine</strong>
+          <span data-lang="zh">預測 → 觀察 → 計算 → 解釋</span><span data-lang="en">Predict → Observe → Calculate → Explain</span>
+        </div>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav aria-label="Page sections">
+        <strong data-lang="zh">本頁內容</strong><strong data-lang="en">On this page</strong>
+        <a href="#goals"><span data-lang="zh">學習目標</span><span data-lang="en">Learning goals</span></a>
+        <a href="#preparation"><span data-lang="zh">課前準備</span><span data-lang="en">Preparation</span></a>
+        <a href="#routes"><span data-lang="zh">建議流程</span><span data-lang="en">Suggested routes</span></a>
+        <a href="#simulations"><span data-lang="zh">四個模擬器</span><span data-lang="en">The four simulations</span></a>
+        <a href="#misconceptions"><span data-lang="zh">常見迷思</span><span data-lang="en">Misconceptions</span></a>
+        <a href="#questions"><span data-lang="zh">課堂提問</span><span data-lang="en">Classroom questions</span></a>
+        <a href="#assessment"><span data-lang="zh">形成性評估</span><span data-lang="en">Formative assessment</span></a>
+        <a href="#technical"><span data-lang="zh">技術提示</span><span data-lang="en">Technical notes</span></a>
+      </nav>
+
+      <main>
+        <section id="goals">
+          <h2 data-lang="zh">學習目標</h2>
+          <h2 data-lang="en">Learning goals</h2>
+          <p class="lead" data-lang="zh">完成活動後，學生應能以符號、計算及文字證據處理以下概念。</p>
+          <p class="lead" data-lang="en">By the end of the sequence, students should be able to use signs, calculations, and written evidence to address the following ideas.</p>
+          <div class="goal-grid">
+            <div class="mini-card">
+              <strong data-lang="zh">1｜動量的大小與方向</strong><strong data-lang="en">1 | Magnitude and direction</strong>
+              <p data-lang="zh">使用 p = mv，按既定正方向為速度及動量加上正負號。</p>
+              <p data-lang="en">Use p = mv and assign signs to velocity and momentum from a stated positive direction.</p>
+            </div>
+            <div class="mini-card">
+              <strong data-lang="zh">2｜動量變化</strong><strong data-lang="en">2 | Change in momentum</strong>
+              <p data-lang="zh">使用 Δp = p<sub>f</sub> − p<sub>i</sub> 解釋反彈時即使速率相同，Δp 仍不為零。</p>
+              <p data-lang="en">Use Δp = p<sub>f</sub> − p<sub>i</sub> to explain why equal rebound speeds do not imply zero momentum change.</p>
+            </div>
+            <div class="mini-card">
+              <strong data-lang="zh">3｜碰撞分類</strong><strong data-lang="en">3 | Collision classification</strong>
+              <p data-lang="zh">以系統總動量、總動能及是否黏合，辨別三種碰撞。</p>
+              <p data-lang="en">Classify elastic, inelastic, and completely inelastic collisions using total momentum, total kinetic energy, and sticking.</p>
+            </div>
+            <div class="mini-card">
+              <strong data-lang="zh">4｜衝量與撞擊力</strong><strong data-lang="en">4 | Impulse and impact force</strong>
+              <p data-lang="zh">使用 J = Δp = F<sub>avg</sub>Δt 比較相同 Δp、相同力或相同時間的情況。</p>
+              <p data-lang="en">Use J = Δp = F<sub>avg</sub>Δt to compare cases with equal Δp, equal force, or equal interaction time.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="preparation">
+          <h2 data-lang="zh">課前準備</h2>
+          <h2 data-lang="en">Preparation</h2>
+          <div class="resource-grid">
+            <div class="mini-card">
+              <strong data-lang="zh">學生已有知識</strong><strong data-lang="en">Prerequisite knowledge</strong>
+              <p data-lang="zh">質量與速度、動能公式、基本代數，以及「向右為正／向左為負」的符號約定。</p>
+              <p data-lang="en">Mass and velocity, the kinetic-energy formula, basic algebra, and the convention right = positive / left = negative.</p>
+            </div>
+            <div class="mini-card">
+              <strong data-lang="zh">物資</strong><strong data-lang="en">Materials</strong>
+              <p data-lang="zh">每組一部電腦或平板、計算機、記錄紙或工作紙；全班示範時使用投影。</p>
+              <p data-lang="en">One computer or tablet per pair, calculator, recording sheet or worksheet, and projection for whole-class demonstration.</p>
+            </div>
+            <div class="mini-card">
+              <strong data-lang="zh">二人角色</strong><strong data-lang="en">Pair roles</strong>
+              <p data-lang="zh">A 操作及讀圖；B 計算及檢查正負號。每完成一個任務交換角色。</p>
+              <p data-lang="en">A operates and reads graphs; B calculates and checks signs. Swap roles after each mission.</p>
+            </div>
+            <div class="mini-card">
+              <strong data-lang="zh">課堂規則</strong><strong data-lang="en">Working rule</strong>
+              <p data-lang="zh">先寫預測才播放；先記錄數值才按下一個任務；解釋必須引用至少一組數據。</p>
+              <p data-lang="en">Write a prediction before playing; record values before moving on; every explanation must cite at least one numerical comparison.</p>
+            </div>
+          </div>
+          <div class="callout amber">
+            <strong data-lang="zh">教師提示：</strong><strong data-lang="en">Teacher cue:</strong>
+            <span data-lang="zh">每次比較只改變一個主要變量。若同時改變質量、速度與時間，學生容易把相關性誤當因果。</span>
+            <span data-lang="en">Change one main variable at a time. Simultaneous changes to mass, velocity, and time make it easy for students to confuse correlation with causation.</span>
+          </div>
+        </section>
+
+        <section id="routes">
+          <h2 data-lang="zh">建議教學流程</h2>
+          <h2 data-lang="en">Suggested teaching routes</h2>
+
+          <h3 data-lang="zh">精簡 45 分鐘路線</h3>
+          <h3 data-lang="en">Focused 45-minute route</h3>
+          <div class="route">
+            <div class="route-row">
+              <span class="time">0–5</span>
+              <div>
+                <strong data-lang="zh">引入：反彈是否代表 Δp = 0？</strong>
+                <strong data-lang="en">Hook: Does a rebound give Δp = 0?</strong>
+                <p data-lang="zh">展示相同入射及反彈速率，要求學生先投票，不立即公布答案。</p>
+                <p data-lang="en">Show equal incoming and rebound speeds. Collect a vote before revealing any calculation.</p>
+              </div>
+            </div>
+            <div class="route-row">
+              <span class="time">5–15</span>
+              <div>
+                <strong data-lang="zh">模擬器 1：方向與反彈</strong>
+                <strong data-lang="en">Simulation 1: Direction and rebound</strong>
+                <p data-lang="zh">集中使用「方向很重要」及「反彈與動量變化」兩部分。</p>
+                <p data-lang="en">Focus on “Direction Matters” and “Bounce & Change.”</p>
+              </div>
+            </div>
+            <div class="route-row">
+              <span class="time">15–32</span>
+              <div>
+                <strong data-lang="zh">模擬器 2：三關碰撞任務</strong>
+                <strong data-lang="en">Simulation 2: Three collision missions</strong>
+                <p data-lang="zh">二人合作完成至少兩個碰撞類型，並以 p 及 KE 證據分類。</p>
+                <p data-lang="en">Pairs complete at least two collision types and classify using momentum and kinetic-energy evidence.</p>
+              </div>
+            </div>
+            <div class="route-row">
+              <span class="time">32–41</span>
+              <div>
+                <strong data-lang="zh">模擬器 3：安全情境遷移</strong>
+                <strong data-lang="en">Simulation 3: Transfer to safety contexts</strong>
+                <p data-lang="zh">比較硬地／軟墊或堅硬車身／緩衝區，完成句式解釋。</p>
+                <p data-lang="en">Compare hard/soft surfaces or rigid/crumple-zone cars and complete the explanation frame.</p>
+              </div>
+            </div>
+            <div class="route-row">
+              <span class="time">41–45</span>
+              <div>
+                <strong data-lang="zh">離堂票</strong>
+                <strong data-lang="en">Exit ticket</strong>
+                <p data-lang="zh">一題正負號、一題碰撞分類、一題 F–Δt 因果解釋。</p>
+                <p data-lang="en">One sign question, one collision-classification question, and one force–time causal explanation.</p>
+              </div>
+            </div>
+          </div>
+
+          <h3 data-lang="zh">完整 70–80 分鐘路線</h3>
+          <h3 data-lang="en">Full 70–80-minute route</h3>
+          <p data-lang="zh">完成上述流程後，加入模擬器 4 的三種控制變量比較，並要求學生畫出或解讀力—時間圖的面積。亦可分成兩課：第一課使用模擬器 1–2；第二課先重溫 Δp，再使用模擬器 3–4。</p>
+          <p data-lang="en">After the focused route, add the three controlled comparisons in Simulation 4 and ask students to sketch or interpret force–time graph area. Alternatively, split the sequence into two lessons: Simulations 1–2 first, then review Δp before Simulations 3–4.</p>
+        </section>
+
+        <section id="simulations">
+          <h2 data-lang="zh">四個模擬器的教學用途</h2>
+          <h2 data-lang="en">Teaching purpose of each simulation</h2>
+
+          <article class="sim-card sim-1">
+            <div class="sim-head">
+              <span class="sim-num">1</span>
+              <div>
+                <h3 data-lang="zh">一維動量模擬器</h3>
+                <h3 data-lang="en">1D Momentum Simulator</h3>
+                <span data-lang="zh">質量與速度 → 方向 → 反彈與 Δp</span>
+                <span data-lang="en">Mass and velocity → direction → rebound and Δp</span>
+              </div>
+              <a href="./momentum_sim1.html"><span data-lang="zh">開啟</span><span data-lang="en">Open</span></a>
+            </div>
+            <div class="sim-body">
+              <div>
+                <h4 data-lang="zh">教師動作</h4><h4 data-lang="en">Teacher moves</h4>
+                <ul data-lang="zh">
+                  <li>要求學生每次只改變質量或速度其中一項。</li>
+                  <li>在改變速度正負號前，先問箭咀會否反向。</li>
+                  <li>反彈例子必須逐行寫出 p<sub>i</sub>、p<sub>f</sub>、Δp。</li>
+                </ul>
+                <ul data-lang="en">
+                  <li>Require students to change mass or velocity, not both.</li>
+                  <li>Before changing the sign of velocity, ask whether the arrow will reverse.</li>
+                  <li>For rebound, write p<sub>i</sub>, p<sub>f</sub>, and Δp on separate lines.</li>
+                </ul>
+              </div>
+              <div>
+                <h4 data-lang="zh">可見學習證據</h4><h4 data-lang="en">Observable evidence</h4>
+                <ul data-lang="zh">
+                  <li>學生能說明「速率相同」不等於「動量相同」。</li>
+                  <li>能把向左速度寫成負值。</li>
+                  <li>能解釋反彈時 Δp 的量值可大於 |p<sub>i</sub>|。</li>
+                </ul>
+                <ul data-lang="en">
+                  <li>Students explain why equal speed does not guarantee equal momentum.</li>
+                  <li>They record leftward velocity as negative.</li>
+                  <li>They explain why rebound |Δp| can exceed |p<sub>i</sub>|.</li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          <article class="sim-card sim-2">
+            <div class="sim-head">
+              <span class="sim-num">2</span>
+              <div>
+                <h3 data-lang="zh">碰撞分類器：三關任務</h3>
+                <h3 data-lang="en">Collision Sorter: Three Missions</h3>
+                <span data-lang="zh">漸退支架、v–t 圖及證據分類</span>
+                <span data-lang="en">Faded scaffolding, v–t graphs, and evidence-based classification</span>
+              </div>
+              <a href="./momentum_sim2_student_missions_final_v8_layout_fixed.html"><span data-lang="zh">開啟</span><span data-lang="en">Open</span></a>
+            </div>
+            <div class="sim-body">
+              <div>
+                <h4 data-lang="zh">教師動作</h4><h4 data-lang="en">Teacher moves</h4>
+                <ul data-lang="zh">
+                  <li>先確認正方向，再從圖中讀取四個速度。</li>
+                  <li>任務一示範如何比較「系統總量」，不可只看單一小車。</li>
+                  <li>任務二交換角色；任務三要求學生先在紙上計算。</li>
+                </ul>
+                <ul data-lang="en">
+                  <li>State the positive direction before reading four velocities from the graph.</li>
+                  <li>Model comparison of system totals, not one cart in isolation.</li>
+                  <li>Swap roles in Mission 2; calculate on paper before Mission 3 submission.</li>
+                </ul>
+              </div>
+              <div>
+                <h4 data-lang="zh">分類判據</h4><h4 data-lang="en">Classification evidence</h4>
+                <ul data-lang="zh">
+                  <li><strong>彈性：</strong>總 p 守恆；總 KE 守恆。</li>
+                  <li><strong>非彈性：</strong>總 p 守恆；總 KE 減少；物體分開。</li>
+                  <li><strong>完全非彈性：</strong>總 p 守恆；總 KE 減少；末速度相同。</li>
+                </ul>
+                <ul data-lang="en">
+                  <li><strong>Elastic:</strong> total p conserved; total KE conserved.</li>
+                  <li><strong>Inelastic:</strong> total p conserved; total KE decreases; objects separate.</li>
+                  <li><strong>Completely inelastic:</strong> total p conserved; total KE decreases; final velocities match.</li>
+                </ul>
+              </div>
+            </div>
+          </article>
+
+          <article class="sim-card sim-3">
+            <div class="sim-head">
+              <span class="sim-num">3</span>
+              <div>
+                <h3 data-lang="zh">撞擊力測試實驗室</h3>
+                <h3 data-lang="en">Impact Force Lab</h3>
+                <span data-lang="zh">雞蛋、軟墊與汽車緩衝區</span>
+                <span data-lang="en">Egg drops, cushions, and car crumple zones</span>
+              </div>
+              <a href="./momentum_sim3.html"><span data-lang="zh">開啟</span><span data-lang="en">Open</span></a>
+            </div>
+            <div class="sim-body">
+              <div>
+                <h4 data-lang="zh">教師動作</h4><h4 data-lang="en">Teacher moves</h4>
+                <ul data-lang="zh">
+                  <li>先問兩個情況的 Δp 是否相同，再比較時間。</li>
+                  <li>避免只說「軟墊吸收力」；要求使用 F<sub>avg</sub> = Δp/Δt。</li>
+                  <li>讓學生完成頁內三格因果句式。</li>
+                </ul>
+                <ul data-lang="en">
+                  <li>First establish whether Δp is the same, then compare stopping time.</li>
+                  <li>Avoid “the cushion absorbs force”; require F<sub>avg</sub> = Δp/Δt.</li>
+                  <li>Have students complete the three-part causal sentence frame.</li>
+                </ul>
+              </div>
+              <div>
+                <h4 data-lang="zh">目標解釋</h4><h4 data-lang="en">Target explanation</h4>
+                <p data-lang="zh">兩者的質量、初速度及末速度相同，因此 Δp 相同。B 的停止時間較長，所以 B 的平均力較小。</p>
+                <p data-lang="en">Both cases have the same mass, initial velocity, and final velocity, so Δp is the same. Case B has a longer stopping time, so its average force is smaller.</p>
+              </div>
+            </div>
+          </article>
+
+          <article class="sim-card sim-4">
+            <div class="sim-head">
+              <span class="sim-num">4</span>
+              <div>
+                <h3 data-lang="zh">衝量實驗室</h3>
+                <h3 data-lang="en">Impulse Lab</h3>
+                <span data-lang="zh">三種受控比較與力—時間圖</span>
+                <span data-lang="en">Three controlled comparisons and force–time graphs</span>
+              </div>
+              <a href="./momentum_sim4.html"><span data-lang="zh">開啟</span><span data-lang="en">Open</span></a>
+            </div>
+            <div class="sim-body">
+              <div>
+                <h4 data-lang="zh">三種比較</h4><h4 data-lang="en">Three comparisons</h4>
+                <ul data-lang="zh">
+                  <li>相同 Δp：時間越長，平均力越小。</li>
+                  <li>相同平均力：時間越長，Δp 越大。</li>
+                  <li>相同時間：Δp 越大，平均力越大。</li>
+                </ul>
+                <ul data-lang="en">
+                  <li>Same Δp: longer time gives smaller average force.</li>
+                  <li>Same average force: longer time gives larger Δp.</li>
+                  <li>Same time: larger Δp gives larger average force.</li>
+                </ul>
+              </div>
+              <div>
+                <h4 data-lang="zh">教師動作</h4><h4 data-lang="en">Teacher moves</h4>
+                <ul data-lang="zh">
+                  <li>每次先圈出「保持不變」的量。</li>
+                  <li>要求學生以圖形的闊度、高度及面積解釋。</li>
+                  <li>教師模式可延伸至峰值力及不同脈衝形狀。</li>
+                </ul>
+                <ul data-lang="en">
+                  <li>Circle the controlled quantity before each comparison.</li>
+                  <li>Require explanations using graph width, height, and area.</li>
+                  <li>Teacher mode can extend to peak force and pulse shape.</li>
+                </ul>
+              </div>
+            </div>
+          </article>
+        </section>
+
+        <section id="misconceptions">
+          <h2 data-lang="zh">常見迷思與回應</h2>
+          <h2 data-lang="en">Common misconceptions and responses</h2>
+          <div class="misconception-grid">
+            <div class="misconception">
+              <strong data-lang="zh">「較重的物體一定有較大動量。」</strong>
+              <strong data-lang="en">“The heavier object always has more momentum.”</strong>
+              <p data-lang="zh">以「重但靜止」對比「輕但快速」，要求同時引用 m 和 v。</p>
+              <p data-lang="en">Compare a heavy stationary object with a light fast object; require reference to both m and v.</p>
+            </div>
+            <div class="misconception">
+              <strong data-lang="zh">「相同速率即相同動量。」</strong>
+              <strong data-lang="en">“Equal speed means equal momentum.”</strong>
+              <p data-lang="zh">把 +4 m/s 與 −4 m/s 並列，要求畫出相反方向箭咀。</p>
+              <p data-lang="en">Place +4 m/s beside −4 m/s and require opposite momentum arrows.</p>
+            </div>
+            <div class="misconception">
+              <strong data-lang="zh">「反彈前後速率相同，所以 Δp = 0。」</strong>
+              <strong data-lang="en">“Equal rebound speed means Δp = 0.”</strong>
+              <p data-lang="zh">堅持使用 p<sub>f</sub> − p<sub>i</sub>，不要只比較大小。</p>
+              <p data-lang="en">Insist on p<sub>f</sub> − p<sub>i</sub>; do not compare magnitudes alone.</p>
+            </div>
+            <div class="misconception">
+              <strong data-lang="zh">「動量守恆表示每架車的動量不變。」</strong>
+              <strong data-lang="en">“Momentum conservation means each cart keeps its momentum.”</strong>
+              <p data-lang="zh">把兩車視為系統，比較碰撞前後的總和，而非個別值。</p>
+              <p data-lang="en">Treat both carts as one system and compare totals, not individual values.</p>
+            </div>
+            <div class="misconception">
+              <strong data-lang="zh">「非彈性碰撞中動量不守恆。」</strong>
+              <strong data-lang="en">“Momentum is not conserved in an inelastic collision.”</strong>
+              <p data-lang="zh">明確分開兩個判據：孤立系統總 p 守恆；總 KE 可能減少。</p>
+              <p data-lang="en">Separate the criteria: total p is conserved in an isolated system, while total KE may decrease.</p>
+            </div>
+            <div class="misconception">
+              <strong data-lang="zh">「作用時間越長，力一定越小。」</strong>
+              <strong data-lang="en">“A longer interaction always means a smaller force.”</strong>
+              <p data-lang="zh">先問哪一個量保持不變。只有相同 Δp 時，時間較長才代表平均力較小。</p>
+              <p data-lang="en">Ask what is held constant. Longer time implies smaller average force only when Δp is fixed.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="questions">
+          <h2 data-lang="zh">高效課堂提問</h2>
+          <h2 data-lang="en">High-leverage classroom questions</h2>
+          <p class="lead" data-lang="zh">提問應迫使學生辨認系統、方向、控制變量及證據，而非只讀出螢幕上的答案。</p>
+          <p class="lead" data-lang="en">Questions should force students to identify the system, direction, controlled quantity, and evidence rather than merely read the screen.</p>
+          <div class="question-list">
+            <div class="question" data-lang="zh">你選擇哪一方向為正？哪一個速度必須寫成負值？</div>
+            <div class="question" data-lang="en">Which direction is positive, and which velocity must be negative?</div>
+            <div class="question" data-lang="zh">你正在比較單一物體，還是由兩架車組成的系統？</div>
+            <div class="question" data-lang="en">Are you analysing one object or the two-cart system?</div>
+            <div class="question" data-lang="zh">哪一個量在兩個情況中保持不變？你如何知道？</div>
+            <div class="question" data-lang="en">Which quantity is held constant in the two cases, and how do you know?</div>
+            <div class="question" data-lang="zh">哪一組數據支持你的碰撞分類？只說「看起來反彈」是否足夠？</div>
+            <div class="question" data-lang="en">Which numerical evidence supports your classification? Is “it looks bouncy” sufficient?</div>
+            <div class="question" data-lang="zh">力—時間圖變闊、變高或面積變大，分別代表甚麼？</div>
+            <div class="question" data-lang="en">What does a wider, taller, or larger-area force–time graph represent?</div>
+          </div>
+        </section>
+
+        <section id="assessment">
+          <h2 data-lang="zh">形成性評估與離堂票</h2>
+          <h2 data-lang="en">Formative assessment and exit ticket</h2>
+          <div class="assessment-grid">
+            <div class="mini-card">
+              <strong data-lang="zh">巡視時檢查</strong><strong data-lang="en">During circulation</strong>
+              <p data-lang="zh">正方向是否寫出；向左速度是否為負；KE 是否使用 v²；比較的是總量還是單一物體；解釋有否引用數據。</p>
+              <p data-lang="en">Check stated positive direction, negative leftward velocities, use of v² in KE, system totals rather than one object, and numerical evidence in explanations.</p>
+            </div>
+            <div class="mini-card">
+              <strong data-lang="zh">口頭回應句式</strong><strong data-lang="en">Oral response frame</strong>
+              <p data-lang="zh">「因為 ______ 保持相同，而 ______ 增加／減少，所以根據 ______，______ 會……」</p>
+              <p data-lang="en">“Because ______ is held constant while ______ increases/decreases, the equation ______ shows that ______ will…”</p>
+            </div>
+          </div>
+
+          <div class="exit-ticket">
+            <strong data-lang="zh">三題離堂票</strong>
+            <strong data-lang="en">Three-question exit ticket</strong>
+            <ol data-lang="zh">
+              <li>一個 2.0 kg 物體由 +3.0 m/s 反彈至 −2.0 m/s。計算 Δp。</li>
+              <li>某孤立碰撞的總動量守恆，而總動能減少，兩物體碰撞後分開。判斷碰撞類型並寫出兩項證據。</li>
+              <li>兩個相同物體由相同速度停下。B 的停止時間是 A 的三倍。比較兩者平均力並解釋。</li>
+            </ol>
+            <ol data-lang="en">
+              <li>A 2.0 kg object rebounds from +3.0 m/s to −2.0 m/s. Calculate Δp.</li>
+              <li>In an isolated collision, total momentum is conserved, total kinetic energy decreases, and the objects separate. Classify it and give two pieces of evidence.</li>
+              <li>Two identical objects stop from the same speed. B takes three times as long to stop as A. Compare their average forces and explain.</li>
+            </ol>
+          </div>
+
+          <div class="callout green">
+            <strong data-lang="zh">參考答案：</strong><strong data-lang="en">Answer guide:</strong>
+            <span data-lang="zh">1. −10 kg·m/s；2. 非彈性碰撞；3. Δp 相同，B 的時間為三倍，因此 B 的平均力為 A 的三分之一。</span>
+            <span data-lang="en">1. −10 kg·m/s; 2. inelastic collision; 3. same Δp, so three times the stopping time gives one-third the average force.</span>
+          </div>
+        </section>
+
+        <section id="technical">
+          <h2 data-lang="zh">技術與部署提示</h2>
+          <h2 data-lang="en">Technical and deployment notes</h2>
+          <p class="technical" data-lang="zh">把此教師筆記、首頁及四個模擬器放在同一資料夾，所有連結即可使用相對路徑。首頁檔案為 <strong>momentum_index.html</strong>；如希望資料夾網址直接開啟首頁，可把它重新命名為 <strong>index.html</strong>。</p>
+          <p class="technical" data-lang="en">Place this page, the home page, and all four simulations in the same folder so every relative link works. The home page is named <strong>momentum_index.html</strong>; rename it to <strong>index.html</strong> if the folder URL should open it automatically.</p>
+          <div class="callout amber">
+            <strong data-lang="zh">連線注意：</strong><strong data-lang="en">Connectivity note:</strong>
+            <span data-lang="zh">模擬器 1 會從網絡載入 React、Babel、Tailwind CSS 及圖示程式庫；課前請測試學校網絡。模擬器 2–4 的主要程式碼已內嵌於 HTML。</span>
+            <span data-lang="en">Simulation 1 loads React, Babel, Tailwind CSS, and an icon library from external CDNs, so test the school network beforehand. The main code for Simulations 2–4 is embedded in their HTML files.</span>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const button = document.getElementById("langToggle");
+      const saved = localStorage.getItem("momentum-notes-lang");
+      let lang = saved === "en" || saved === "zh"
+        ? saved
+        : (navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
+
+      function applyLanguage() {
+        root.dataset.currentLang = lang;
+        root.lang = lang === "zh" ? "zh-Hant" : "en";
+        button.textContent = lang === "zh" ? "English" : "繁體中文";
+        localStorage.setItem("momentum-notes-lang", lang);
+      }
+
+      button.addEventListener("click", () => {
+        lang = lang === "zh" ? "en" : "zh";
+        applyLanguage();
+      });
+
+      applyLanguage();
+    })();
+  </script>
+</body>
+</html>

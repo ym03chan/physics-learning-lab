@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="A guided learning path for momentum, collisions, impulse, and impact force." />
+  <title>動量與衝量學習路徑｜Momentum & Impulse Learning Path</title>
+  <style>
+    :root {
+      --bg: #f4f7fb;
+      --surface: #ffffff;
+      --surface-soft: #eef5ff;
+      --text: #172033;
+      --muted: #617087;
+      --line: #d8e1ed;
+      --blue: #235fd1;
+      --blue-dark: #174596;
+      --green: #14745a;
+      --amber: #a86200;
+      --shadow: 0 16px 42px rgba(28, 47, 79, 0.09);
+      --radius-lg: 28px;
+      --radius-md: 20px;
+      --max: 1180px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 12% 0%, rgba(35, 95, 209, 0.10), transparent 30rem),
+        radial-gradient(circle at 92% 12%, rgba(20, 116, 90, 0.08), transparent 26rem),
+        var(--bg);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Noto Sans TC", "Microsoft JhengHei", sans-serif;
+      line-height: 1.55;
+    }
+
+    a { color: inherit; }
+
+    button, a { -webkit-tap-highlight-color: transparent; }
+
+    .shell {
+      width: min(var(--max), calc(100% - 30px));
+      margin: 0 auto;
+      padding: 18px 0 44px;
+    }
+
+    .utility {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .utility a,
+    .utility button {
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,.92);
+      color: var(--blue-dark);
+      border-radius: 999px;
+      padding: 9px 14px;
+      font: inherit;
+      font-size: .9rem;
+      font-weight: 800;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 4px 14px rgba(28, 47, 79, .06);
+    }
+
+    .utility a:hover,
+    .utility button:hover { background: #fff; border-color: #adc4ed; }
+
+    .hero {
+      background: rgba(255,255,255,.91);
+      border: 1px solid rgba(255,255,255,.9);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: clamp(26px, 5vw, 54px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      right: -90px;
+      bottom: -120px;
+      background: linear-gradient(145deg, rgba(35,95,209,.17), rgba(20,116,90,.10));
+      pointer-events: none;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 12px;
+      border-radius: 999px;
+      background: var(--surface-soft);
+      border: 1px solid #cfe0fb;
+      color: var(--blue-dark);
+      font-size: .87rem;
+      font-weight: 850;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+
+    h1 {
+      margin: 16px 0 12px;
+      max-width: 850px;
+      font-size: clamp(2.05rem, 5vw, 4.25rem);
+      line-height: 1.02;
+      letter-spacing: -.045em;
+    }
+
+    .hero p {
+      max-width: 760px;
+      margin: 0;
+      color: var(--muted);
+      font-size: clamp(1rem, 1.7vw, 1.18rem);
+    }
+
+    .concept-strip {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 9px;
+      margin-top: 24px;
+    }
+
+    .concept-strip span {
+      border: 1px solid var(--line);
+      background: #fff;
+      border-radius: 999px;
+      padding: 8px 11px;
+      color: #405169;
+      font-size: .9rem;
+      font-weight: 750;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 18px;
+      margin: 38px 4px 16px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: clamp(1.45rem, 3vw, 2.1rem);
+      letter-spacing: -.025em;
+    }
+
+    .section-head p {
+      margin: 0;
+      max-width: 500px;
+      color: var(--muted);
+      font-size: .96rem;
+      text-align: right;
+    }
+
+    .path {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 360px;
+      padding: 25px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,.94);
+      box-shadow: 0 10px 28px rgba(28,47,79,.07);
+      overflow: hidden;
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: #b8cae6;
+      box-shadow: 0 18px 36px rgba(28,47,79,.11);
+    }
+
+    .card::after {
+      content: "";
+      position: absolute;
+      width: 170px;
+      height: 170px;
+      border-radius: 50%;
+      right: -85px;
+      top: -85px;
+      background: var(--accent-soft);
+      pointer-events: none;
+    }
+
+    .card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      position: relative;
+      z-index: 1;
+    }
+
+    .step-num {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 900;
+      font-size: 1.05rem;
+      box-shadow: 0 8px 20px color-mix(in srgb, var(--accent) 26%, transparent);
+    }
+
+    .duration {
+      border-radius: 999px;
+      padding: 7px 10px;
+      background: #f7f9fc;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: .83rem;
+      font-weight: 800;
+    }
+
+    .card h3 {
+      margin: 22px 0 7px;
+      font-size: 1.42rem;
+      line-height: 1.18;
+      letter-spacing: -.02em;
+    }
+
+    .subtitle {
+      color: var(--accent);
+      font-weight: 850;
+      font-size: .94rem;
+    }
+
+    .card p {
+      margin: 14px 0 0;
+      color: var(--muted);
+    }
+
+    .focus {
+      margin: 20px 0 22px;
+      padding: 14px 15px;
+      border-radius: 15px;
+      background: #f8fafc;
+      border: 1px solid var(--line);
+      color: #34445b;
+      font-size: .94rem;
+    }
+
+    .focus strong {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--text);
+    }
+
+    .launch {
+      margin-top: auto;
+      display: inline-flex;
+      justify-content: center;
+      align-items: center;
+      gap: 9px;
+      min-height: 48px;
+      border-radius: 14px;
+      background: var(--accent);
+      color: #fff;
+      padding: 12px 16px;
+      text-decoration: none;
+      font-weight: 900;
+      box-shadow: 0 10px 24px color-mix(in srgb, var(--accent) 24%, transparent);
+    }
+
+    .launch::after { content: "→"; font-size: 1.1rem; }
+    .launch:hover { filter: brightness(.95); }
+
+    .card-1 { --accent: #235fd1; --accent-soft: rgba(35,95,209,.11); }
+    .card-2 { --accent: #6b4bc3; --accent-soft: rgba(107,75,195,.12); }
+    .card-3 { --accent: #14745a; --accent-soft: rgba(20,116,90,.12); }
+    .card-4 { --accent: #a86200; --accent-soft: rgba(168,98,0,.12); }
+
+    .teacher-callout {
+      margin-top: 22px;
+      display: grid;
+      grid-template-columns: 1.4fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 23px 25px;
+      border-radius: var(--radius-md);
+      background: #172033;
+      color: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .teacher-callout h2 { margin: 0 0 6px; font-size: 1.35rem; }
+    .teacher-callout p { margin: 0; color: #cbd5e3; }
+    .teacher-callout a {
+      white-space: nowrap;
+      border-radius: 13px;
+      padding: 12px 16px;
+      background: #fff;
+      color: #172033;
+      font-weight: 900;
+      text-decoration: none;
+    }
+
+    footer {
+      padding: 28px 4px 0;
+      color: var(--muted);
+      font-size: .88rem;
+      text-align: center;
+    }
+
+    [data-lang] { display: none; }
+    html[data-current-lang="zh"] [data-lang="zh"],
+    html[data-current-lang="en"] [data-lang="en"] { display: revert; }
+
+    @media (max-width: 820px) {
+      .path { grid-template-columns: 1fr; }
+      .section-head { align-items: flex-start; flex-direction: column; }
+      .section-head p { text-align: left; }
+      .teacher-callout { grid-template-columns: 1fr; }
+      .teacher-callout a { text-align: center; }
+    }
+
+    @media (max-width: 520px) {
+      .shell { width: min(100% - 18px, var(--max)); }
+      .hero, .card { padding: 21px; }
+      .utility { flex-wrap: wrap; }
+      .utility a, .utility button { flex: 1; text-align: center; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .card { transition: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <div class="utility">
+      <a href="./momentum_teacher_notes.html">
+        <span data-lang="zh">教師筆記</span><span data-lang="en">Teacher notes</span>
+      </a>
+      <button id="langToggle" type="button" aria-label="Switch language">English</button>
+    </div>
+
+    <header class="hero">
+      <div class="eyebrow">
+        <span data-lang="zh">互動物理學習單元</span>
+        <span data-lang="en">Interactive physics unit</span>
+      </div>
+      <h1>
+        <span data-lang="zh">動量、碰撞與衝量</span>
+        <span data-lang="en">Momentum, Collisions &amp; Impulse</span>
+      </h1>
+      <p data-lang="zh">依照概念發展次序，由動量的大小與方向開始，進入碰撞分類，再把衝量應用到撞擊力與安全設計。</p>
+      <p data-lang="en">Follow a concept-first path from momentum magnitude and direction to collision classification, impact force, and safety design.</p>
+      <div class="concept-strip" aria-label="Key concepts">
+        <span>p = mv</span>
+        <span>Δp = p<sub>f</sub> − p<sub>i</sub></span>
+        <span>J = Δp</span>
+        <span>F<sub>avg</sub> = Δp / Δt</span>
+      </div>
+    </header>
+
+    <div class="section-head">
+      <div>
+        <h2 data-lang="zh">選擇學習活動</h2>
+        <h2 data-lang="en">Choose a learning activity</h2>
+      </div>
+      <p data-lang="zh">建議按 1 → 4 進行；教師亦可按課堂目標選用個別活動。</p>
+      <p data-lang="en">The recommended sequence is 1 → 4, though each activity can also stand alone.</p>
+    </div>
+
+    <main class="path">
+      <article class="card card-1">
+        <div class="card-top">
+          <span class="step-num">1</span>
+          <span class="duration"><span data-lang="zh">10–15 分鐘</span><span data-lang="en">10–15 min</span></span>
+        </div>
+        <h3 data-lang="zh">一維動量基礎</h3>
+        <h3 data-lang="en">1D Momentum Foundations</h3>
+        <div class="subtitle">
+          <span data-lang="zh">質量、速度、方向與反彈</span>
+          <span data-lang="en">Mass, velocity, direction, and rebound</span>
+        </div>
+        <p data-lang="zh">比較質量與速度的影響，利用正負號表示方向，並分析反彈前後的動量變化。</p>
+        <p data-lang="en">Compare the effects of mass and velocity, represent direction with signs, and analyse momentum change during a rebound.</p>
+        <div class="focus">
+          <strong data-lang="zh">核心問題</strong><strong data-lang="en">Focus question</strong>
+          <span data-lang="zh">反彈前後速率相同，動量變化會是零嗎？</span>
+          <span data-lang="en">If the speed is unchanged after a rebound, is the momentum change zero?</span>
+        </div>
+        <a class="launch" href="./momentum_sim1.html">
+          <span data-lang="zh">開啟模擬器 1</span><span data-lang="en">Open Simulation 1</span>
+        </a>
+      </article>
+
+      <article class="card card-2">
+        <div class="card-top">
+          <span class="step-num">2</span>
+          <span class="duration"><span data-lang="zh">15–25 分鐘</span><span data-lang="en">15–25 min</span></span>
+        </div>
+        <h3 data-lang="zh">碰撞分類任務</h3>
+        <h3 data-lang="en">Collision Classification Missions</h3>
+        <div class="subtitle">
+          <span data-lang="zh">v–t 圖、總動量與總動能</span>
+          <span data-lang="en">v–t graphs, total momentum, and total kinetic energy</span>
+        </div>
+        <p data-lang="zh">從速度—時間圖讀取數據，計算碰撞前後總量，再以證據辨別彈性、非彈性及完全非彈性碰撞。</p>
+        <p data-lang="en">Read velocities from a velocity–time graph, calculate totals before and after, and classify three collision types from evidence.</p>
+        <div class="focus">
+          <strong data-lang="zh">核心問題</strong><strong data-lang="en">Focus question</strong>
+          <span data-lang="zh">動量守恆是否代表動能也一定守恆？</span>
+          <span data-lang="en">Does conservation of momentum guarantee conservation of kinetic energy?</span>
+        </div>
+        <a class="launch" href="./momentum_sim2_student_missions_final_v8_layout_fixed.html">
+          <span data-lang="zh">開啟模擬器 2</span><span data-lang="en">Open Simulation 2</span>
+        </a>
+      </article>
+
+      <article class="card card-3">
+        <div class="card-top">
+          <span class="step-num">3</span>
+          <span class="duration"><span data-lang="zh">10–15 分鐘</span><span data-lang="en">10–15 min</span></span>
+        </div>
+        <h3 data-lang="zh">撞擊力情境實驗</h3>
+        <h3 data-lang="en">Impact Force in Context</h3>
+        <div class="subtitle">
+          <span data-lang="zh">硬地、軟墊與汽車緩衝區</span>
+          <span data-lang="en">Hard surfaces, cushions, and crumple zones</span>
+        </div>
+        <p data-lang="zh">比較相同動量改變下的不同停止時間，連結軟墊、緩衝區與平均撞擊力。</p>
+        <p data-lang="en">Compare different stopping times for the same momentum change and connect cushioning and crumple zones to average impact force.</p>
+        <div class="focus">
+          <strong data-lang="zh">核心問題</strong><strong data-lang="en">Focus question</strong>
+          <span data-lang="zh">兩個物體都停下，為何受到的平均力可以不同？</span>
+          <span data-lang="en">If both objects stop, why can their average forces be different?</span>
+        </div>
+        <a class="launch" href="./momentum_sim3.html">
+          <span data-lang="zh">開啟模擬器 3</span><span data-lang="en">Open Simulation 3</span>
+        </a>
+      </article>
+
+      <article class="card card-4">
+        <div class="card-top">
+          <span class="step-num">4</span>
+          <span class="duration"><span data-lang="zh">15–20 分鐘</span><span data-lang="en">15–20 min</span></span>
+        </div>
+        <h3 data-lang="zh">衝量關係實驗室</h3>
+        <h3 data-lang="en">Impulse Relationships Lab</h3>
+        <div class="subtitle">
+          <span data-lang="zh">控制變量與力—時間圖</span>
+          <span data-lang="en">Controlled comparisons and force–time graphs</span>
+        </div>
+        <p data-lang="zh">分別固定 Δp、平均力或作用時間，觀察另一個量如何改變，並以圖像面積連結衝量。</p>
+        <p data-lang="en">Hold momentum change, average force, or interaction time constant and use graph area to connect the variables through impulse.</p>
+        <div class="focus">
+          <strong data-lang="zh">核心問題</strong><strong data-lang="en">Focus question</strong>
+          <span data-lang="zh">「時間較長」何時令力變小，何時令動量改變變大？</span>
+          <span data-lang="en">When does a longer time reduce force, and when does it increase momentum change?</span>
+        </div>
+        <a class="launch" href="./momentum_sim4.html">
+          <span data-lang="zh">開啟模擬器 4</span><span data-lang="en">Open Simulation 4</span>
+        </a>
+      </article>
+    </main>
+
+    <section class="teacher-callout">
+      <div>
+        <h2 data-lang="zh">課堂使用建議與提問</h2>
+        <h2 data-lang="en">Lesson guidance and questioning</h2>
+        <p data-lang="zh">教師筆記包括建議流程、常見迷思、二人合作角色、形成性評估及課後延伸。</p>
+        <p data-lang="en">The teacher notes include lesson sequencing, misconceptions, pair roles, formative assessment, and extensions.</p>
+      </div>
+      <a href="./momentum_teacher_notes.html">
+        <span data-lang="zh">查看教師筆記</span><span data-lang="en">View teacher notes</span>
+      </a>
+    </section>
+
+    <footer>
+      <span data-lang="zh">Physics Learning Lab · 動量與衝量互動學習單元</span>
+      <span data-lang="en">Physics Learning Lab · Momentum and Impulse Interactive Unit</span>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const root = document.documentElement;
+      const button = document.getElementById("langToggle");
+      const saved = localStorage.getItem("momentum-home-lang");
+      let lang = saved === "en" || saved === "zh"
+        ? saved
+        : (navigator.language.toLowerCase().startsWith("zh") ? "zh" : "en");
+
+      function applyLanguage() {
+        root.dataset.currentLang = lang;
+        root.lang = lang === "zh" ? "zh-Hant" : "en";
+        button.textContent = lang === "zh" ? "English" : "繁體中文";
+        button.setAttribute("aria-label", lang === "zh" ? "Switch to English" : "切換至繁體中文");
+        localStorage.setItem("momentum-home-lang", lang);
+      }
+
+      button.addEventListener("click", () => {
+        lang = lang === "zh" ? "en" : "zh";
+        applyLanguage();
+      });
+
+      applyLanguage();
+    })();
+  </script>
+</body>
+</html>
