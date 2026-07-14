@@ -1,59 +1,267 @@
-# Time Lab activities
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Lab Activities | Physics Learning Lab</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #0f172a;
+            --text-muted: #475569;
+            --border-color: #e2e8f0;
+            --radius: 12px;
+        }
 
-This folder contains two self-contained, bilingual time-measurement activities for the **Physics Learning Lab** website.
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
 
-## Folder structure
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding: 2rem 1rem;
+        }
 
-```text
-activities/time-lab/
-├── index.html          # Student-facing choice page
-├── lab_v1.html         # Version 1: Time Scale Match
-├── lab_v2.html         # Version 2: Time Lab pair investigation
-├── teacher-notes.html  # Lesson guidance for both versions
-└── README.md           # This file
-```
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
 
-The public paths are therefore:
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
 
-- `activities/time-lab/index.html`
-- `activities/time-lab/lab_v1.html`
-- `activities/time-lab/lab_v2.html`
-- `activities/time-lab/teacher-notes.html`
+        h1 {
+            font-size: 2.5rem;
+            color: var(--primary-color);
+            margin-bottom: 0.5rem;
+        }
 
-## Adding the folder to the main repository
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.1rem;
+        }
 
-1. In the repository, open or create the folders `activities` and then `time-lab`.
-2. Upload all five files from this folder without renaming them.
-3. Commit the upload.
-4. On the main homepage, link the Time Lab card to:
+        /* Card Grid Layout */
+        .activities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
 
-```html
-<a href="activities/time-lab/index.html">Open Time Lab</a>
-```
+        .card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 2rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            flex-direction: column;
+        }
 
-On GitHub Pages, the expected address will be:
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
 
-```text
-https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/activities/time-lab/
-```
+        .card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: var(--text-main);
+        }
 
-## Which version should a teacher choose?
+        .card-meta {
+            background: #eff6ff;
+            color: #1e3a8a;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-bottom: 1.5rem;
+        }
 
-| Version | Main learning focus | Suggested use |
-|---|---|---|
-| `lab_v1.html` | Time scales, order of magnitude, scientific notation and unit conversion | Individual or pair game after prefixes/scientific notation |
-| `lab_v2.html` | Human timing variation, repeated measurements, uncertainty and method design | 10–15 minute Exploratorium-style pair investigation |
+        .card-meta strong {
+            display: block;
+            margin-bottom: 0.25rem;
+        }
 
-Both activities work as standalone HTML files. They do not require a server, build process, external library or internet connection after download.
+        .card-desc {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+            flex-grow: 1;
+        }
 
-## 中文簡介
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            text-align: center;
+            padding: 0.75rem 1.5rem;
+            border-radius: 6px;
+            font-weight: 600;
+            transition: background-color 0.2s ease;
+            width: 100%;
+        }
 
-此資料夾包含兩個雙語時間量度活動。`lab_v1.html` 是時間尺度配對遊戲，著重數量級、科學記數法和單位換算；`lab_v2.html` 是 10–15 分鐘的二人探究，著重人為計時變化、重複量度、不確定度和量度方法設計。
+        .btn:hover {
+            background-color: var(--primary-hover);
+        }
 
-請保留以上檔案名稱和資料夾結構，主頁只需連結至 `activities/time-lab/index.html`。
+        .btn-secondary {
+            background-color: #f1f5f9;
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+        }
 
-## Maintenance
+        .btn-secondary:hover {
+            background-color: #e2e8f0;
+        }
 
-- Keep all links relative so that local use and GitHub Pages both work.
-- When revising an activity, retain the filenames unless the main index is updated at the same time.
-- This folder follows the licence and attribution information of the parent repository; it does not create a separate licence.
+        /* Informational Sections */
+        .info-section {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .info-section h3 {
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid var(--bg-color);
+        }
+
+        /* Details / Accordion for Admin info */
+        details {
+            background-color: var(--bg-color);
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+        }
+
+        summary {
+            font-weight: 600;
+            cursor: pointer;
+            color: var(--text-main);
+        }
+        
+        details[open] summary {
+            margin-bottom: 1rem;
+        }
+
+        pre {
+            background: #1e293b;
+            color: #f8fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            font-size: 0.9rem;
+            margin: 1rem 0;
+        }
+
+        code {
+            font-family: "Courier New", Courier, monospace;
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .bilingual-note {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+            border-left: 4px solid var(--border-color);
+            padding-left: 1rem;
+            margin-top: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Time Lab Activities</h1>
+            <p class="subtitle">Physics Learning Lab • 雙語時間量度活動</p>
+        </header>
+
+        <main class="activities-grid">
+            
+            <article class="card">
+                <h2>Activity 1: Time Scale Match</h2>
+                <div class="card-meta">
+                    <strong>Focus:</strong> Time scales, order of magnitude, scientific notation, and unit conversion.
+                </div>
+                <p class="card-desc">
+                    An interactive matching game designed to be played individually or in pairs. Best used after introducing prefixes and scientific notation.
+                </p>
+                <a href="lab_v1.html" class="btn">Launch Time Scale Match</a>
+            </article>
+
+            <article class="card">
+                <h2>Activity 2: Pair Investigation</h2>
+                <div class="card-meta">
+                    <strong>Focus:</strong> Human timing variation, repeated measurements, uncertainty, and method design.
+                </div>
+                <p class="card-desc">
+                    A short 10–15 minute Exploratorium-style investigation for student pairs to explore the limits of human reaction time and measurement error.
+                </p>
+                <a href="lab_v2.html" class="btn">Launch Pair Investigation</a>
+            </article>
+
+        </main>
+
+        <section class="info-section">
+            <h3>Educator Resources</h3>
+            <p style="margin-bottom: 1.5rem;">Access the comprehensive lesson guidance, pedagogical notes, and setup instructions for both versions of the Time Lab.</p>
+            <a href="teacher-notes.html" class="btn btn-secondary" style="width: auto;">View Teacher Notes</a>
+            
+            <div class="bilingual-note">
+                <strong>中文簡介:</strong> 此資料夾包含兩個雙語時間量度活動。`lab_v1.html` 是時間尺度配對遊戲，著重數量級、科學記數法和單位換算；`lab_v2.html` 是 10–15 分鐘的二人探究，著重人為計時變化、重複量度、不確定度和量度方法設計。
+            </div>
+        </section>
+
+        <section class="info-section">
+            <h3>Technical & Maintenance Information</h3>
+            <p style="margin-bottom: 1rem; color: var(--text-muted);">For website administrators and repository maintainers.</p>
+            
+            <details>
+                <summary>Repository Setup & Installation</summary>
+                <p>Both activities work as standalone HTML files. They do not require a server, build process, external library, or internet connection after download.</p>
+                <ol>
+                    <li>In the repository, open or create the folders <code>activities</code> and then <code>time-lab</code>.</li>
+                    <li>Upload all files from this folder without renaming them.</li>
+                    <li>Commit the upload.</li>
+                    <li>On the main homepage, link the Time Lab card to:</li>
+                </ol>
+<pre><code>&lt;a href="activities/time-lab/index.html"&gt;Open Time Lab&lt;/a&gt;</code></pre>
+                <p>On GitHub Pages, the expected address will be: <br><code>https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/activities/time-lab/</code></p>
+            </details>
+
+            <details>
+                <summary>Maintenance & Licensing Guidelines</summary>
+                <ul>
+                    <li>Keep all links relative so that local use and GitHub Pages both work.</li>
+                    <li>When revising an activity, retain the filenames unless the main index is updated at the same time.</li>
+                    <li>This folder follows the licence and attribution information of the parent repository; it does not create a separate licence.</li>
+                </ul>
+            </details>
+        </section>
+
+    </div>
+
+</body>
+</html>
