@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wave Interference Lab 2 — Constructive &amp; Destructive Interference</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom slider styling */
+        input[type=range] {
+            -webkit-appearance: none; 
+            width: 100%; 
+            background: transparent; 
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #EF4444; /* Red to match Wave 2 */
+            cursor: pointer;
+            margin-top: -10px;
+            box-shadow: 1px 1px 1px #000000, 0px 0px 1px #0d0d0d;
+            transition: transform 0.1s;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #ddd;
+            border-radius: 1.3px;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]:focus-visible {
+            outline: 3px solid rgba(59, 130, 246, 0.45);
+            outline-offset: 6px;
+            border-radius: 999px;
+        }
+
+        button:focus-visible, summary:focus-visible {
+            outline: 3px solid rgba(59, 130, 246, 0.55);
+            outline-offset: 3px;
+        }
+
+        .canvas-container {
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+
+        #waveCanvas {
+            width: 100%;
+            height: 480px;
+            display: block;
+        }
+
+        #sourceCanvas {
+            width: 100%;
+            height: 320px;
+            display: block;
+        }
+
+        [hidden] { display: none !important; }
+
+        .model-tabs {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 0.65rem;
+            margin-bottom: 1.25rem;
+        }
+
+        .model-tab {
+            border: 2px solid #cbd5e1;
+            border-radius: 0.75rem;
+            background: #ffffff;
+            color: #475569;
+            cursor: pointer;
+            font-weight: 800;
+            line-height: 1.25;
+            padding: 0.8rem 1rem;
+            text-align: left;
+            transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+        }
+
+        .model-tab:hover { border-color: #93c5fd; }
+        .model-tab.active {
+            border-color: #2563eb;
+            background: #eff6ff;
+            color: #1e40af;
+        }
+
+        .model-tab small {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-top: 0.2rem;
+            opacity: 0.8;
+        }
+
+        .next-model-button {
+            border: 0;
+            border-radius: 0.65rem;
+            background: #2563eb;
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 800;
+            padding: 0.75rem 1rem;
+        }
+
+        .next-model-button:hover { background: #1d4ed8; }
+
+        .animate-button {
+            border: 0;
+            border-radius: 0.6rem;
+            background: #0f766e;
+            color: #ffffff;
+            cursor: pointer;
+            font-weight: 800;
+            padding: 0.7rem 1rem;
+            transition: transform 0.08s ease, background 0.15s ease;
+        }
+
+        .animate-button:hover { background: #115e59; }
+        .animate-button:active { transform: scale(0.98); }
+        .animate-button.is-running { background: #be123c; }
+        .animate-button.is-running:hover { background: #9f1239; }
+
+        .teacher-guide summary {
+            cursor: pointer;
+            font-weight: 800;
+            color: #334155;
+            list-style-position: outside;
+        }
+
+        .teacher-guide[open] summary { margin-bottom: 0.9rem; }
+
+        @media (max-width: 640px) {
+            #waveCanvas { height: 430px; }
+            #sourceCanvas { height: 300px; }
+            .model-tabs { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <header class="mb-6 text-center">
+            <p class="text-sm font-bold uppercase tracking-widest text-blue-700 mb-1">Wave Interference Lab 2</p>
+            <h1 class="text-3xl font-bold text-slate-900 mb-2">Constructive &amp; Destructive Interference</h1>
+            <p class="text-slate-600">Compare two ways of producing the same phase difference: move a source, then move a detector.</p>
+        </header>
+
+        <nav class="model-tabs" role="tablist" aria-label="Interference models">
+            <button id="model1Tab" class="model-tab active" type="button" role="tab" aria-selected="true" aria-controls="model1Page">
+                Page 1 — Move a source
+                <small>Visual model: separate the wave starting points</small>
+            </button>
+            <button id="model2Tab" class="model-tab" type="button" role="tab" aria-selected="false" aria-controls="model2Page">
+                Page 2 — Move the detector
+                <small>Physical model: fixed sources, different paths</small>
+            </button>
+        </nav>
+
+        <section id="model1Page" role="tabpanel" aria-labelledby="model1Tab">
+            <div class="mb-4 p-4 rounded-lg border border-amber-200 bg-amber-50">
+                <h2 class="text-xl font-bold text-amber-950">Page 1: Separate the wave starting points</h2>
+                <p class="text-sm text-amber-900 mt-1">This simplified model makes phase difference visible by shifting the red source. Watch how crest–crest alignment changes into crest–trough alignment.</p>
+            </div>
+
+            <div class="canvas-container border-2 border-slate-200 bg-white mb-6">
+                <canvas id="sourceCanvas" aria-label="A blue wave source and a red wave source whose starting position can be shifted"></canvas>
+                <div id="sourceStatus" class="absolute top-4 right-4 bg-green-100 border-green-300 text-green-800 px-4 py-2 rounded shadow-md border font-mono text-sm font-bold">
+                    Δ = 0.00λ · Constructive
+                </div>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+                <div class="mb-8">
+                    <div class="flex flex-wrap justify-between items-center gap-3 mb-2">
+                        <label for="sourceSlider" class="font-bold text-lg text-slate-700">Shift Red Source — Separation Δ</label>
+                        <div class="flex flex-wrap items-center gap-4">
+                            <label class="flex items-center space-x-2 text-sm text-slate-600 cursor-pointer select-none bg-slate-100 px-3 py-1 rounded hover:bg-slate-200 transition">
+                                <input type="checkbox" id="sourceSnap" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                                <span class="font-medium">Snap to 0.5λ</span>
+                            </label>
+                            <span id="sourceSliderValue" class="text-slate-500 font-mono min-w-[4rem] text-right">0.00 λ</span>
+                        </div>
+                    </div>
+                    <div class="relative w-full px-2">
+                        <input type="range" id="sourceSlider" min="0" max="3.5" step="0.01" value="0" aria-label="Red source separation in wavelengths" aria-valuemin="0" aria-valuemax="3.5" aria-valuenow="0" aria-valuetext="0.00 wavelengths">
+                    </div>
+                    <div class="flex justify-between text-xs text-slate-400 mt-2 font-mono select-none px-2">
+                        <span>0λ</span><span>0.5λ</span><span>1.0λ</span><span>1.5λ</span>
+                        <span>2.0λ</span><span>2.5λ</span><span>3.0λ</span><span>3.5λ</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Visibility Controls</h3>
+                        <div class="space-y-2">
+                            <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-50 rounded transition">
+                                <input type="checkbox" id="sourceShowWave1" checked class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
+                                <span class="font-medium text-blue-600">Show Wave 1 (Blue Source)</span>
+                            </label>
+                            <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-50 rounded transition">
+                                <input type="checkbox" id="sourceShowWave2" checked class="w-5 h-5 text-red-500 rounded focus:ring-red-500 border-gray-300">
+                                <span class="font-medium text-red-500">Show Wave 2 (Red Source)</span>
+                            </label>
+                            <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-50 rounded transition">
+                                <input type="checkbox" id="sourceShowResultant" checked class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500 border-gray-300">
+                                <span class="font-bold text-purple-700">Show Resultant (Sum)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-50 p-4 rounded text-sm text-slate-600">
+                        <h3 class="font-bold text-slate-700 mb-2">What this model isolates</h3>
+                        <ul class="list-disc list-inside space-y-1">
+                            <li>Moving the red starting point by 0.5λ reverses its phase.</li>
+                            <li>Integer λ separation gives crest–crest alignment.</li>
+                            <li>Half-integer λ separation gives crest–trough alignment.</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-6 p-5 rounded-lg border border-blue-200 bg-blue-50">
+                <h3 class="font-bold text-blue-950">Conceptual bridge: keep the phase difference, change the cause</h3>
+                <p class="text-blue-900 mt-2">Page 1 physically slides the red source to expose the phase shift. In many real interference situations, however, both coherent sources remain fixed. The same phase shift appears because the waves travel different distances—and therefore take different times—to reach a detector.</p>
+                <button id="goToModel2" type="button" class="next-model-button mt-4">Continue to Page 2: keep the sources fixed</button>
+            </div>
+        </section>
+
+        <section id="model2Page" role="tabpanel" aria-labelledby="model2Tab" hidden>
+            <div class="mb-4 p-4 rounded-lg border border-teal-200 bg-teal-50">
+                <h2 class="text-xl font-bold text-teal-950">Page 2: Fixed sources, moving detector</h2>
+                <p class="text-sm text-teal-900 mt-1">Now preserve the same Δ/λ relationship without moving either source. Detector D changes the two travel distances.</p>
+            </div>
+
+        <!-- Main Display Area -->
+        <div class="canvas-container border-2 border-slate-200 bg-white mb-6">
+            <canvas id="waveCanvas" aria-label="Two fixed coherent sources, a movable detector, and a comparison of the waves arriving at the detector"></canvas>
+            
+            <!-- Dynamic Overlay Text -->
+            <div id="statusIndicator" class="absolute top-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded shadow-md border border-slate-200 font-mono text-sm font-bold text-slate-700">
+                Δ = 0.00λ · Constructive
+            </div>
+        </div>
+
+        <!-- Controls Section -->
+        <div class="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
+            
+            <!-- Slider Control -->
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <label for="phaseSlider" class="font-bold text-lg text-slate-700">Move Detector — Path Difference Δ</label>
+                    <div class="flex items-center gap-4">
+                        <!-- Snap Checkbox -->
+                        <label class="flex items-center space-x-2 text-sm text-slate-600 cursor-pointer select-none bg-slate-100 px-3 py-1 rounded hover:bg-slate-200 transition">
+                            <input type="checkbox" id="snapToggle" class="rounded text-blue-600 focus:ring-blue-500 w-4 h-4">
+                            <span class="font-medium">Snap to 0.5λ</span>
+                        </label>
+                        <span id="sliderValue" class="text-slate-500 font-mono min-w-[4rem] text-right">0.00 λ</span>
+                    </div>
+                </div>
+                
+                <div class="relative w-full px-2">
+                    <input type="range" id="phaseSlider" min="0" max="3.5" step="0.01" value="0" class="w-full" aria-valuemin="0" aria-valuemax="3.5" aria-valuenow="0" aria-valuetext="0.00 wavelengths">
+                </div>
+                
+                <!-- Tick Marks visual guide -->
+                <div class="flex justify-between text-xs text-slate-400 mt-2 font-mono select-none px-2">
+                    <span>0λ</span>
+                    <span>0.5λ</span>
+                    <span>1.0λ</span>
+                    <span>1.5λ</span>
+                    <span>2.0λ</span>
+                    <span>2.5λ</span>
+                    <span>3.0λ</span>
+                    <span>3.5λ</span>
+                </div>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3 mb-8 p-4 rounded-lg border border-teal-200 bg-teal-50">
+                <button id="animationToggle" type="button" class="animate-button" aria-pressed="false">Animate waves</button>
+                <div>
+                    <p id="animationState" class="font-bold text-teal-900">Static snapshot</p>
+                    <p class="text-sm text-teal-800">Pause first to compare phases; animate when students are ready to see continuous vibration.</p>
+                </div>
+            </div>
+
+            <!-- Toggles & Legend -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                
+                <!-- Visibility Toggles -->
+                <div>
+                    <h3 class="font-bold text-sm text-slate-500 uppercase tracking-wider mb-3">Wave Comparison Visibility</h3>
+                    <div class="space-y-2">
+                        <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-50 rounded transition">
+                            <input type="checkbox" id="showWave1" checked class="w-5 h-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
+                            <span class="font-medium text-blue-600">Show Wave 1 (Blue Source)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-50 rounded transition">
+                            <input type="checkbox" id="showWave2" checked class="w-5 h-5 text-red-500 rounded focus:ring-red-500 border-gray-300">
+                            <span class="font-medium text-red-500">Show Wave 2 (Red Source)</span>
+                        </label>
+                        <label class="flex items-center space-x-3 cursor-pointer p-2 hover:bg-slate-50 rounded transition">
+                            <input type="checkbox" id="showResultant" checked class="w-5 h-5 text-purple-600 rounded focus:ring-purple-500 border-gray-300">
+                            <span class="font-bold text-purple-700">Show Resultant (Sum)</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Legend / Explanation -->
+                <div class="bg-slate-50 p-4 rounded text-sm text-slate-600">
+                    <h3 class="font-bold text-slate-700 mb-2">How to use:</h3>
+                    <ul class="list-disc list-inside space-y-1">
+                        <li><strong>Slider:</strong> Moves detector D while S1 and S2 remain fixed.</li>
+                        <li><strong>Integer Δ/λ:</strong> the waves arrive in phase—crest meets crest.</li>
+                        <li><strong>Half-integer Δ/λ:</strong> the waves arrive out of phase—crest meets trough.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <details class="teacher-guide mt-6 bg-blue-50 p-5 rounded-lg border border-blue-200 shadow-sm">
+            <summary>Teacher explanation: bridge Page 1 to Page 2</summary>
+            <div class="space-y-4 text-slate-700 leading-relaxed">
+                <p><strong>Name the representational change:</strong> Page 1 deliberately moves the red source so students can see a wave shifted by Δ. Page 2 keeps S1 and S2 fixed. Here the lower graph compares the phases arriving at D; it does not show either source moving.</p>
+                <ol class="list-decimal pl-6 space-y-2">
+                    <li><strong>End Page 1 at Δ = 0.50λ.</strong> Ask students to explain why crest meets trough when one starting point is shifted by half a wavelength.</li>
+                    <li><strong>Open Page 2 at Δ = 0.</strong> D is equally far from S1 and S2, so both waves spend the same time travelling. Ask: “How could we create the same half-cycle delay without moving a source?”</li>
+                    <li><strong>Hide the resultant and move D slowly.</strong> Moving D lengthens one path and shortens the other. The sources have not changed; the waves now take different times to reach D.</li>
+                    <li><strong>Stop at Δ = 0.50λ.</strong> One wave has travelled half a wavelength farther, so it arrives half a cycle later: crest meets trough. Ask students to predict the resultant before revealing it.</li>
+                    <li><strong>Compare Δ = 1.00λ and 1.50λ.</strong> Build the rules from evidence: Δ = nλ gives constructive interference; Δ = (n + ½)λ gives destructive interference.</li>
+                    <li><strong>Animate last.</strong> Emphasise that interference is continuous superposition at D—not a one-time collision of two drawn curves.</li>
+                </ol>
+                <div class="bg-white p-4 rounded border border-blue-100">
+                    <p><strong>Link distance, time and phase:</strong></p>
+                    <p class="font-mono mt-1">Δ = |r1 − r2| &nbsp;&nbsp; Δt = Δ/v &nbsp;&nbsp; phase difference = 2πΔ/λ</p>
+                </div>
+            </div>
+        </details>
+        </section>
+    </div>
+
+    <script>
+        const model1Tab = document.getElementById('model1Tab');
+        const model2Tab = document.getElementById('model2Tab');
+        const model1Page = document.getElementById('model1Page');
+        const model2Page = document.getElementById('model2Page');
+        const goToModel2 = document.getElementById('goToModel2');
+
+        /* ================================================================
+           PAGE 1 — ORIGINAL MOVING-SOURCE MODEL
+           This preserves the original idea: source separation is displayed
+           directly as a horizontal shift of the red wave's starting point.
+           ================================================================ */
+        const sourceCanvas = document.getElementById('sourceCanvas');
+        const sourceCtx = sourceCanvas.getContext('2d');
+        const sourceSlider = document.getElementById('sourceSlider');
+        const sourceSliderValue = document.getElementById('sourceSliderValue');
+        const sourceStatus = document.getElementById('sourceStatus');
+        const sourceSnap = document.getElementById('sourceSnap');
+        const sourceShowWave1 = document.getElementById('sourceShowWave1');
+        const sourceShowWave2 = document.getElementById('sourceShowWave2');
+        const sourceShowResultant = document.getElementById('sourceShowResultant');
+
+        const SOURCE_MAX_LAMBDA = 3.5;
+        const SOURCE_START_PADDING = 50;
+        const sourceAmplitude = 50;
+        let sourceWidth = 0;
+        let sourceHeight = 0;
+        let sourceCenterY = 0;
+        let sourceWavelengthPixels = 100;
+        let sourceFrequency = (2 * Math.PI) / sourceWavelengthPixels;
+        let sourceShiftLambda = 0;
+
+        function resizeSourceCanvas() {
+            const rect = sourceCanvas.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+
+            const dpr = window.devicePixelRatio || 1;
+            sourceCanvas.width = Math.round(rect.width * dpr);
+            sourceCanvas.height = Math.round(rect.height * dpr);
+            sourceCtx.setTransform(1, 0, 0, 1, 0, 0);
+            sourceCtx.scale(dpr, dpr);
+
+            sourceWidth = rect.width;
+            sourceHeight = rect.height;
+            sourceCenterY = sourceHeight / 2;
+            const availableTrackWidth = Math.max(140, sourceWidth - (SOURCE_START_PADDING * 2));
+            sourceWavelengthPixels = availableTrackWidth / SOURCE_MAX_LAMBDA;
+            sourceFrequency = (2 * Math.PI) / sourceWavelengthPixels;
+            drawSourcePage();
+        }
+
+        window.addEventListener('resize', resizeSourceCanvas);
+        const sourceResizeObserver = new ResizeObserver(resizeSourceCanvas);
+        sourceResizeObserver.observe(sourceCanvas);
+
+        sourceSlider.addEventListener('input', (event) => {
+            sourceShiftLambda = Number(event.target.value);
+            updateSourceUI();
+            drawSourcePage();
+        });
+
+        sourceSnap.addEventListener('change', () => {
+            sourceSlider.step = sourceSnap.checked ? '0.5' : '0.01';
+            if (sourceSnap.checked) {
+                sourceShiftLambda = Math.round(Number(sourceSlider.value) * 2) / 2;
+                sourceSlider.value = String(sourceShiftLambda);
+                updateSourceUI();
+                drawSourcePage();
+            }
+        });
+
+        [sourceShowWave1, sourceShowWave2, sourceShowResultant].forEach((checkbox) => {
+            checkbox.addEventListener('change', drawSourcePage);
+        });
+
+        function updateSourceUI() {
+            const valueText = sourceShiftLambda.toFixed(2);
+            sourceSliderValue.textContent = `${valueText} λ`;
+            sourceSlider.setAttribute('aria-valuenow', valueText);
+            sourceSlider.setAttribute('aria-valuetext', `${valueText} wavelengths`);
+
+            const tolerance = 0.0051;
+            const distanceFromInteger = Math.abs(sourceShiftLambda - Math.round(sourceShiftLambda));
+            const nearestHalf = Math.round(sourceShiftLambda - 0.5) + 0.5;
+            const distanceFromHalf = Math.abs(sourceShiftLambda - nearestHalf);
+
+            if (distanceFromInteger <= tolerance) {
+                sourceStatus.textContent = `Δ = ${valueText}λ · Constructive`;
+                sourceStatus.className = 'absolute top-4 right-4 bg-green-100 border-green-300 text-green-800 px-4 py-2 rounded shadow-md border font-mono text-sm font-bold transition-colors';
+            } else if (distanceFromHalf <= tolerance) {
+                sourceStatus.textContent = `Δ = ${valueText}λ · Destructive`;
+                sourceStatus.className = 'absolute top-4 right-4 bg-red-100 border-red-300 text-red-800 px-4 py-2 rounded shadow-md border font-mono text-sm font-bold transition-colors';
+            } else {
+                sourceStatus.textContent = `Δ = ${valueText}λ · Partial`;
+                sourceStatus.className = 'absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-600 px-4 py-2 rounded shadow-md border border-slate-200 font-mono text-sm font-bold transition-colors';
+            }
+        }
+
+        function drawSourceWave(color, startX, opacity) {
+            sourceCtx.save();
+            sourceCtx.strokeStyle = color;
+            sourceCtx.lineWidth = 3;
+            sourceCtx.lineJoin = 'round';
+            sourceCtx.globalAlpha = opacity;
+            sourceCtx.beginPath();
+
+            let firstPoint = true;
+            for (let x = Math.floor(startX); x <= sourceWidth; x += 1) {
+                const displacement = Math.sin((x - startX) * sourceFrequency) * sourceAmplitude;
+                const y = sourceCenterY - displacement;
+                if (firstPoint) {
+                    sourceCtx.moveTo(x, y);
+                    firstPoint = false;
+                } else {
+                    sourceCtx.lineTo(x, y);
+                }
+            }
+            sourceCtx.stroke();
+            sourceCtx.restore();
+        }
+
+        function drawSourceResultant(blueStartX, redStartX) {
+            sourceCtx.save();
+            sourceCtx.strokeStyle = '#7e22ce';
+            sourceCtx.lineWidth = 4;
+            sourceCtx.lineJoin = 'round';
+            sourceCtx.beginPath();
+
+            for (let x = 0; x <= sourceWidth; x += 1) {
+                const blue = x >= blueStartX
+                    ? Math.sin((x - blueStartX) * sourceFrequency) * sourceAmplitude
+                    : 0;
+                const red = x >= redStartX
+                    ? Math.sin((x - redStartX) * sourceFrequency) * sourceAmplitude
+                    : 0;
+                const y = sourceCenterY - (blue + red);
+                if (x === 0) sourceCtx.moveTo(x, y);
+                else sourceCtx.lineTo(x, y);
+            }
+            sourceCtx.stroke();
+            sourceCtx.restore();
+        }
+
+        function drawSourceLabel(x, color, label, verticalOffset) {
+            const size = 24;
+            const y = sourceCenterY + verticalOffset;
+            sourceCtx.save();
+
+            if (verticalOffset !== 0) {
+                sourceCtx.strokeStyle = color;
+                sourceCtx.lineWidth = 1.5;
+                sourceCtx.globalAlpha = 0.65;
+                sourceCtx.beginPath();
+                sourceCtx.moveTo(x, sourceCenterY);
+                sourceCtx.lineTo(x, y);
+                sourceCtx.stroke();
+                sourceCtx.globalAlpha = 1;
+            }
+
+            sourceCtx.fillStyle = color;
+            sourceCtx.shadowColor = 'rgba(0,0,0,0.14)';
+            sourceCtx.shadowBlur = 4;
+            sourceCtx.shadowOffsetY = 2;
+            sourceCtx.fillRect(x - size / 2, y - size / 2, size, size);
+            sourceCtx.shadowColor = 'transparent';
+            sourceCtx.strokeStyle = 'rgba(0,0,0,0.25)';
+            sourceCtx.lineWidth = 1;
+            sourceCtx.strokeRect(x - size / 2, y - size / 2, size, size);
+            sourceCtx.fillStyle = '#ffffff';
+            sourceCtx.font = 'bold 10px system-ui, sans-serif';
+            sourceCtx.textAlign = 'center';
+            sourceCtx.textBaseline = 'middle';
+            sourceCtx.fillText(label, x, y);
+            sourceCtx.restore();
+        }
+
+        function drawSourcePage() {
+            if (sourceWidth === 0 || sourceHeight === 0) return;
+            sourceCtx.clearRect(0, 0, sourceWidth, sourceHeight);
+            sourceCtx.fillStyle = '#ffffff';
+            sourceCtx.fillRect(0, 0, sourceWidth, sourceHeight);
+
+            sourceCtx.save();
+            sourceCtx.strokeStyle = '#cbd5e1';
+            sourceCtx.lineWidth = 2;
+            sourceCtx.setLineDash([10, 10]);
+            sourceCtx.beginPath();
+            sourceCtx.moveTo(0, sourceCenterY);
+            sourceCtx.lineTo(sourceWidth, sourceCenterY);
+            sourceCtx.stroke();
+            sourceCtx.restore();
+
+            const blueSourceX = SOURCE_START_PADDING;
+            const redSourceX = SOURCE_START_PADDING + (sourceShiftLambda * sourceWavelengthPixels);
+            const componentOpacity = sourceShowResultant.checked ? 0.5 : 1;
+
+            if (sourceShowWave1.checked) drawSourceWave('#2563eb', blueSourceX, componentOpacity);
+            if (sourceShowWave2.checked) drawSourceWave('#ef4444', redSourceX, componentOpacity);
+            if (sourceShowResultant.checked) drawSourceResultant(blueSourceX, redSourceX);
+
+            const labelsWouldOverlap = Math.abs(redSourceX - blueSourceX) < 32;
+            if (sourceShowWave1.checked) {
+                drawSourceLabel(blueSourceX, '#2563eb', 'S1', labelsWouldOverlap ? -22 : 0);
+            }
+            if (sourceShowWave2.checked) {
+                drawSourceLabel(redSourceX, '#ef4444', 'S2', labelsWouldOverlap ? 22 : 0);
+            }
+        }
+
+        /* ================================================================
+           PAGE 2 — FIXED-SOURCE / MOVING-DETECTOR MODEL
+           ================================================================ */
+        const canvas = document.getElementById('waveCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const slider = document.getElementById('phaseSlider');
+        const sliderValDisplay = document.getElementById('sliderValue');
+        const statusIndicator = document.getElementById('statusIndicator');
+        const snapToggle = document.getElementById('snapToggle');
+        const showWave1Cb = document.getElementById('showWave1');
+        const showWave2Cb = document.getElementById('showWave2');
+        const showResultantCb = document.getElementById('showResultant');
+        const animationToggle = document.getElementById('animationToggle');
+        const animationState = document.getElementById('animationState');
+
+        const MAX_LAMBDA = 3.5;
+        const amplitude = 42;
+        const angularSpeed = 3.2;
+
+        let width = 0;
+        let height = 0;
+        let wavelengthPixels = 110;
+        let frequency = (2 * Math.PI) / wavelengthPixels;
+        let phaseShiftLambda = 0;
+        let time = 0;
+        let isAnimating = false;
+        let previousFrameTime = null;
+        let animationFrameId = null;
+
+        function resize() {
+            const rect = canvas.getBoundingClientRect();
+            if (rect.width === 0 || rect.height === 0) return;
+
+            const dpr = window.devicePixelRatio || 1;
+            canvas.width = Math.round(rect.width * dpr);
+            canvas.height = Math.round(rect.height * dpr);
+            ctx.setTransform(1, 0, 0, 1, 0, 0);
+            ctx.scale(dpr, dpr);
+
+            width = rect.width;
+            height = rect.height;
+            wavelengthPixels = Math.max(70, Math.min(125, (width - 70) / 5.5));
+            frequency = (2 * Math.PI) / wavelengthPixels;
+            draw();
+        }
+
+        window.addEventListener('resize', resize);
+        const resizeObserver = new ResizeObserver(resize);
+        resizeObserver.observe(canvas);
+
+        slider.addEventListener('input', (event) => {
+            phaseShiftLambda = Number(event.target.value);
+            updateUI();
+            draw();
+        });
+
+        snapToggle.addEventListener('change', () => {
+            slider.step = snapToggle.checked ? '0.5' : '0.01';
+            if (snapToggle.checked) {
+                phaseShiftLambda = Math.round(Number(slider.value) * 2) / 2;
+                slider.value = String(phaseShiftLambda);
+                updateUI();
+                draw();
+            }
+        });
+
+        [showWave1Cb, showWave2Cb, showResultantCb].forEach((checkbox) => {
+            checkbox.addEventListener('change', draw);
+        });
+
+        animationToggle.addEventListener('click', () => {
+            setAnimation(!isAnimating);
+        });
+
+        function setAnimation(running) {
+            isAnimating = running;
+            animationToggle.classList.toggle('is-running', running);
+            animationToggle.setAttribute('aria-pressed', String(running));
+            animationToggle.textContent = running ? 'Pause animation' : 'Animate waves';
+            animationState.textContent = running ? 'Continuous vibration' : 'Static snapshot';
+
+            if (running && animationFrameId === null) {
+                previousFrameTime = null;
+                animationFrameId = requestAnimationFrame(animate);
+            } else if (!running) {
+                previousFrameTime = null;
+                draw();
+            }
+        }
+
+        function updateUI() {
+            const valueText = phaseShiftLambda.toFixed(2);
+            sliderValDisplay.textContent = `${valueText} λ`;
+            slider.setAttribute('aria-valuenow', valueText);
+            slider.setAttribute('aria-valuetext', `${valueText} wavelengths`);
+
+            const tolerance = 0.0051;
+            const distanceFromInteger = Math.abs(phaseShiftLambda - Math.round(phaseShiftLambda));
+            const nearestHalf = Math.round(phaseShiftLambda - 0.5) + 0.5;
+            const distanceFromHalf = Math.abs(phaseShiftLambda - nearestHalf);
+
+            if (distanceFromInteger <= tolerance) {
+                statusIndicator.textContent = `Δ = ${valueText}λ · Constructive`;
+                statusIndicator.className = 'absolute top-4 right-4 bg-green-100 border-green-300 text-green-800 px-4 py-2 rounded shadow-md border font-mono text-sm font-bold transition-colors';
+            } else if (distanceFromHalf <= tolerance) {
+                statusIndicator.textContent = `Δ = ${valueText}λ · Destructive`;
+                statusIndicator.className = 'absolute top-4 right-4 bg-red-100 border-red-300 text-red-800 px-4 py-2 rounded shadow-md border font-mono text-sm font-bold transition-colors';
+            } else {
+                statusIndicator.textContent = `Δ = ${valueText}λ · Partial`;
+                statusIndicator.className = 'absolute top-4 right-4 bg-white/90 backdrop-blur text-slate-600 px-4 py-2 rounded shadow-md border border-slate-200 font-mono text-sm font-bold transition-colors';
+            }
+        }
+
+        function drawText(text, x, y, options = {}) {
+            ctx.save();
+            ctx.fillStyle = options.color || '#475569';
+            ctx.font = options.font || '14px system-ui, -apple-system, Segoe UI, sans-serif';
+            ctx.textAlign = options.align || 'left';
+            ctx.textBaseline = options.baseline || 'alphabetic';
+            ctx.fillText(text, x, y);
+            ctx.restore();
+        }
+
+        function drawSource(x, y, color, label) {
+            ctx.save();
+            ctx.shadowColor = 'rgba(15, 23, 42, 0.18)';
+            ctx.shadowBlur = 7;
+            ctx.shadowOffsetY = 2;
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, 18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+
+            drawText(label, x, y + 1, {
+                color: '#ffffff',
+                font: 'bold 12px system-ui, sans-serif',
+                align: 'center',
+                baseline: 'middle'
+            });
+        }
+
+        function drawWavefronts(startX, endX, y, color, lambdaDiagram) {
+            const direction = Math.sign(endX - startX);
+            const pathLength = Math.abs(endX - startX);
+            const waveSpeed = lambdaDiagram * 0.75;
+            const offset = (time * waveSpeed) % lambdaDiagram;
+
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 2;
+            ctx.globalAlpha = 0.9;
+            for (let distance = offset; distance < pathLength; distance += lambdaDiagram) {
+                const x = startX + direction * distance;
+                ctx.beginPath();
+                ctx.moveTo(x, y - 8);
+                ctx.lineTo(x, y + 8);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawGeometry() {
+            const sourceY = 126;
+            const source1X = 72;
+            const source2X = width - 72;
+            const sourceSeparation = Math.max(150, source2X - source1X);
+            const endClearance = Math.min(62, sourceSeparation * 0.22);
+            const maximumShownDifference = Math.max(70, sourceSeparation - 2 * endClearance);
+            const lambdaDiagram = maximumShownDifference / MAX_LAMBDA;
+            const detectorX = (source1X + source2X) / 2 + (phaseShiftLambda * lambdaDiagram) / 2;
+            const phaseDifference = 2 * Math.PI * phaseShiftLambda;
+            const detectorSignal = Math.sin(-angularSpeed * time) + Math.sin(-angularSpeed * time - phaseDifference);
+
+            drawText('Fixed coherent sources and a moving detector', 18, 70, {
+                color: '#334155',
+                font: 'bold 15px system-ui, sans-serif'
+            });
+            drawText(`Path difference  Δ = |r1 − r2| = ${phaseShiftLambda.toFixed(2)}λ`, 18, 92, {
+                color: '#64748b',
+                font: '13px system-ui, sans-serif'
+            });
+
+            ctx.save();
+            ctx.lineCap = 'round';
+            ctx.lineWidth = 6;
+            ctx.globalAlpha = 0.26;
+            ctx.strokeStyle = '#2563eb';
+            ctx.beginPath();
+            ctx.moveTo(source1X, sourceY);
+            ctx.lineTo(detectorX, sourceY);
+            ctx.stroke();
+            ctx.strokeStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(source2X, sourceY);
+            ctx.lineTo(detectorX, sourceY);
+            ctx.stroke();
+            ctx.restore();
+
+            if (showWave1Cb.checked) {
+                drawWavefronts(source1X + 18, detectorX - 12, sourceY, '#2563eb', lambdaDiagram);
+            }
+            if (showWave2Cb.checked) {
+                drawWavefronts(source2X - 18, detectorX + 12, sourceY, '#ef4444', lambdaDiagram);
+            }
+
+            drawText('r1', (source1X + detectorX) / 2, sourceY - 16, {
+                color: '#1d4ed8', font: 'bold 13px system-ui, sans-serif', align: 'center'
+            });
+            drawText('r2', (source2X + detectorX) / 2, sourceY - 16, {
+                color: '#b91c1c', font: 'bold 13px system-ui, sans-serif', align: 'center'
+            });
+
+            drawSource(source1X, sourceY, '#2563eb', 'S1');
+            drawSource(source2X, sourceY, '#ef4444', 'S2');
+
+            ctx.save();
+            const glow = 4 + 3 * Math.abs(detectorSignal / 2);
+            ctx.fillStyle = 'rgba(15, 118, 110, 0.16)';
+            ctx.beginPath();
+            ctx.arc(detectorX, sourceY, 18 + glow, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#0f766e';
+            ctx.beginPath();
+            ctx.arc(detectorX, sourceY, 11, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+            drawText('D', detectorX, sourceY + 1, {
+                color: '#ffffff', font: 'bold 11px system-ui, sans-serif', align: 'center', baseline: 'middle'
+            });
+            drawText('detector', detectorX, sourceY + 34, {
+                color: '#0f766e', font: 'bold 12px system-ui, sans-serif', align: 'center'
+            });
+
+            ctx.save();
+            ctx.strokeStyle = '#e2e8f0';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(18, 188);
+            ctx.lineTo(width - 18, 188);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawCurve(getDisplacement, midY, color, lineWidth, dash = [], dashOffset = 0, opacity = 1) {
+            const plotLeft = 24;
+            const plotRight = width - 18;
+            ctx.save();
+            ctx.strokeStyle = color;
+            ctx.lineWidth = lineWidth;
+            ctx.lineJoin = 'round';
+            ctx.lineCap = 'round';
+            ctx.globalAlpha = opacity;
+            ctx.setLineDash(dash);
+            ctx.lineDashOffset = dashOffset;
+            ctx.beginPath();
+            for (let x = plotLeft; x <= plotRight; x += 1) {
+                const y = midY - getDisplacement(x);
+                if (x === plotLeft) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawWavelengthBracket(x, y) {
+            ctx.save();
+            ctx.strokeStyle = '#94a3b8';
+            ctx.fillStyle = '#64748b';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            ctx.lineTo(x + wavelengthPixels, y);
+            ctx.moveTo(x, y - 5);
+            ctx.lineTo(x, y + 5);
+            ctx.moveTo(x + wavelengthPixels, y - 5);
+            ctx.lineTo(x + wavelengthPixels, y + 5);
+            ctx.stroke();
+            ctx.font = '13px system-ui, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('one wavelength, λ', x + wavelengthPixels / 2, y - 8);
+            ctx.restore();
+        }
+
+        function drawArrivalComparison() {
+            const compactLayout = width < 560;
+            const plotTop = compactLayout ? 252 : 244;
+            const plotBottom = height - 42;
+            const midY = (plotTop + plotBottom) / 2;
+            const plotLeft = 24;
+            const waveAmplitude = Math.min(amplitude, (plotBottom - plotTop) * 0.23);
+            const phaseDifference = 2 * Math.PI * phaseShiftLambda;
+            const phaseAt = (x) => ((x - plotLeft) * frequency) - angularSpeed * time;
+            // D moves toward S2, so the S1 (blue) path is longer by Δ.
+            const blueAt = (x) => waveAmplitude * Math.sin(phaseAt(x) - phaseDifference);
+            const redAt = (x) => waveAmplitude * Math.sin(phaseAt(x));
+            const sumAt = (x) => {
+                const sum = blueAt(x) + redAt(x);
+                return Math.abs(sum) < 1e-9 ? 0 : sum;
+            };
+
+            drawText(compactLayout ? 'Arrival waves at D' : 'Waves arriving at D — phase-comparison view', 18, 214, {
+                color: '#334155', font: 'bold 15px system-ui, sans-serif'
+            });
+            drawText(compactLayout ? 'Same instant; both sources remain fixed.' : 'The curves are aligned for comparison; they do not show the sources moving.', 18, 234, {
+                color: '#64748b', font: '12px system-ui, sans-serif'
+            });
+
+            ctx.save();
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([8, 7]);
+            ctx.beginPath();
+            ctx.moveTo(18, midY);
+            ctx.lineTo(width - 18, midY);
+            ctx.stroke();
+            ctx.restore();
+
+            if (showResultantCb.checked) {
+                drawCurve(sumAt, midY, '#7e22ce', 4.5);
+            }
+            const componentOpacity = showResultantCb.checked ? 0.82 : 1;
+            if (showWave1Cb.checked) {
+                drawCurve(blueAt, midY, '#2563eb', 2.7, [9, 7], 0, componentOpacity);
+            }
+            if (showWave2Cb.checked) {
+                drawCurve(redAt, midY, '#ef4444', 2.7, [9, 7], 8, componentOpacity);
+            }
+
+            drawWavelengthBracket(38, height - 17);
+        }
+
+        function draw() {
+            if (width === 0 || height === 0) return;
+            ctx.clearRect(0, 0, width, height);
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, width, height);
+            drawGeometry();
+            drawArrivalComparison();
+        }
+
+        function animate(frameTime) {
+            if (!isAnimating) {
+                animationFrameId = null;
+                previousFrameTime = null;
+                return;
+            }
+            if (previousFrameTime === null) previousFrameTime = frameTime;
+            const elapsed = Math.min((frameTime - previousFrameTime) / 1000, 0.05);
+            previousFrameTime = frameTime;
+            time += elapsed;
+            draw();
+            animationFrameId = requestAnimationFrame(animate);
+        }
+
+        function showModelPage(pageNumber) {
+            const showFirstModel = pageNumber === 1;
+            model1Page.hidden = !showFirstModel;
+            model2Page.hidden = showFirstModel;
+            model1Tab.classList.toggle('active', showFirstModel);
+            model2Tab.classList.toggle('active', !showFirstModel);
+            model1Tab.setAttribute('aria-selected', String(showFirstModel));
+            model2Tab.setAttribute('aria-selected', String(!showFirstModel));
+
+            if (showFirstModel) {
+                if (isAnimating) setAnimation(false);
+                resizeSourceCanvas();
+            } else {
+                resize();
+            }
+        }
+
+        model1Tab.addEventListener('click', () => showModelPage(1));
+        model2Tab.addEventListener('click', () => showModelPage(2));
+        goToModel2.addEventListener('click', () => {
+            showModelPage(2);
+            model2Tab.focus();
+        });
+
+        updateSourceUI();
+        updateUI();
+        showModelPage(1);
+    </script>
+</body>
+</html>

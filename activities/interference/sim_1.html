@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Wave Interference Lab 1 — Superposition &amp; Path Difference</title>
+
+<style>
+  :root{
+    --bg:#0f172a;
+    --panel:#111c33;
+    --panel2:#1e293b;
+    --border:#23314f;
+    --text:#e5e7eb;
+    --muted:#94a3b8;
+    --blue:#60a5fa;
+    --red:#f87171;
+    --amber:#f59e0b;
+    --green:#10b981;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;
+    padding:18px;
+    background:var(--bg);
+    color:var(--text);
+    font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+  header{ max-width:980px; text-align:center; }
+  h1{ margin:6px 0 4px; color:var(--blue); font-size: clamp(20px, 2.6vw, 30px); }
+  p{ margin:0; color:#cbd5f5; font-size:0.95rem; line-height:1.35; }
+
+  .shell{ width:min(1020px, 100%); display:flex; flex-direction:column; gap:10px; }
+
+  .tabs{ display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+  .tabbtn{
+    border:1px solid var(--border);
+    background:transparent;
+    color:var(--text);
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:800;
+    transition: transform .06s, opacity .15s, background .15s;
+  }
+  .tabbtn:hover{ opacity:.92; }
+  .tabbtn:active{ transform:scale(.98); }
+  .tabbtn.active{
+    background:rgba(96,165,250,0.14);
+    border-color: rgba(96,165,250,0.55);
+  }
+  button:focus-visible, input:focus-visible{
+    outline:3px solid rgba(147,197,253,0.9);
+    outline-offset:3px;
+  }
+
+  .panel{
+    background:var(--panel);
+    border:1px solid var(--border);
+    border-radius:12px;
+    padding:12px;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .leftgroup, .rightgroup{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    align-items:center;
+  }
+
+  .btn{
+    border:none;
+    font-weight:900;
+    padding:8px 12px;
+    border-radius:10px;
+    cursor:pointer;
+    transition: transform .06s, opacity .15s;
+    user-select:none;
+  }
+  .btn:active{ transform:scale(.98); }
+  .btn:hover{ opacity:.92; }
+  #playPauseBtn{ background:var(--green); color:#06261c; }
+  #speedBtn{ background:var(--blue); color:#071a2a; }
+  #resetBtn{ background:var(--amber); color:#2a1a03; }
+
+  .subpanel{
+    background:var(--panel2);
+    border:1px solid rgba(148,163,184,0.25);
+    border-radius:12px;
+    padding:10px 12px;
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .subpanel h3{
+    margin:0;
+    font-size:0.85rem;
+    color:var(--muted);
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .row{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  .radio{ display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  label{ cursor:pointer; user-select:none; }
+  input[type="radio"]{ transform: translateY(1px); }
+
+  .sliderwrap{ display:flex; flex-wrap:wrap; gap:10px; align-items:center; }
+  input[type="range"]{
+    width:min(520px, 70vw);
+    accent-color: var(--blue);
+    cursor:pointer;
+  }
+  .pill{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:6px 10px;
+    border-radius:999px;
+    border:1px solid rgba(148,163,184,0.25);
+    background: rgba(15,23,42,0.35);
+    color:#dbeafe;
+    font-weight:800;
+    font-size:0.9rem;
+  }
+  .hint{
+    color:var(--muted);
+    font-size:0.9rem;
+    line-height:1.35;
+  }
+
+  .snapbar{ display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .snap{
+    padding:6px 10px;
+    border-radius:10px;
+    border:1px solid rgba(148,163,184,0.25);
+    background: rgba(15,23,42,0.25);
+    color:var(--text);
+    font-weight:900;
+    cursor:pointer;
+  }
+  .snap:hover{ opacity:.92; }
+  .snap:active{ transform:scale(.98); }
+  .snap.selected{
+    border-color:rgba(96,165,250,0.8);
+    background:rgba(96,165,250,0.18);
+    color:#eff6ff;
+  }
+
+  canvas{
+    width:100%;
+    height:auto;
+    background:var(--panel2);
+    border-radius:12px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.32);
+    border:1px solid rgba(148,163,184,0.15);
+  }
+
+  .footerline{ color:var(--muted); font-size:0.85rem; text-align:center; margin-top:2px; }
+  .hidden{ display:none !important; }
+</style>
+</head>
+
+<body>
+<header>
+  <h1>Wave Interference Lab 1</h1>
+  <p>
+    <strong>Superposition &amp; Path Difference</strong><br>
+    Blue + red are the component waves. White is their resultant: <i>y</i><sub>resultant</sub> = <i>y</i><sub>blue</sub> + <i>y</i><sub>red</sub>.
+  </p>
+</header>
+
+<div class="shell">
+
+  <div class="tabs" role="tablist" aria-label="Interference activities">
+    <button class="tabbtn active" id="tab1" type="button" role="tab" aria-selected="true" aria-controls="page1Controls">1. Pulse Superposition</button>
+    <button class="tabbtn" id="tab2" type="button" role="tab" aria-selected="false" aria-controls="page2Controls">2. Wave Trains &amp; Path Difference</button>
+  </div>
+
+  <div class="panel">
+    <div class="leftgroup">
+      <button class="btn" id="playPauseBtn" type="button">Pause</button>
+      <button class="btn" id="speedBtn" type="button">Slow: OFF</button>
+      <button class="btn" id="resetBtn" type="button">Reset</button>
+    </div>
+    <div class="rightgroup">
+      <span class="pill" id="statusPill" aria-live="polite">Ready</span>
+    </div>
+  </div>
+
+  <div class="subpanel" id="page1Controls">
+    <h3>Pulse controls</h3>
+    <div class="row">
+      <div class="radio">
+        <label><input type="radio" name="p1mode" value="constructive" checked> Constructive (same sign)</label>
+        <label><input type="radio" name="p1mode" value="destructive"> Destructive (opposite sign)</label>
+      </div>
+      <div class="hint">
+        Try this: pause during overlap and predict the white displacement before checking it at the marker.
+      </div>
+    </div>
+  </div>
+
+  <div class="subpanel hidden" id="page2Controls">
+    <h3>Wave-train controls</h3>
+
+    <div class="sliderwrap">
+      <div class="pill">Path difference: <span id="deltaReadout">0.00</span> λ</div>
+      <label for="deltaSlider" class="hidden">Path difference in wavelengths</label>
+      <input id="deltaSlider" type="range" min="0" max="2" step="0.01" value="0" aria-label="Path difference in wavelengths" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0" aria-valuetext="0.00 wavelengths">
+      <div class="pill" id="classifyPill">Constructive (Δ = nλ)</div>
+    </div>
+
+    <div class="snapbar">
+      <span class="hint">Snap Δ/λ:</span>
+      <button class="snap selected" type="button" data-snap="0" aria-pressed="true">0</button>
+      <button class="snap" type="button" data-snap="0.5" aria-pressed="false">0.5</button>
+      <button class="snap" type="button" data-snap="1" aria-pressed="false">1.0</button>
+      <button class="snap" type="button" data-snap="1.5" aria-pressed="false">1.5</button>
+      <button class="snap" type="button" data-snap="2" aria-pressed="false">2.0</button>
+    </div>
+
+    <div class="hint">
+      The graph overlays two coherent waves after travelling paths that differ by <b>Δ</b>.<br>
+      A whole-wavelength difference aligns crest with crest; a half-wavelength difference aligns crest with trough.<br>
+      Therefore Δ = 0.50λ gives exact destructive interference and a zero resultant.
+    </div>
+  </div>
+
+  <canvas id="canvas" width="980" height="360"></canvas>
+
+  <div class="footerline">
+    Tip: Reset pauses at the start so you can explain the setup before running.
+  </div>
+</div>
+
+<script>
+/* =========================
+   State + UI
+   ========================= */
+const canvas = document.getElementById("canvas");
+const ctx = canvas.getContext("2d");
+
+let currentPage = 1;
+let playing = true;
+let slowMotion = false;
+
+let t = 0; // elapsed simulation time in seconds
+let previousFrameTime = null;
+const slowFactor = 0.20;
+
+let p1mode = "constructive";
+let deltaLambda = 0.0;
+
+const tab1 = document.getElementById("tab1");
+const tab2 = document.getElementById("tab2");
+
+const page1Controls = document.getElementById("page1Controls");
+const page2Controls = document.getElementById("page2Controls");
+
+const playPauseBtn = document.getElementById("playPauseBtn");
+const speedBtn = document.getElementById("speedBtn");
+const resetBtn = document.getElementById("resetBtn");
+const statusPill = document.getElementById("statusPill");
+
+const deltaSlider = document.getElementById("deltaSlider");
+const deltaReadout = document.getElementById("deltaReadout");
+const classifyPill = document.getElementById("classifyPill");
+
+function updateGlobalUI(){
+  playPauseBtn.textContent = playing ? "Pause" : "Play";
+  speedBtn.textContent = slowMotion ? "Slow: ON" : "Slow: OFF";
+  statusPill.textContent = (currentPage === 1)
+    ? `Pulse superposition | ${playing ? "Playing" : "Paused"} | ${slowMotion ? "Slow" : "Normal"}`
+    : `Wave trains | ${playing ? "Playing" : "Paused"} | ${slowMotion ? "Slow" : "Normal"} | Δ=${deltaLambda.toFixed(2)}λ`;
+}
+
+function setPage(page){
+  currentPage = page;
+  tab1.classList.toggle("active", page === 1);
+  tab2.classList.toggle("active", page === 2);
+  tab1.setAttribute("aria-selected", String(page === 1));
+  tab2.setAttribute("aria-selected", String(page === 2));
+  page1Controls.classList.toggle("hidden", page !== 1);
+  page2Controls.classList.toggle("hidden", page !== 2);
+  updateGlobalUI();
+  draw();
+}
+
+tab1.addEventListener("click", ()=>setPage(1));
+tab2.addEventListener("click", ()=>setPage(2));
+
+document.querySelectorAll('input[name="p1mode"]').forEach(r=>{
+  r.addEventListener("change", ()=>{
+    p1mode = r.value;
+    draw();
+  });
+});
+
+playPauseBtn.addEventListener("click", ()=>{
+  playing = !playing;
+  updateGlobalUI();
+  draw();
+});
+speedBtn.addEventListener("click", ()=>{
+  slowMotion = !slowMotion;
+  updateGlobalUI();
+});
+resetBtn.addEventListener("click", ()=>{
+  t = 0;
+  playing = false;
+  if(currentPage === 2){
+    deltaLambda = 0;
+    deltaSlider.value = "0";
+    updateDeltaUI();
+  }
+  updateGlobalUI();
+  draw();
+});
+
+/* Page 2 slider */
+function classifyDelta(delta){
+  const tol = 0.0051; // one half-step of the 0.01 slider, allowing for rounding
+  const nearestInt = Math.round(delta);
+  const distInt = Math.abs(delta - nearestInt);
+
+  const nearestHalf = Math.round(delta - 0.5) + 0.5;
+  const distHalf = Math.abs(delta - nearestHalf);
+
+  if(distInt <= tol) return { label: "Constructive (Δ = nλ)", kind: "constructive" };
+  if(distHalf <= tol) return { label: "Destructive (Δ = (n + 1/2)λ)", kind: "destructive" };
+  return { label: "Partial interference", kind: "partial" };
+}
+
+function updateDeltaUI(){
+  deltaReadout.textContent = Number(deltaLambda).toFixed(2);
+  deltaSlider.setAttribute("aria-valuenow", deltaLambda.toFixed(2));
+  deltaSlider.setAttribute("aria-valuetext", `${deltaLambda.toFixed(2)} wavelengths`);
+  const c = classifyDelta(deltaLambda);
+  classifyPill.textContent = c.label;
+
+  document.querySelectorAll(".snap").forEach(btn=>{
+    const selected = Math.abs(Number(btn.dataset.snap) - deltaLambda) < 1e-9;
+    btn.classList.toggle("selected", selected);
+    btn.setAttribute("aria-pressed", String(selected));
+  });
+
+  if(c.kind === "constructive"){
+    classifyPill.style.borderColor = "rgba(16,185,129,0.75)";
+    classifyPill.style.background = "rgba(16,185,129,0.12)";
+    classifyPill.style.color = "#d1fae5";
+  } else if(c.kind === "destructive"){
+    classifyPill.style.borderColor = "rgba(248,113,113,0.75)";
+    classifyPill.style.background = "rgba(248,113,113,0.12)";
+    classifyPill.style.color = "#fee2e2";
+  } else {
+    classifyPill.style.borderColor = "rgba(96,165,250,0.55)";
+    classifyPill.style.background = "rgba(96,165,250,0.12)";
+    classifyPill.style.color = "#dbeafe";
+  }
+}
+
+deltaSlider.addEventListener("input", ()=>{
+  deltaLambda = Number(deltaSlider.value);
+  updateDeltaUI();
+  updateGlobalUI();
+  draw();
+});
+
+document.querySelectorAll(".snap").forEach(btn=>{
+  btn.addEventListener("click", ()=>{
+    const v = Number(btn.getAttribute("data-snap"));
+    deltaLambda = v;
+    deltaSlider.value = String(v);
+    updateDeltaUI();
+    updateGlobalUI();
+    draw();
+  });
+});
+
+/* =========================
+   Drawing helpers
+   ========================= */
+function clear(){ ctx.clearRect(0,0,canvas.width, canvas.height); }
+
+function cleanNearZero(value){
+  return Math.abs(value) < 1e-9 ? 0 : value;
+}
+
+function drawCurve(getY, midY, { color, width, dash=[], dashOffset=0 }){
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width;
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.setLineDash(dash);
+  ctx.lineDashOffset = dashOffset;
+  ctx.beginPath();
+  for(let x=0; x<=canvas.width; x++){
+    const y = getY(x);
+    if(x === 0) ctx.moveTo(x, midY - y);
+    else ctx.lineTo(x, midY - y);
+  }
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawMidline(midY){
+  ctx.save();
+  ctx.strokeStyle = "rgba(148,163,184,0.35)";
+  ctx.lineWidth = 1;
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(0, midY);
+  ctx.lineTo(canvas.width, midY);
+  ctx.stroke();
+  ctx.restore();
+}
+
+function drawLabel(text, x, y, color="rgba(226,232,240,0.88)"){
+  ctx.save();
+  ctx.fillStyle = color;
+  ctx.font = "14px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(text, x, y);
+  ctx.restore();
+}
+
+function drawWavelengthBracket(xStart, y, lambdaPx){
+  ctx.save();
+  ctx.strokeStyle = "rgba(226,232,240,0.55)";
+  ctx.lineWidth = 1.5;
+
+  ctx.beginPath();
+  ctx.moveTo(xStart, y);
+  ctx.lineTo(xStart + lambdaPx, y);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.moveTo(xStart, y-6);
+  ctx.lineTo(xStart, y+6);
+  ctx.moveTo(xStart + lambdaPx, y-6);
+  ctx.lineTo(xStart + lambdaPx, y+6);
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(226,232,240,0.9)";
+  ctx.font = "14px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText("λ", xStart + lambdaPx/2 - 4, y - 10);
+  ctx.restore();
+}
+
+/* =========================
+   Page 1: Pulses
+   ========================= */
+function pulse(x, center, amp=55){
+  const width = 52;
+  return amp * Math.exp(-((x-center)**2)/(2*width*width));
+}
+
+function drawPage1(){
+  clear();
+  const midY = canvas.height/2;
+  drawMidline(midY);
+
+  const speed = 78;
+  const c1 = 230 + speed * t;
+  const c2 = canvas.width - 230 - speed * t;
+
+  const sign = (p1mode === "constructive") ? 1 : -1;
+
+  const blueAt = x => pulse(x, c1);
+  const redAt = x => sign * pulse(x, c2);
+  const sumAt = x => blueAt(x) + redAt(x);
+
+  // Draw the resultant first, then place the components in front so none are masked.
+  drawCurve(sumAt, midY, { color:"white", width:4.5 });
+  drawCurve(blueAt, midY, { color:"#60a5fa", width:2.5, dash:[8,7] });
+  drawCurve(redAt, midY, { color:"#f87171", width:2.5, dash:[8,7], dashOffset:7.5 });
+
+  const x0 = Math.round(canvas.width*0.55);
+  const y1 = blueAt(x0);
+  const y2 = redAt(x0);
+  const ys = cleanNearZero(sumAt(x0));
+
+  ctx.save();
+  ctx.strokeStyle = "rgba(226,232,240,0.22)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(x0, 0);
+  ctx.lineTo(x0, canvas.height);
+  ctx.stroke();
+  ctx.restore();
+
+  function dot(x, y, color){
+    ctx.save();
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, 4, 0, Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  dot(x0, midY - ys, "white");
+  dot(x0, midY - y1, "#60a5fa");
+  dot(x0, midY - y2, "#f87171");
+
+  drawLabel(`At x = marker: blue ${y1.toFixed(1)} + red ${y2.toFixed(1)} = white ${ys.toFixed(1)}`, 14, 24);
+}
+
+/* =========================
+   Page 2: Coherent wave trains with a uniform phase difference
+   The display overlays two waves arriving after paths that differ by Δ:
+     yBlue(x,t) = A sin(ωt - kx)
+     yRed(x,t)  = A sin(ωt - kx + 2πΔ/λ)
+   At Δ = 0.50λ, yRed = -yBlue at every x, so the resultant is exactly zero.
+   ========================= */
+function drawPage2(){
+  clear();
+  const midY = canvas.height/2;
+  drawMidline(midY);
+
+  const lambdaPx = 130;               // display wavelength
+  const k = (2*Math.PI) / lambdaPx;
+  const A = 48;
+
+  const c = 95;                       // display speed in pixels per second
+  const omega = c * k;
+  const xM = Math.round(canvas.width/2);
+  const phaseDifference = 2*Math.PI*deltaLambda;
+  const blueAt = x => A * Math.sin(omega*t - k*x);
+  const redAt = x => A * Math.sin(omega*t - k*x + phaseDifference);
+  const sumAt = x => cleanNearZero(blueAt(x) + redAt(x));
+
+  // Draw the resultant first so the dashed component waves remain visible.
+  drawCurve(sumAt, midY, { color:"white", width:4.5 });
+  drawCurve(blueAt, midY, { color:"#60a5fa", width:2.5, dash:[8,7] });
+  drawCurve(redAt, midY, { color:"#f87171", width:2.5, dash:[8,7], dashOffset:7.5 });
+
+  // λ bracket
+  drawWavelengthBracket(60, canvas.height - 34, lambdaPx);
+
+  // Marker line + instantaneous readout
+  ctx.save();
+  ctx.strokeStyle = "rgba(226,232,240,0.22)";
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(xM, 0);
+  ctx.lineTo(xM, canvas.height);
+  ctx.stroke();
+  ctx.restore();
+
+  const yBlue = blueAt(xM);
+  const yRed  = redAt(xM);
+  const ySum  = sumAt(xM);
+
+  function dot(x,y,color){
+    ctx.save();
+    ctx.fillStyle=color;
+    ctx.beginPath();
+    ctx.arc(x,y,4,0,Math.PI*2);
+    ctx.fill();
+    ctx.restore();
+  }
+  dot(xM, midY - ySum,  "white");
+  dot(xM, midY - yBlue, "#60a5fa");
+  dot(xM, midY - yRed,  "#f87171");
+
+  drawLabel(`Marker: Δ = ${deltaLambda.toFixed(2)}λ | blue ${yBlue.toFixed(1)} + red ${yRed.toFixed(1)} = white ${ySum.toFixed(1)}`, 14, 24);
+}
+
+/* =========================
+   Main draw / animate
+   ========================= */
+function draw(){
+  if(currentPage === 1) drawPage1();
+  else drawPage2();
+}
+
+function animate(frameTime){
+  if(previousFrameTime === null) previousFrameTime = frameTime;
+  const elapsed = Math.min((frameTime - previousFrameTime) / 1000, 0.05);
+  previousFrameTime = frameTime;
+
+  if(playing){
+    t += elapsed * (slowMotion ? slowFactor : 1);
+
+    // Replay the pulse encounter after both pulses have left the display.
+    if(currentPage === 1 && 230 + 78*t > canvas.width + 120) t = 0;
+  }
+  draw();
+  requestAnimationFrame(animate);
+}
+
+/* Init */
+updateDeltaUI();
+updateGlobalUI();
+draw();
+requestAnimationFrame(animate);
+</script>
+
+</body>
+</html>
