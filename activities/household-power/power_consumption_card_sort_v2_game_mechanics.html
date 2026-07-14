@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Power Use Estimation Card Sort</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --primary-color: #4f46e5;
+            --accent-color: #7c3aed;
+            --match-color: #2563eb;
+            --try-color: #c2410c;
+            --bg-color: #ffffff;
+            --text-color: #1f2937;
+            --card-bg: #ffffff;
+            --soft-bg: #f8fafc;
+            --card-border: #cbd5e1;
+            --muted-text: #64748b;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #111827;
+                --text-color: #e5e7eb;
+                --card-bg: #1f2937;
+                --soft-bg: #0f172a;
+                --card-border: #475569;
+                --muted-text: #cbd5e1;
+            }
+        }
+
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border: 2px solid var(--card-border);
+            transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(15, 23, 42, 0.12);
+        }
+
+        .range-card {
+            border-left: 8px solid #94a3b8;
+        }
+
+        .range-card.band-1 { border-left-style: dotted; }
+        .range-card.band-2 { border-left-style: dashed; }
+        .range-card.band-3 { border-left-style: solid; }
+        .range-card.band-4 { border-left-width: 12px; }
+
+        .selected {
+            outline: 4px solid rgba(79, 70, 229, 0.35);
+            border-color: var(--primary-color);
+        }
+
+        .matched {
+            border-color: var(--match-color);
+            background-image: linear-gradient(0deg, rgba(37, 99, 235, 0.08), rgba(37, 99, 235, 0.08));
+        }
+
+        .not-intended {
+            border-color: var(--try-color);
+            background-image: linear-gradient(0deg, rgba(194, 65, 12, 0.10), rgba(194, 65, 12, 0.10));
+        }
+
+        .disabled {
+            opacity: 0.62;
+            pointer-events: none;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.25rem;
+            border: 1px solid var(--card-border);
+            color: var(--muted-text);
+            border-radius: 9999px;
+            padding: 0.15rem 0.55rem;
+            font-size: 0.75rem;
+            line-height: 1rem;
+        }
+
+        .timer-bar {
+            height: 8px;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-color));
+            transition: width 1s linear;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.035); }
+        }
+
+        .pulse {
+            animation: pulse 0.7s ease-in-out infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+
+        .shake {
+            animation: shake 0.25s ease-in-out 2;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .mono {
+            font-variant-numeric: tabular-nums;
+        }
+    </style>
+</head>
+<body>
+    <main class="container mx-auto px-4 py-6 md:py-8 max-w-6xl">
+        <header class="bg-gradient-to-r from-indigo-600 to-violet-700 text-white p-5 rounded-2xl shadow-lg mb-5">
+            <h1 class="text-2xl md:text-3xl font-bold text-center">Power Use Estimation Card Sort</h1>
+            <p class="text-center mt-2 max-w-3xl mx-auto">
+                Match each appliance to a <strong>typical power range</strong>. Real appliances vary by model, size, setting, and region.
+            </p>
+        </header>
+
+        <section class="mb-5 grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <div class="lg:col-span-2 p-4 rounded-xl shadow-sm" style="background: var(--soft-bg);">
+                <h2 class="font-bold text-lg mb-2">How to play</h2>
+                <ol class="list-decimal pl-6 space-y-1">
+                    <li>Select one power-range card.</li>
+                    <li>Select the appliance it most reasonably matches.</li>
+                    <li>Look for the text feedback: <strong>Matched</strong>, <strong>Try again</strong>, or <strong>Plausible but not intended</strong>.</li>
+                    <li>Use hints carefully: each round has only <strong>3 hints</strong>, and a hint reveals one reasoning clue for the selected range.</li>
+                    <li>After the game, compare <strong>power × time</strong> to discuss energy use.</li>
+                </ol>
+                <p class="mt-3 text-sm" style="color: var(--muted-text);">
+                    Teacher note: the numbers are classroom estimates, not official standards. For a real device, read the rating label.
+                </p>
+            </div>
+
+            <div class="p-4 rounded-xl shadow-sm" style="background: var(--soft-bg);">
+                <div class="flex items-center justify-between gap-3">
+                    <div>
+                        <span>Score: </span>
+                        <span id="score" class="font-bold mono">0</span>/<span id="total-pairs" class="mono">10</span>
+                    </div>
+                    <div>
+                        <span>Time: </span>
+                        <span id="timer" class="font-bold mono">6:00</span>
+                    </div>
+                </div>
+                <div class="w-full mt-3 bg-slate-200 dark:bg-slate-700 rounded-full h-2">
+                    <div id="timer-bar" class="timer-bar rounded-full" style="width: 100%"></div>
+                </div>
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <button id="hint-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors">
+                        Hint
+                    </button>
+                    <button id="reset-btn" class="px-4 py-2 bg-slate-600 hover:bg-slate-700 text-white rounded-lg transition-colors">
+                        Reset
+                    </button>
+                    <button id="reveal-btn" class="hidden px-4 py-2 bg-violet-600 hover:bg-violet-700 text-white rounded-lg transition-colors">
+                        Reveal
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="message-area" class="hidden mb-5 p-3 rounded-xl border text-sm" style="background: var(--soft-bg); border-color: var(--card-border);"></section>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xl font-bold">Appliances</h2>
+                    <span class="tag">Select after a range</span>
+                </div>
+                <div id="appliances-container" class="p-4 rounded-xl shadow-sm" style="background: var(--soft-bg);">
+                    <!-- Appliance cards inserted here -->
+                </div>
+            </div>
+
+            <div>
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-xl font-bold">Typical Power Ranges</h2>
+                    <span class="tag">Approximate values</span>
+                </div>
+                <div id="ratings-container" class="p-4 rounded-xl shadow-sm" style="background: var(--soft-bg);">
+                    <!-- Rating cards inserted here -->
+                </div>
+            </div>
+        </section>
+
+        <section class="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-8">
+            <div class="lg:col-span-2 p-5 rounded-xl shadow-sm" style="background: var(--soft-bg);">
+                <h2 class="text-xl font-bold mb-3">Energy awareness lens</h2>
+                <p class="mb-3">
+                    A high power rating does not automatically mean “bad”. Energy use depends on both power and time:
+                </p>
+                <div class="text-center text-lg font-bold p-3 rounded-lg border mb-4" style="border-color: var(--card-border);">
+                    Energy transferred = Power × Time
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="font-bold">Fan vs air-con</h3>
+                        <p class="text-sm mt-1" style="color: var(--muted-text);">
+                            Both improve comfort, but they transfer energy at very different rates.
+                        </p>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="font-bold">Water heater</h3>
+                        <p class="text-sm mt-1" style="color: var(--muted-text);">
+                            Shorter use time can matter because heating water needs a large power input.
+                        </p>
+                    </div>
+                    <div class="card p-4 rounded-xl">
+                        <h3 class="font-bold">Kettle</h3>
+                        <p class="text-sm mt-1" style="color: var(--muted-text);">
+                            High power, but usually short use. Boiling only what is needed changes total energy.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-5 rounded-xl shadow-sm" style="background: var(--soft-bg);">
+                <h2 class="text-xl font-bold mb-3">Quick energy calculator</h2>
+                <div class="space-y-3">
+                    <label class="block">
+                        <span class="text-sm font-medium">Power / W</span>
+                        <input id="calc-power" type="number" min="0" value="50" class="mt-1 w-full px-3 py-2 rounded-lg border text-base bg-white dark:bg-slate-800" style="border-color: var(--card-border);">
+                    </label>
+                    <label class="block">
+                        <span class="text-sm font-medium">Time / minutes</span>
+                        <input id="calc-time" type="number" min="0" value="60" class="mt-1 w-full px-3 py-2 rounded-lg border text-base bg-white dark:bg-slate-800" style="border-color: var(--card-border);">
+                    </label>
+                    <div class="p-3 rounded-lg border" style="border-color: var(--card-border);">
+                        <p class="text-sm" style="color: var(--muted-text);">Energy transferred</p>
+                        <p id="calc-output" class="text-lg font-bold mono">50 Wh = 0.050 kWh</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button class="example-btn px-3 py-1.5 rounded-lg border text-sm" data-power="50" data-time="60" style="border-color: var(--card-border);">Fan 1 h</button>
+                        <button class="example-btn px-3 py-1.5 rounded-lg border text-sm" data-power="1200" data-time="60" style="border-color: var(--card-border);">Air-con 1 h</button>
+                        <button class="example-btn px-3 py-1.5 rounded-lg border text-sm" data-power="4500" data-time="10" style="border-color: var(--card-border);">Heater 10 min</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="results" class="hidden p-6 rounded-xl shadow-md mb-8" style="background: var(--soft-bg);">
+            <h2 class="text-xl font-bold mb-3 text-center">Results and discussion</h2>
+            <p id="result-message" class="text-center mb-5"></p>
+            <div id="result-breakdown" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4"></div>
+        </section>
+
+        <section class="p-5 rounded-xl shadow-sm" style="background: var(--soft-bg);">
+            <h2 class="text-xl font-bold mb-3">Physics summary</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div class="card p-4 rounded-xl">
+                    <h3 class="font-bold">Power, P</h3>
+                    <p class="mt-1">Power measures how quickly energy is transferred.</p>
+                </div>
+                <div class="card p-4 rounded-xl">
+                    <h3 class="font-bold">Energy, E</h3>
+                    <p class="mt-1">For constant power, <strong>E = Pt</strong>.</p>
+                </div>
+                <div class="card p-4 rounded-xl">
+                    <h3 class="font-bold">Classroom estimates</h3>
+                    <p class="mt-1">Appliance ratings vary, so ranges are more realistic than single exact answers.</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const appliances = [
+                {
+                    id: "phone",
+                    name: "Phone charger",
+                    range: "5–30 W",
+                    min: 5,
+                    max: 30,
+                    examplePower: 18,
+                    icon: "📱",
+                    band: 1,
+                    mechanism: "small electronics",
+                    note: "Fast chargers can be higher than older small chargers.",
+                    energyTip: "Low power, but many small devices left on standby still add up."
+                },
+                {
+                    id: "fan",
+                    name: "Electric fan",
+                    range: "30–70 W",
+                    min: 30,
+                    max: 70,
+                    examplePower: 50,
+                    icon: "🌀",
+                    band: 1,
+                    mechanism: "motor moving air",
+                    note: "Size and speed setting change the rating.",
+                    energyTip: "A fan can improve comfort with much lower power than an air-conditioner."
+                },
+                {
+                    id: "laptop",
+                    name: "Laptop computer",
+                    range: "45–90 W",
+                    min: 45,
+                    max: 90,
+                    examplePower: 65,
+                    icon: "💻",
+                    band: 1,
+                    mechanism: "electronics and battery charging",
+                    note: "Gaming laptops and high-load use can be much higher.",
+                    energyTip: "Sleep mode and screen brightness affect total energy use."
+                },
+                {
+                    id: "tv",
+                    name: "LED TV",
+                    range: "80–180 W",
+                    min: 80,
+                    max: 180,
+                    examplePower: 120,
+                    icon: "📺",
+                    band: 2,
+                    mechanism: "screen and electronics",
+                    note: "Screen size and brightness matter.",
+                    energyTip: "Long use time can make a medium-power device important."
+                },
+                {
+                    id: "microwave",
+                    name: "Household microwave",
+                    range: "600–1200 W",
+                    min: 600,
+                    max: 1200,
+                    examplePower: 800,
+                    icon: "📟",
+                    band: 3,
+                    mechanism: "rapid food heating",
+                    note: "Cooking output and electrical input are not always the same number; ratings vary by model and region.",
+                    energyTip: "High power, but often used for a short time."
+                },
+                {
+                    id: "toaster",
+                    name: "Toaster",
+                    range: "700–1200 W",
+                    min: 700,
+                    max: 1200,
+                    examplePower: 900,
+                    icon: "🍞",
+                    band: 3,
+                    mechanism: "hot heating elements",
+                    note: "Number of slots and heating setting change the power.",
+                    energyTip: "Heating appliances often have high power because they transfer thermal energy quickly."
+                },
+                {
+                    id: "hairdryer",
+                    name: "Hair dryer",
+                    range: "1000–1800 W",
+                    min: 1000,
+                    max: 1800,
+                    examplePower: 1500,
+                    icon: "💨",
+                    band: 4,
+                    mechanism: "heater plus fan",
+                    note: "Heat and fan settings change the power.",
+                    energyTip: "Heat setting often matters more than fan speed."
+                },
+                {
+                    id: "aircon",
+                    name: "Room air-conditioner",
+                    range: "700–2000 W",
+                    min: 700,
+                    max: 2000,
+                    examplePower: 1200,
+                    icon: "❄️",
+                    band: 4,
+                    mechanism: "compressor and fans",
+                    note: "Room size, inverter control, outdoor temperature, and set temperature can change the input power.",
+                    energyTip: "Compared with a fan, an air-conditioner usually transfers energy much faster, especially over long use time."
+                },
+                {
+                    id: "kettle",
+                    name: "Electric kettle",
+                    range: "1800–2200 W",
+                    min: 1800,
+                    max: 2200,
+                    examplePower: 2000,
+                    icon: "🫖",
+                    band: 4,
+                    mechanism: "heating water quickly",
+                    note: "Local mains voltage and model design can change the rating.",
+                    energyTip: "Boiling only the water needed reduces the time and energy transferred."
+                },
+                {
+                    id: "waterheater",
+                    name: "Electric water heater",
+                    range: "3000–6000 W",
+                    min: 3000,
+                    max: 6000,
+                    examplePower: 4500,
+                    icon: "🚿",
+                    band: 4,
+                    mechanism: "heating flowing or stored water",
+                    note: "This is especially model- and region-dependent; use as a discussion estimate.",
+                    energyTip: "Because water has a high heat capacity, heating water can dominate household energy use."
+                }
+            ];
+
+            const appliancesContainer = document.getElementById("appliances-container");
+            const ratingsContainer = document.getElementById("ratings-container");
+            const scoreElement = document.getElementById("score");
+            const totalPairsElement = document.getElementById("total-pairs");
+            const timerElement = document.getElementById("timer");
+            const timerBar = document.getElementById("timer-bar");
+            const hintBtn = document.getElementById("hint-btn");
+            const resetBtn = document.getElementById("reset-btn");
+            const revealBtn = document.getElementById("reveal-btn");
+            const resultsDiv = document.getElementById("results");
+            const resultMessage = document.getElementById("result-message");
+            const resultBreakdown = document.getElementById("result-breakdown");
+            const messageArea = document.getElementById("message-area");
+            const calcPower = document.getElementById("calc-power");
+            const calcTime = document.getElementById("calc-time");
+            const calcOutput = document.getElementById("calc-output");
+
+            let score = 0;
+            let selectedRangeCard = null;
+            let timerInterval;
+            let timeRemaining = 360;
+            let shuffledAppliances = [];
+            let shuffledRatings = [];
+            let matches = {};
+            let completed = false;
+            let hintsRemaining = 3;
+
+            totalPairsElement.textContent = appliances.length;
+
+            function shuffle(array) {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            }
+
+            function formatTime(seconds) {
+                const mins = Math.floor(seconds / 60);
+                const secs = seconds % 60;
+                return `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+            }
+
+            function showMessage(html, tone = "neutral") {
+                messageArea.classList.remove("hidden");
+                messageArea.innerHTML = html;
+                messageArea.dataset.tone = tone;
+            }
+
+            function clearMessage() {
+                messageArea.classList.add("hidden");
+                messageArea.innerHTML = "";
+            }
+
+            function rangesOverlap(a, b) {
+                return Math.max(a.min, b.min) <= Math.min(a.max, b.max);
+            }
+
+            function createApplianceCard(appliance, index) {
+                const card = document.createElement("button");
+                card.type = "button";
+                card.className = "card appliance-card w-full mb-3 p-4 rounded-xl shadow-sm text-left flex items-center gap-4";
+                card.dataset.id = appliance.id;
+                card.dataset.index = index;
+                card.setAttribute("aria-label", `Appliance: ${appliance.name}`);
+                card.innerHTML = `
+                    <span class="text-3xl" aria-hidden="true">${appliance.icon}</span>
+                    <div class="flex-1">
+                        <div class="flex items-center justify-between gap-2">
+                            <h3 class="font-bold">${appliance.name}</h3>
+                            <span id="status-${appliance.id}" class="tag">unmatched</span>
+                        </div>
+                        <p class="text-sm mt-1" style="color: var(--muted-text);">${appliance.mechanism}</p>
+                        <div class="mt-2 text-sm">
+                            <span>Matched range: </span>
+                            <span class="font-semibold mono" id="appliance-match-${appliance.id}">?</span>
+                        </div>
+                    </div>
+                `;
+
+                card.addEventListener("click", function () {
+                    if (completed || card.classList.contains("disabled")) return;
+
+                    if (!selectedRangeCard) {
+                        showMessage("Select a power-range card first, then choose an appliance.", "neutral");
+                        return;
+                    }
+
+                    const selectedId = selectedRangeCard.dataset.targetId;
+                    const chosenAppliance = appliances.find(item => item.id === selectedId);
+                    const isCorrect = selectedId === appliance.id;
+                    const isPlausible = !isCorrect && rangesOverlap(appliance, chosenAppliance);
+
+                    const matchSpan = document.getElementById(`appliance-match-${appliance.id}`);
+                    const statusSpan = document.getElementById(`status-${appliance.id}`);
+                    matchSpan.textContent = selectedRangeCard.dataset.range;
+
+                    matches[appliance.id] = {
+                        applianceId: appliance.id,
+                        applianceName: appliance.name,
+                        expectedRange: appliance.range,
+                        guessedRange: selectedRangeCard.dataset.range,
+                        guessedApplianceId: selectedId,
+                        isCorrect: isCorrect,
+                        isPlausible: isPlausible
+                    };
+
+                    if (isCorrect) {
+                        card.classList.add("matched", "disabled");
+                        selectedRangeCard.classList.add("matched", "disabled");
+                        statusSpan.textContent = "✓ matched";
+                        statusSpan.style.color = "var(--match-color)";
+                        score += 1;
+                        scoreElement.textContent = score;
+                        showMessage(`<strong>Matched.</strong> ${appliance.name} is commonly estimated around <strong>${appliance.range}</strong>. ${appliance.note}`, "matched");
+
+                        if (score === appliances.length) {
+                            finishGame(false);
+                        }
+                    } else {
+                        card.classList.add("not-intended", "shake");
+                        selectedRangeCard.classList.add("not-intended", "shake");
+                        statusSpan.textContent = isPlausible ? "plausible?" : "try again";
+                        statusSpan.style.color = "var(--try-color)";
+
+                        const feedback = isPlausible
+                            ? `<strong>Plausible but not the intended match.</strong> Some model ranges overlap. This is a good discussion point, but try to find the best classroom estimate.`
+                            : `<strong>Try again.</strong> Compare the energy transfer process: electronics, motor, compressor, or heating element.`;
+
+                        showMessage(feedback, "try");
+
+                        setTimeout(() => {
+                            card.classList.remove("not-intended", "shake");
+                            selectedRangeCard.classList.remove("not-intended", "shake");
+                            if (!card.classList.contains("matched")) {
+                                statusSpan.textContent = "unmatched";
+                                statusSpan.style.color = "";
+                                matchSpan.textContent = "?";
+                            }
+                            selectedRangeCard.classList.remove("not-intended", "shake");
+                        }, 900);
+                    }
+
+                    selectedRangeCard.classList.remove("selected");
+                    selectedRangeCard = null;
+                });
+
+                return card;
+            }
+
+            function createRangeCard(appliance) {
+                const card = document.createElement("button");
+                card.type = "button";
+                card.className = `card range-card band-${appliance.band} w-full mb-3 p-4 rounded-xl shadow-sm text-left`;
+                card.dataset.targetId = appliance.id;
+                card.dataset.range = appliance.range;
+                card.setAttribute("aria-label", `Typical power range: ${appliance.range}`);
+                card.innerHTML = `
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="font-bold text-lg mono">${appliance.range}</h3>
+                        <span class="tag">Estimate</span>
+                    </div>
+                    <p class="text-sm mt-2" style="color: var(--muted-text);">Select this range, then choose the best appliance match.</p>
+                    <p class="hint-text hidden text-sm mt-2 p-2 rounded-lg border" style="color: var(--muted-text); border-color: var(--card-border);">
+                        <strong>Reasoning clue:</strong> ${appliance.mechanism}
+                    </p>
+                `;
+
+                card.addEventListener("click", function () {
+                    if (completed || card.classList.contains("disabled")) return;
+
+                    if (selectedRangeCard) {
+                        selectedRangeCard.classList.remove("selected");
+                    }
+
+                    selectedRangeCard = card;
+                    card.classList.add("selected");
+                    showMessage(`Selected <strong>${appliance.range}</strong>. Now choose the appliance that best fits this typical range.`, "neutral");
+                });
+
+                return card;
+            }
+
+            function updateHintButton() {
+                hintBtn.textContent = `Hint (${hintsRemaining})`;
+                hintBtn.disabled = hintsRemaining <= 0;
+                hintBtn.classList.toggle("opacity-50", hintsRemaining <= 0);
+                hintBtn.classList.toggle("cursor-not-allowed", hintsRemaining <= 0);
+            }
+
+            function startTimer() {
+                clearInterval(timerInterval);
+                timerInterval = setInterval(() => {
+                    if (completed) return;
+                    timeRemaining -= 1;
+                    timerElement.textContent = formatTime(timeRemaining);
+                    timerBar.style.width = `${(timeRemaining / 360) * 100}%`;
+
+                    if (timeRemaining <= 60) {
+                        timerElement.classList.add("text-orange-600", "dark:text-orange-400");
+                    }
+
+                    if (timeRemaining <= 0) {
+                        finishGame(true);
+                    }
+                }, 1000);
+            }
+
+            function initializeGame() {
+                appliancesContainer.innerHTML = "";
+                ratingsContainer.innerHTML = "";
+                resultBreakdown.innerHTML = "";
+                resultsDiv.classList.add("hidden");
+                clearMessage();
+
+                score = 0;
+                scoreElement.textContent = "0";
+                selectedRangeCard = null;
+                matches = {};
+                completed = false;
+                hintsRemaining = 3;
+                updateHintButton();
+                timeRemaining = 360;
+                timerElement.textContent = formatTime(timeRemaining);
+                timerElement.classList.remove("text-orange-600", "dark:text-orange-400");
+                timerBar.style.width = "100%";
+
+                shuffledAppliances = shuffle(appliances);
+                // Keep the left appliance column random, but arrange the right range column from lower to higher typical power.
+                shuffledRatings = [...appliances].sort((a, b) => a.examplePower - b.examplePower);
+
+                shuffledAppliances.forEach((appliance, index) => {
+                    appliancesContainer.appendChild(createApplianceCard(appliance, index));
+                });
+
+                shuffledRatings.forEach(appliance => {
+                    ratingsContainer.appendChild(createRangeCard(appliance));
+                });
+
+                startTimer();
+            }
+
+            function giveHint() {
+                if (completed) return;
+
+                if (!selectedRangeCard) {
+                    showMessage("Select one power-range card first. A hint will reveal the reasoning clue for that selected range.", "neutral");
+                    return;
+                }
+
+                if (hintsRemaining <= 0) {
+                    showMessage("No hints left this round. Try using the energy-transfer process and the approximate size of the power range.", "neutral");
+                    return;
+                }
+
+                const clue = selectedRangeCard.querySelector(".hint-text");
+                if (!clue) return;
+
+                if (!clue.classList.contains("hidden")) {
+                    showMessage("This range already has its reasoning clue revealed. Select another range before using another hint.", "neutral");
+                    return;
+                }
+
+                clue.classList.remove("hidden");
+                selectedRangeCard.classList.add("pulse");
+                hintsRemaining -= 1;
+                updateHintButton();
+
+                showMessage(`Hint used. The selected range now shows one reasoning clue. Hints left: <strong>${hintsRemaining}</strong>.`, "neutral");
+
+                setTimeout(() => {
+                    selectedRangeCard?.classList.remove("pulse");
+                }, 1800);
+            }
+
+            function revealAnswers() {
+                if (completed) return;
+                finishGame(false, true);
+            }
+
+            function finishGame(timeUp = false, reveal = false) {
+                completed = true;
+                clearInterval(timerInterval);
+
+                document.querySelectorAll(".appliance-card").forEach(card => card.classList.add("disabled"));
+                document.querySelectorAll(".range-card").forEach(card => card.classList.add("disabled"));
+
+                appliances.forEach(appliance => {
+                    if (!matches[appliance.id]) {
+                        matches[appliance.id] = {
+                            applianceId: appliance.id,
+                            applianceName: appliance.name,
+                            expectedRange: appliance.range,
+                            guessedRange: null,
+                            guessedApplianceId: null,
+                            isCorrect: false,
+                            isPlausible: false
+                        };
+                    }
+                });
+
+                showResults(timeUp, reveal);
+            }
+
+            function showResults(timeUp, reveal) {
+                resultsDiv.classList.remove("hidden");
+                const totalCorrect = Object.values(matches).filter(match => match.isCorrect).length;
+                const totalPlausible = Object.values(matches).filter(match => match.isPlausible).length;
+                const percentage = Math.round((totalCorrect / appliances.length) * 100);
+
+                let message = "";
+                if (totalCorrect === appliances.length) {
+                    message = "Excellent. You matched all estimated ranges. Now discuss why some real models may differ.";
+                } else if (percentage >= 70) {
+                    message = "Good result. The remaining items are useful discussion cases because appliance ratings often overlap.";
+                } else {
+                    message = "Power ratings are not obvious from appearance alone. Use the appliance function and energy transfer process to reason.";
+                }
+
+                if (timeUp) {
+                    message = "Time is up. " + message;
+                }
+                if (reveal) {
+                    message = "Answers revealed. " + message;
+                }
+                if (totalPlausible > 0) {
+                    message += ` You also made ${totalPlausible} plausible-but-not-intended match(es), which can be discussed rather than treated as simple mistakes.`;
+                }
+
+                resultMessage.textContent = message;
+                resultBreakdown.innerHTML = "";
+
+                appliances.forEach(appliance => {
+                    const match = matches[appliance.id];
+                    const card = document.createElement("div");
+                    card.className = "card p-4 rounded-xl shadow-sm";
+
+                    let statusText = "✗ Not matched";
+                    if (match.isCorrect) statusText = "✓ Matched";
+                    else if (match.isPlausible) statusText = "△ Plausible discussion case";
+
+                    card.innerHTML = `
+                        <div class="flex items-center gap-2 mb-2">
+                            <span class="text-2xl" aria-hidden="true">${appliance.icon}</span>
+                            <h3 class="font-bold">${appliance.name}</h3>
+                        </div>
+                        <p class="text-sm"><strong>Typical range:</strong> <span class="mono">${appliance.range}</span></p>
+                        <p class="text-sm"><strong>Your match:</strong> <span class="mono">${match.guessedRange || "No match"}</span></p>
+                        <p class="text-sm mt-2"><strong>${statusText}</strong></p>
+                        <p class="text-xs mt-2" style="color: var(--muted-text);">${appliance.energyTip}</p>
+                    `;
+
+                    resultBreakdown.appendChild(card);
+                });
+
+                resultsDiv.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
+
+            function updateCalculator() {
+                const power = Math.max(0, Number(calcPower.value) || 0);
+                const minutes = Math.max(0, Number(calcTime.value) || 0);
+                const wh = power * minutes / 60;
+                const kwh = wh / 1000;
+                calcOutput.textContent = `${wh.toFixed(0)} Wh = ${kwh.toFixed(3)} kWh`;
+            }
+
+            calcPower.addEventListener("input", updateCalculator);
+            calcTime.addEventListener("input", updateCalculator);
+
+            document.querySelectorAll(".example-btn").forEach(button => {
+                button.addEventListener("click", function () {
+                    calcPower.value = button.dataset.power;
+                    calcTime.value = button.dataset.time;
+                    updateCalculator();
+                });
+            });
+
+            hintBtn.addEventListener("click", giveHint);
+            resetBtn.addEventListener("click", initializeGame);
+            if (revealBtn) revealBtn.addEventListener("click", revealAnswers);
+
+            updateCalculator();
+            initializeGame();
+        });
+    </script>
+</body>
+</html>
