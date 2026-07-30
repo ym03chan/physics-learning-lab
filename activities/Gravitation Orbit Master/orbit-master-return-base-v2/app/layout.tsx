@@ -1,39 +1,29 @@
+import type { CSSProperties } from "react";
 import type { Metadata } from "next";
-import { headers } from "next/headers";
 import "./globals.css";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const requestHeaders = await headers();
-  const host = requestHeaders.get("x-forwarded-host") ?? requestHeaders.get("host");
-  const protocol = requestHeaders.get("x-forwarded-proto") ?? "https";
-  const origin = host ? `${protocol}://${host}` : "http://localhost:3000";
-  const title = "Orbit Master: Return to Base";
-  const description =
-    "Command gravity-assisted rescue flights across humanity's frontier systems in 2300 AD.";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      images: [{ url: `${origin}/og.png`, width: 1672, height: 937 }],
-    },
-    twitter: {
-      card: "summary_large_image",
-      title,
-      description,
-      images: [`${origin}/og.png`],
-    },
-  };
-}
+export const metadata: Metadata = {
+  title: "Orbit Master: Return to Base",
+  description:
+    "Command gravity-assisted rescue flights across humanity's frontier systems in 2300 AD.",
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body
+        style={
+          {
+            "--og-image": `url("${basePath}/og.png")`,
+          } as CSSProperties
+        }
+      >
+        {children}
+      </body>
     </html>
   );
 }
